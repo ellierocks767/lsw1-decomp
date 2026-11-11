@@ -6,7 +6,9 @@
 
 The directory holds:
 
-    base.c         the current best candidate, preprocessed with ProDG's CPP: the newest
+    base.c         the current best candidate, preprocessed with ProDG's CPP (MWCC -EP with the
+                   unit's build.ninja flags for SDK units, which compile through score_fn.py
+                   with that MWCC version and set compiler_type = "mwcc"): the newest
                    best hillclimb ledger snapshot of the unit source, else the unit
                    source itself (`--source` overrides)
     target.o       the retail DTK split object that defines the function
@@ -100,6 +102,26 @@ def preprocess(source: Path, out: Path, include_dir: Path) -> str:
     return score_fn.run(cpp + flags + ["-I", str(include_dir), str(source), str(out)])
 
 
+def preprocess_mw(source: Path, out: Path, mw: tuple[str, list[str]]) -> str:
+    """MWCC -EP with the unit's own flags (SDK units); '' on success, else the error text."""
+    version, flags = mw
+    cmd = [str(ROOT / "build" / "tools" / "wibo"),
+           str(ROOT / "build" / "compilers" / "GC" / version / "mwcceppc.exe"),
+           *flags, "-i", str(source.parent), "-EP", str(source)]
+    r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+    if r.returncode:
+        return score_fn.error_tail((r.stdout + r.stderr).strip())
+    out.write_text(r.stdout.replace("\r\n", "\n"))
+    return ""
+
+
+def mw_args(mw: tuple[str, list[str]] | None) -> list[str]:
+    """score_fn.py arguments that select the unit's MWCC build for a file outside build.ninja."""
+    if not mw:
+        return []
+    return ["--compiler", "sdk", "--mw-version", mw[0], "--mw-flags", shlex.join(mw[1])]
+
+
 def focus(text: str, keep: bool) -> tuple[str, int]:
     """Turn permute focus markers into PERM macros (keep) or drop them; returns (text, regions)."""
     depth = regions = 0
@@ -126,11 +148,12 @@ def m2c_names(text: str, symbol: str) -> list[str]:
     return sorted(set(M2C_NAME.findall(fn.body)))
 
 
-def score_compile_script(name: str) -> str:
+def score_compile_script(name: str, mw: tuple[str, list[str]] | None = None) -> str:
     score = shlex.quote(str(ROOT / "tools" / "score_fn.py"))
+    extra = "".join(" " + shlex.quote(a) for a in mw_args(mw))
     return ("#!/usr/bin/env bash\n"
             "# decomp-permuter compile step: compile.sh IN.c -o OUT.o\n"
-            f'exec python3 {score} {shlex.quote(name)} "$1" --compile-only -o "$3"\n')
+            f'exec python3 {score} {shlex.quote(name)} "$1" --compile-only -o "$3"{extra}\n')
 
 
 def compile_script(name: str) -> str:
@@ -160,10 +183,10 @@ def fast_compile_agrees(out: Path, source: Path) -> bool:
         return fast.returncode == 0 and not err and a.read_bytes() == b.read_bytes()
 
 
-def settings_toml(func_name: str, directory: Path) -> str:
+def settings_toml(func_name: str, directory: Path, compiler_type: str = "gcc") -> str:
     dumper = f"python3 {ROOT / 'tools' / 'permute_objdump.py'} --dir {directory}"
     return (f'func_name = "{func_name}"\n'
-            'compiler_type = "gcc"\n'
+            f'compiler_type = "{compiler_type}"\n'
             f"objdump_command = {json.dumps(dumper)}\n")
 
 
@@ -205,28 +228,33 @@ def setup(name: str, out: Path, source: Path | None, compiled_symbol: str | None
         rel_body = body.resolve()
         provenance += f" + --body {rel_body.relative_to(ROOT) if rel_body.is_relative_to(ROOT) else rel_body}"
     marked, regions = focus(text, keep=True)
+    mw = score_fn.unit_mw_settings(unit_source) if unit_source else None
+    pre = (lambda s, o: preprocess_mw(s, o, mw)) if mw else (lambda s, o: preprocess(s, o, source.parent))
     with tempfile.TemporaryDirectory(prefix="permute_setup_") as tmp:
         src = Path(tmp) / source.name
         src.write_text(marked)
-        err = preprocess(src, out / "base.c", source.parent)
+        err = pre(src, out / "base.c")
         if not err and regions:
             # base.c with PERM macros does not compile; score and check against a plain copy.
             src.write_text(focus(text, keep=False)[0])
-            err = preprocess(src, out / "base_plain.c", source.parent)
+            err = pre(src, out / "base_plain.c")
     if err:
         raise vf.ToolError(f"preprocessing {provenance} failed:\n{err}")
     shutil.copyfile(target, out / "target.o")
     (out / "compile.sh").write_text(compile_script(name))
     (out / "compile.sh").chmod(0o755)
     plain = out / ("base_plain.c" if regions else "base.c")
-    fast = fast_compile_agrees(out, plain)
+    fast = not mw and fast_compile_agrees(out, plain)
     if not fast:
-        (out / "compile.sh").write_text(score_compile_script(name))
-    (out / "settings.toml").write_text(settings_toml(compiled_symbol or name, out.resolve()))
+        # SDK units always go through score_fn.py with the unit's MWCC version and flags.
+        (out / "compile.sh").write_text(score_compile_script(name, mw))
+    (out / "settings.toml").write_text(settings_toml(compiled_symbol or name, out.resolve(),
+                                                     "mwcc" if mw else "gcc"))
     meta = {"name": name, "compiled_symbol": compiled_symbol, "unit": unit,
             "target_object": str(target.relative_to(ROOT)), "base_source": provenance,
             "focus_regions": regions, "fast_compile": fast,
-            "m2c_names": m2c_names(text, compiled_symbol or name)}
+            "m2c_names": m2c_names(text, compiled_symbol or name),
+            "mw": list(mw) if mw else None}
     (out / "permute.json").write_text(json.dumps(meta, indent=2) + "\n")
     return meta
 
@@ -241,7 +269,8 @@ def base_score(out: Path) -> dict:
     if r.returncode:
         raise vf.ToolError(f"{base.name} does not compile:\n{(r.stdout + r.stderr)[-1500:]}")
     meta = json.loads((out / "permute.json").read_text())
-    args = [meta["name"], str(base), "--json", "--no-queue"]
+    args = [meta["name"], str(base), "--json", "--no-queue",
+            *mw_args(tuple(meta["mw"]) if meta.get("mw") else None)]
     if meta.get("compiled_symbol"):
         args += ["--compiled-symbol", meta["compiled_symbol"]]
     r = subprocess.run([sys.executable, str(ROOT / "tools" / "score_fn.py"), *args],
@@ -266,7 +295,7 @@ def warnings(rep: dict, meta: dict) -> list[str]:
     if not meta.get("focus_regions") and rep.get("verdict") != "MATCH":
         out.append("no /* permute: begin|lineswap */ focus: whole-function randomization; mark the "
                    "differing region to narrow the search")
-    if not meta.get("fast_compile", True):
+    if not meta.get("fast_compile", True) and not meta.get("mw"):
         out.append("fast compile.sh disagreed with score_fn.py on the base; using the slower score_fn wrapper")
     return out
 

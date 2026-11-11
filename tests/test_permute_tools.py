@@ -31,6 +31,14 @@ class SetupTests(unittest.TestCase):
         text = ps.score_compile_script("fn_8000A64C")
         self.assertIn('score_fn.py fn_8000A64C "$1" --compile-only -o "$3"', text)
 
+    def test_sdk_unit_script_selects_the_units_mwcc_build(self):
+        text = ps.score_compile_script("MotionComp", ("1.2.5", ["-O4,p", "-i", "include"]))
+        self.assertIn('--compile-only -o "$3" --compiler sdk --mw-version 1.2.5 '
+                      "--mw-flags '-O4,p -i include'", text)
+        self.assertEqual(ps.mw_args(None), [])
+        settings = toml.loads(ps.settings_toml("MotionComp", Path("/w/p"), "mwcc"))
+        self.assertEqual(settings["compiler_type"], "mwcc")
+
     def test_focus_markers_become_perm_macros_or_vanish(self):
         src = ("void f(int *p) {\n/* permute: begin */\np[0] = 1;\n/* permute: lineswap */\n"
                "p[1] = 2;\np[2] = 3;\n/* permute: end */\n/* permute: end */\n}\n")
