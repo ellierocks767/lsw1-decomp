@@ -896,7 +896,7 @@ static inline void MotionBlock(u8* cP, int width, u8* tP, int hx, int hy) {
 }
 
 void BasisBlockDec(HVQState* state, u8* blk, s32 blkWidth, u8 value, u8 nbasis, s32 p) {
-    s32 v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15;
+    s32 v6, v0, v15, v1, v13, v5, v8, v12, v3, v7, v11, v2, v9, v14, v10, v4;
     int mns;
     s32 avr;
     if (nbasis == 6) {
@@ -2542,12 +2542,16 @@ s32 HVQM4DecSoundDecode(HVQSound* snd, HVQSoundFrame* hdr, u32 size, u8* in, s32
 }
 
 void fn_80189934(HVQSoundState* st, u8* in, s16* out, u32 type, u32 count, s32 frame) {
+    u8* src;
+    struct ADPCM { s32 delta[89][8]; u8 next[89][8]; };
+    struct ADPCM* table = (struct ADPCM*)adpcmTable;
     s32 pred;
     s32 idx;
     u32 bytes;
     u32 left;
 
-    if (in == NULL) {
+    src = in;
+    if (src == NULL) {
         return;
     }
     left = count;
@@ -2567,41 +2571,41 @@ void fn_80189934(HVQSoundState* st, u8* in, s16* out, u32 type, u32 count, s32 f
         bytes += 1;
     }
     bytes *= adpcmStride1;
-    in += bytes;
+    src += bytes;
     if (type == 1) {
-        u8 hi = in[0];
-        u8 lo = in[1];
+        u8 hi = src[0];
+        u8 lo = src[1];
         left -= 1;
-        in += 2;
+        src += 2;
         st->pred0 = (s16)((hi << 8) | (lo & 0x80));
         st->idx0 = lo & 0x7F;
         out[0] = out[1] = (s16)st->pred0;
         out += 2;
     } else if (type == 3) {
         left -= 1;
-        st->pred0 = (s16)((in[0] << 8) | in[1]);
-        st->idx0 = in[2];
-        in += 3;
+        st->pred0 = (s16)((src[0] << 8) | src[1]);
+        st->idx0 = src[2];
+        src += 3;
         out[0] = out[1] = (s16)st->pred0;
         out += 2;
     }
     pred = st->pred0;
     idx = st->idx0;
     while (left != 0) {
-        u8 b = *in;
+        u8 b = *src;
         s32 n = (b >> 4) & 7;
         if (!(b & 0x80)) {
-            pred += ADPCM_DELTA(idx, n);
+            pred += table->delta[idx][n];
             if (pred > 0x7FFF) {
                 pred = 0x7FFF;
             }
         } else {
-            pred -= ADPCM_DELTA(idx, n);
+            pred -= table->delta[idx][n];
             if (pred < -0x8000) {
                 pred = -0x8000;
             }
         }
-        idx = ADPCM_NEXT(idx, n);
+        idx = table->next[idx][n];
         out[0] = (s16)pred;
         out[1] = (s16)pred;
         if (left == 1) {
@@ -2609,18 +2613,18 @@ void fn_80189934(HVQSoundState* st, u8* in, s16* out, u32 type, u32 count, s32 f
         }
         n = b & 7;
         if (!(b & 8)) {
-            pred += ADPCM_DELTA(idx, n);
+            pred += table->delta[idx][n];
             if (pred > 0x7FFF) {
                 pred = 0x7FFF;
             }
         } else {
-            pred -= ADPCM_DELTA(idx, n);
+            pred -= table->delta[idx][n];
             if (pred < -0x8000) {
                 pred = -0x8000;
             }
         }
-        idx = ADPCM_NEXT(idx, n);
-        in += 1;
+        idx = table->next[idx][n];
+        src += 1;
         out[2] = (s16)pred;
         left -= 2;
         out[3] = (s16)pred;
@@ -2631,6 +2635,9 @@ void fn_80189934(HVQSoundState* st, u8* in, s16* out, u32 type, u32 count, s32 f
 }
 
 void fn_80189B30(HVQSoundState* st, u8* in, s16* out, u32 type, u32 count, s32 frame) {
+    u8* src;
+    struct ADPCM { s32 delta[89][8]; u8 next[89][8]; };
+    struct ADPCM* table = (struct ADPCM*)adpcmTable;
     s32 pred0;
     s32 idx0;
     s32 pred1;
@@ -2638,7 +2645,8 @@ void fn_80189B30(HVQSoundState* st, u8* in, s16* out, u32 type, u32 count, s32 f
     u32 bytes;
     u32 left;
 
-    if (in == NULL) {
+    src = in;
+    if (src == NULL) {
         return;
     }
     left = count;
@@ -2654,28 +2662,28 @@ void fn_80189B30(HVQSoundState* st, u8* in, s16* out, u32 type, u32 count, s32 f
         bytes += 1;
     }
     bytes *= adpcmStride2;
-    in += bytes;
+    src += bytes;
     if (type == 1) {
         u8 lo;
         u8 lo1;
         left -= 1;
-        lo = in[1];
-        st->pred0 = (s16)((in[0] << 8) | (lo & 0x80));
+        lo = src[1];
+        st->pred0 = (s16)((src[0] << 8) | (lo & 0x80));
         st->idx0 = lo & 0x7F;
-        lo1 = in[3];
-        st->pred1 = (s16)((in[2] << 8) | (lo1 & 0x80));
+        lo1 = src[3];
+        st->pred1 = (s16)((src[2] << 8) | (lo1 & 0x80));
         st->idx1 = lo1 & 0x7F;
-        in += 4;
+        src += 4;
         out[1] = (s16)st->pred0;
         out[0] = (s16)st->pred1;
         out += 2;
     } else if (type == 3) {
         left -= 1;
-        st->pred0 = (s16)((in[0] << 8) | in[1]);
-        st->idx0 = in[2];
-        st->pred1 = (s16)((in[3] << 8) | in[4]);
-        st->idx1 = in[5];
-        in += 6;
+        st->pred0 = (s16)((src[0] << 8) | src[1]);
+        st->idx0 = src[2];
+        st->pred1 = (s16)((src[3] << 8) | src[4]);
+        st->idx1 = src[5];
+        src += 6;
         out[1] = (s16)st->pred0;
         out[0] = (s16)st->pred1;
         out += 2;
@@ -2685,36 +2693,42 @@ void fn_80189B30(HVQSoundState* st, u8* in, s16* out, u32 type, u32 count, s32 f
     pred1 = st->pred1;
     idx1 = st->idx1;
     while (left != 0) {
-        u8 b = *in;
+        u8 b = *src;
         s32 n = (b >> 4) & 7;
         s32 m;
         if (!(b & 0x80)) {
-            pred0 += ADPCM_DELTA(idx0, n);
+            pred0 += table->delta[idx0][n];
             if (pred0 > 0x7FFF) {
                 pred0 = 0x7FFF;
             }
         } else {
-            pred0 -= ADPCM_DELTA(idx0, n);
+            pred0 -= table->delta[idx0][n];
             if (pred0 < -0x8000) {
                 pred0 = -0x8000;
             }
         }
-        idx0 = ADPCM_NEXT(idx0, n);
+        {
+            u8* next = (u8*)table + idx0 * 8;
+            idx0 = next[0xB20 + n];
+        }
         out[1] = (s16)pred0;
         m = b & 7;
         if (!(b & 8)) {
-            pred1 += ADPCM_DELTA(idx1, m);
+            pred1 += table->delta[idx1][m];
             if (pred1 > 0x7FFF) {
                 pred1 = 0x7FFF;
             }
         } else {
-            pred1 -= ADPCM_DELTA(idx1, m);
+            pred1 -= table->delta[idx1][m];
             if (pred1 < -0x8000) {
                 pred1 = -0x8000;
             }
         }
-        idx1 = ADPCM_NEXT(idx1, m);
-        in += 1;
+        {
+            u8* next = (u8*)table + idx1 * 8;
+            idx1 = next[0xB20 + m];
+        }
+        src += 1;
         out[0] = (s16)pred1;
         out += 2;
         left -= 1;
