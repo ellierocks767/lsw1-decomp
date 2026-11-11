@@ -1234,35 +1234,27 @@ void IpicLineDec(HVQState* state, u8* dst, s32 stride, HVQStack* stack, s32 coun
     stack->line_next += 2;
 }
 
-void IpicPlaneDec(HVQState* state, s32 plane_idx, u8* dst_) {
-    HVQBlock** payload;
+void IpicPlaneDec(HVQState* state, s32 plane_idx, u8* dst) {
+    HVQStack stack;
     s32 stride;
     s32 stride4;
     s32 width;
+    s32 hsafe;
     s32 y;
-    u8* dst;
-    HVQPlane* plane;
-    HVQBlock* p;
-    HVQStack stack;
 
-    plane = &state->planes[plane_idx];
-    payload = &plane->payload;
-    y = plane->v_blocks;
-    width = plane->h_blocks;
-    dst = dst_;
-    stride = plane->width;
-    stack.plane_idx = plane_idx;
-    p = plane->payload;
-    stack.line_prev = p;
-    stack.line_curr = p;
-    stack.line_next = p + plane->h_blocks_safe;
+    stride = state->planes[plane_idx].width;
     stride4 = stride * 4;
+    width = state->planes[plane_idx].h_blocks;
+    y = state->planes[plane_idx].v_blocks;
+    hsafe = state->planes[plane_idx].h_blocks_safe;
+    stack.plane_idx = plane_idx;
+    stack.line_next = (stack.line_curr = stack.line_prev = state->planes[plane_idx].payload) + hsafe;
     if (y > 0) {
         IpicLineDec(state, dst, stride, &stack, width);
         dst += stride4;
         y--;
     }
-    stack.line_prev = *payload;
+    stack.line_prev = state->planes[plane_idx].payload;
     for (; y > 1; y--) {
         IpicLineDec(state, dst, stride, &stack, width);
         dst += stride4;
