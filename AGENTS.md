@@ -30,6 +30,12 @@ from doldecomp/dolsdk2004. CrashWOC's CodeWarrior game code generation does not 
   provider, wait for a verified checkpoint before adding at most one more (cap at
   1–2 concurrent children per provider unless Ellie explicitly asks otherwise), and
   stop launches on that provider at the first rate-limit error.
+- **Pick models by the work.** Before launching children, run `agent-usage warnings` once
+  and avoid any provider or model it names. Plan items and hand-matching go to Codex
+  (`codex-pool`, sol medium) or Claude Sonnet; keep Opus or high effort for dead ends
+  and tooling design. Gemini Neon (`antigravity`) can take a plan item, one child at a
+  time, with its claimed matches re-verified before merge; Argon only gets near-mechanical
+  work (copy an exact upstream source, compile, verify).
 - Matching: follow the [quickstart](docs/matching_quickstart.md) for bootstrap,
   target selection, scoring and handoff, and [C matching](docs/code_matching_workflow.md)
   for strict verification and promotion. SDK work uses [SDK import](docs/sdk_import.md#importing-a-unit-quickly).
@@ -78,6 +84,25 @@ Do not report renamed symbols as matching progress.
 Current source, headers, `config/GL5E4F/symbols.txt` and target assembly take
 precedence over names in generated reports or historical task packs.
 Keep raw experiment logs and proprietary artifacts local.
+
+## Working with Ellie
+
+- When she names a batch of children, finish that batch, verify and report, then propose
+  the next items; launch more only on a later go-ahead. Leave parked or tapped-out items
+  parked and pick items with fresh functions.
+- Decide technical matching policy yourself from evidence and record why; ask her about
+  gameplay, destructive actions, long permuter runs and driving Dolphin.
+- Before stopping or relaunching the game, ask whether she already tested it; her own
+  test result stands.
+- Permuter: bursts of about 180 s (`timeout 180`) are fine; queue long runs
+  (`tools/permute_long.sh`, a systemd unit with a sleep inhibitor, never `setsid`/`nohup`)
+  only when she asks in the current thread. Otherwise record "permuter run" as the next
+  hypothesis.
+- SDK and middleware: search other GameCube decomps for a Matching source with the same
+  compiler first ([donors](docs/symbol_donors/README.md)) and record repo, commit and licence.
+- Worktrees: don't delete merged worktrees or branches after a PR; she batches cleanup.
+  At handoff, list each worktree you created with its state (merged, open PR, parked with
+  local-only results) so the cleanup day can use `tools/worktree_cleanup.py --audit`.
 
 Coding conventions live in [C matching](docs/code_matching_workflow.md#coding-conventions).
 `CLAUDE.md` imports this file.
