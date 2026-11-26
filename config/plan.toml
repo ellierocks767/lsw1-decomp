@@ -20,7 +20,7 @@
 # reports that the plan needs revision, or when evidence changes the order. Parking a function
 # needs a reason that names its best score and the next hypothesis.
 
-revision = 10
+revision = 11
 # The `# at revision N` comments record each item's size when the plan was written; they are
 # not read by tools.
 
@@ -241,7 +241,7 @@ note = "Pass 2 (2026-11-13) adds three strict VERIFIED functions / 3,908 B: NuAn
 [[stage.item]]
 id = "nurndr-nugscn"
 units = ["auto/nu3d/ngc/nurndr", "auto/nu3d/ngc/nugscn", "auto/nu3d/ngc/nustream", "auto/nu3d/nuspecial"]
-note = "nugscn follow-up: fn_80028444 VERIFIED (624 B), two measured plateaus below. Revision 10 pass (2026-11-25, no subagents): nustream fn_8002C644 gained a source candidate (107 to 122/232) and both nuspecial functions were re-climbed without gain; all three are parked below. Remaining unattempted: nurndr (fn_80024F68 222/270, fn_80026F0C 206/229, fn_80026710 with no source); the next pass owns nurndr alone."
+note = "nugscn follow-up: fn_80028444 VERIFIED (624 B), two measured plateaus below. Revision 10: nustream fn_8002C644 gained a source candidate (107 to 122/232) and both nuspecial functions were re-climbed without gain; all three are parked below. Revision 11: nurndr fn_80024F68 VERIFIED (270/270, 1,080 B), counted as strict-only. The next pass can resume fn_80026F0C and fn_80026710."
 # at revision 1: 32 functions, 18,980 bytes left
 
 [[stage.item]]

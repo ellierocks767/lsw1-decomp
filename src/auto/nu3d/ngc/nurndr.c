@@ -1137,7 +1137,6 @@ s32 fn_8001AF7C(void);
 s32 fn_8001AF84(void);
 void fn_80030A70(void);
 
-/* NONMATCHING 222/270: point-copy anchor/register allocation; see work/fn_80024F68/status.md. */
 s32 fn_80024F68(struct nurndr_hgobj_s *hg, struct nurndr_hgmtx_s *mtx, s32 n, s16 *layers, struct nurndr_hgmtx_s *mtxs, s32 *arg5, s32 arg6)
 {
   s32 ret;
@@ -1163,7 +1162,7 @@ s32 fn_80024F68(struct nurndr_hgobj_s *hg, struct nurndr_hgmtx_s *mtx, s32 n, s1
   if ((hg->points != ((void *) 0)) && (hg->nopoints == 0))
   {
     pt = hg->points;
-    for (i = 0; i < hg->numpoints; i++, pt++)
+    for (j = 0; j < hg->numpoints; j++, pt++)
     {
       if ((lbl_80407CE0 <= 0x117) && (lbl_80407CD8 != 0))
       {
@@ -1185,8 +1184,8 @@ s32 fn_80024F68(struct nurndr_hgobj_s *hg, struct nurndr_hgmtx_s *mtx, s32 n, s1
         }
         lbl_803378CC[lbl_80407CE0].unknown64 = pt->unknown0C;
         lbl_803378CC[lbl_80407CE0].unknown65 = pt->unknown0D;
-        lbl_803378CC[lbl_80407CE0].unknown67 = lbl_80407CDF;
         lbl_803378CC[lbl_80407CE0].unknown66 = pt->unknown0E;
+        lbl_803378CC[lbl_80407CE0].unknown67 = lbl_80407CDF;
         lbl_80407CE0++;
         lbl_80407CDC++;
       }

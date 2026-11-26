@@ -209,6 +209,12 @@ the two `nuspecial` plateaus are re-climbed without gain and parked. The `nuanim
 four PR 166 plateaus move into `[[parked]]` with their best scores and next hypotheses.
 The three `nurndr` functions stay in the item for the next pass; stage order is unchanged.
 
+Revision 11 (2026-11-26) records the `nurndr` hillclimb. `fn_80024F68` matches all
+270 instructions in the strict verifier (1,080 B), up from 222. It counts as a
+strict-only match. The prior zero-yield pass parked the `nustream` and `nuspecial`
+plateaus, and the new match supports continuing the renderer item with
+`fn_80026F0C` and `fn_80026710`.
+
 ## Rules that do not change
 
 - The strict verifier, pinned compilers and the retail DOL are the oracle. Never weaken
