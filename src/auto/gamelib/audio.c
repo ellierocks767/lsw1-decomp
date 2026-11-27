@@ -460,20 +460,25 @@ struct AudioPath {
 };
 
 struct AudioAnimState {
-    u8 pad0[0x30];
-    struct nuvec_s position;
-    u8 pad3C[8];
+    struct numtx_s matrix;
+    f32 tfactor;
     f32 unk44;
-    u8 pad48[4];
+    f32 unk48;
     f32 time;
-    u32 flags;
+    u32 playing : 1;
+    u32 backwards : 1;
+    u32 repeating : 1;
+    u32 oscillate : 1;
+    u32 padFlags : 28;
 };
 
 struct AudioPathSlot {
     struct numtx_s matrix;
     s16 id;
     u8 pad42[2];
-    u32 flags;
+    u32 flag0 : 1;
+    u32 visible : 1;
+    u32 flagRest : 30;
     struct AudioAnimState *animation;
     u8 pad4C[4];
 };
@@ -797,4 +802,199 @@ void fn_800698B8(void)
         lbl_8039B1AC[i].id = -1;
     }
     lbl_8040AEDC = 0;
+}
+
+void fn_80069810(void)
+{
+    s32 i;
+
+    for (i = 0; i < 64; i++) {
+        struct AudioPathSlot *slot = &lbl_80399DAC[i];
+        lbl_8039B1AC[i].tags[0] = -1;
+        if (slot->id != -1) {
+            struct AudioAnimState *anim = slot->animation;
+            if (anim != NULL) {
+                anim->unk44 = 0.0f;
+                anim->repeating = 1;
+                anim->time = (f32)lbl_8039B1AC[i].unk24;
+                anim->playing = 0;
+                anim->backwards = 0;
+            }
+        }
+    }
+}
+
+extern void NuVecSub(struct nuvec_s *, struct nuvec_s *, struct nuvec_s *);
+extern struct nuvec_s lbl_803AADAC;
+extern s32 lbl_8040AED8;
+
+void fn_80067294(f32 bestDist)
+{
+    struct nuvec_s diff;
+    s32 i;
+    f32 dist;
+
+    if (lbl_8040AED8 != -1) {
+        NuVecSub(&diff, &lbl_803AADAC, (struct nuvec_s *)&lbl_80399DAC[lbl_8040AED8].matrix._30);
+        dist = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
+        if (dist == 0.0f)
+            return;
+    }
+
+    lbl_8040AED8 = -1;
+    for (i = 0; i < 64; i++) {
+        if (lbl_80399DAC[i].id != -1) {
+            NuVecSub(&diff, &lbl_803AADAC, (struct nuvec_s *)&lbl_80399DAC[i].matrix._30);
+            dist = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
+            if (bestDist < 0.0f || dist < bestDist) {
+                lbl_8040AED8 = i;
+                bestDist = dist;
+            }
+        }
+    }
+}
+
+extern struct nuvec_s lbl_803B6DF8;
+extern s32 lbl_8040AEE8;
+
+void fn_8006998C(f32 bestDist)
+{
+    struct nuvec_s diff;
+    s32 i;
+    f32 dist;
+
+    if (lbl_8040AEE8 != -1 &&
+        lbl_803AC5B8[lbl_8040AEE8].id != -1 &&
+        lbl_803AC5B8[lbl_8040AEE8].id != 99999) {
+        NuVecSub(&diff, &lbl_803B6DF8, (struct nuvec_s *)&lbl_803AC5B8[lbl_8040AEE8]);
+        dist = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
+        if (dist == 0.0f)
+            return;
+    }
+
+    lbl_8040AEE8 = -1;
+    for (i = 0; i < 512; i++) {
+        if (lbl_803AC5B8[i].id != -1 && lbl_803AC5B8[i].id != 99999) {
+            NuVecSub(&diff, &lbl_803B6DF8, (struct nuvec_s *)&lbl_803AC5B8[i]);
+            dist = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
+            if (bestDist < 0.0f || dist < bestDist) {
+                lbl_8040AEE8 = i;
+                bestDist = dist;
+            }
+        }
+    }
+}
+
+struct AudioEntry2EC {
+    u8 pad0[0x102];
+    s16 unk102;
+    u8 pad104[0x2EC - 0x104];
+};
+
+extern void fn_80064424(struct AudioEntry2EC *, s16);
+extern void **lbl_804083FC;
+extern struct AudioEntry2EC *lbl_80408404;
+
+struct AudioEmitter {
+    u8 pad0[0x12];
+    s16 unk12;
+    s16 unk14;
+    u8 pad16[6];
+    f32 unk1C;
+    f32 unk20;
+    f32 unk24;
+    u8 pad28[0x7c];
+    f32 unkA4;
+    u8 padA8[0x360];
+    s16 unk408;
+};
+
+void fn_80069ACC(struct AudioEmitter *arg0)
+{
+    f32 onTime = 0.0f;
+    f32 totalTime = 0.0f;
+    s32 i;
+
+    while (totalTime < arg0->unkA4) {
+        f32 rem = arg0->unkA4 - totalTime;
+        f32 pulse = arg0->unk1C + arg0->unk20;
+        if (rem < pulse) {
+            onTime += rem;
+            totalTime += rem;
+        } else {
+            onTime += pulse;
+            totalTime += pulse;
+        }
+        rem = arg0->unkA4 - totalTime;
+        if (rem < arg0->unk24) {
+            totalTime += rem;
+        } else {
+            totalTime += arg0->unk24;
+        }
+    }
+
+    arg0->unk12 = (s16)((f32)arg0->unk14 * (onTime / totalTime) * arg0->unkA4);
+    if (arg0->unk12 <= 0) {
+        arg0->unk12 = 1;
+    }
+    arg0->unk12 *= (arg0->unk408 + 1);
+
+    for (i = 0; i < 512; i++) {
+        s32 id = lbl_803AC5B8[i].id;
+        if (id != -1 && id != 99999) {
+            if (lbl_804083FC[lbl_80408404[id].unk102] == arg0) {
+                fn_80064424(&lbl_80408404[id], arg0->unk12);
+            }
+        }
+    }
+}
+
+extern f32 NuFsqrt(f32);
+extern s32 fn_80027688(void *, void *);
+
+struct AudioCam7114 {
+    u8 pad0[0x30];
+    struct nuvec_s pos;
+};
+
+extern struct AudioCam7114 lbl_80313268;
+extern s32 lbl_8040AED0;
+extern s32 lbl_8040AED4;
+
+struct AudioScene7114 {
+    u8 pad0[0x14];
+    void **objs;
+};
+
+static inline s32 audio_in_range(struct nuvec_s *pos, f32 maxDist)
+{
+    f32 dx = pos->x - lbl_80313268.pos.x;
+    f32 dy = pos->y - lbl_80313268.pos.y;
+    f32 dz = pos->z - lbl_80313268.pos.z;
+    if (NuFsqrt(dx * dx + dy * dy + dz * dz) > maxDist)
+        return 0;
+    return 1;
+}
+
+void fn_80067114(struct AudioScene7114 *arg0)
+{
+    s32 i;
+
+    for (i = 0; i < 64; i++) {
+        struct AudioPathSlot *slot = &lbl_80399DAC[i];
+        if (slot->id != -1) {
+            struct AudioAnimState *anim = slot->animation;
+            if ((lbl_8040AED0 || lbl_8040AED4) && lbl_8040AED8 == i) {
+                slot->visible = fn_80027688(arg0->objs[slot->id], slot);
+            } else if (anim != NULL) {
+                if (audio_in_range((struct nuvec_s *)&anim->matrix._30, 40.0f)) {
+                    slot->visible = fn_80027688(arg0->objs[slot->id], anim);
+                }
+            } else {
+                if (audio_in_range((struct nuvec_s *)&slot->matrix._30, 40.0f)) {
+                    slot->visible = fn_80027688(arg0->objs[slot->id], slot);
+                }
+            }
+        }
+    }
 }
