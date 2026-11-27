@@ -574,3 +574,27 @@ HVQM4AudioNode* HVQM4BufaGetFree(HVQM4AudioQueue* queue)
     OSRestoreInterrupts(interrupts);
     return node;
 }
+
+HVQM4AudioNode* HVQM4BufaGetSend(HVQM4AudioQueue* queue)
+{
+    HVQM4AudioNode* next;
+    HVQM4AudioNode* node;
+    s32 interrupts;
+
+    interrupts = OSDisableInterrupts();
+    node = queue->sendHead;
+
+    if (node != NULL) {
+        next = node->nextSend;
+
+        do {
+            if (next == NULL) {
+                queue->sendTail = next;
+            }
+        } while (0);
+        queue->sendHead = next;
+        node->nextSend = NULL;
+    }
+    OSRestoreInterrupts(interrupts);
+    return node;
+}
