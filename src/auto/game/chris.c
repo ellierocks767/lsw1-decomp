@@ -762,7 +762,8 @@ struct CHRISMINIKITOBJECT_s {
     struct numtx_s transform;
     u8 pad4C[0x64 - 0x4C];
     u8 variant;
-    u8 pad65[3];
+    u8 pad65[2];
+    u8 variantIndex; /* InitMiniKit numbers objects of each variant */
 };
 
 struct CHRISMINIRUNNERNAMES_s {
@@ -819,5 +820,55 @@ void fn_80141958(struct CHRISMINIRUNNER_s *runner, u32 *cursor, u32 *end)
             } while (i < lbl_8040B0FC);
         }
         *cursor += lbl_8040B0FC * sizeof(*runner->objects);
+    }
+}
+
+extern s32 lbl_804017F8[6];
+extern char lbl_801E17A0[6][5];
+extern char str_Format_LevelScript[];
+extern char lbl_801AF0F4[];
+
+void InitMiniKit(struct CHRISMINIKIT_s *kit, u32 *cursor, u32 *limit)
+{
+    char name[0x40];
+
+    if (kit->scene != NULL) {
+        s32 index;
+
+        memset(lbl_804017F8, 0, sizeof(lbl_804017F8));
+        *cursor = (*cursor + 3) & ~3;
+        kit->objects = (struct CHRISMINIKITOBJECT_s *)*cursor;
+        for (index = 0; index < 100; index++) {
+            u8 previous = kit->count;
+            s32 variant;
+
+            for (variant = 0; variant < 6; variant++) {
+                sprintf(name, str_Format_LevelScript, lbl_801DC074[kit->level].file,
+                        lbl_801E17A0[variant], index);
+                if (NuSpecialFind(kit->scene, &kit->objects[kit->count].special, name, 1)) {
+                    struct numtx_s *transform = fn_800133FC(&kit->objects[kit->count].special);
+                    kit->objects[kit->count].transform = *transform;
+                    kit->objects[kit->count].variant = variant;
+                    kit->objects[kit->count].variantIndex = lbl_804017F8[variant]++;
+                    kit->count++;
+                }
+            }
+            if (previous == kit->count) {
+                sprintf(name, lbl_801AF0F4, lbl_801DC074[kit->level].file, index);
+                if (NuSpecialFind(kit->scene, &kit->objects[kit->count].special, name, 1)) {
+                    struct numtx_s *transform = fn_800133FC(&kit->objects[kit->count].special);
+                    kit->objects[kit->count].transform = *transform;
+                    kit->objects[kit->count].variant = 3;
+                    kit->count++;
+                }
+            }
+        }
+        if (kit->count != 0) {
+            *cursor += kit->count * sizeof(*kit->objects);
+        } else {
+            kit->objects = NULL;
+        }
+    } else {
+        kit->level = -1;
     }
 }
