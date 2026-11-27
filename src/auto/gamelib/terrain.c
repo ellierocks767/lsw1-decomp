@@ -322,7 +322,39 @@ void fn_8004BDD0(void *arg0) {
 
 f32 NuCosApprox(s32);
 f32 NuSinApprox(s32);
-extern void *lbl_8040AE5C;
+f32 NuFsqrt(f32);
+
+typedef struct terrainvec_s {
+    f32 x;
+    f32 y;
+    f32 z;
+} terrainvec_s;
+
+typedef struct terrainpoly_s {
+    u8 pad00[0x18];
+    terrainvec_s verts[4];
+    terrainvec_s normal;
+} terrainpoly_s;
+
+typedef struct terrainscan_s {
+    u8 pad00[0x4c];
+    f32 len;
+    f32 rad;
+    f32 rad_sq;
+    u8 pad58[0x18];
+    terrainvec_s pos;
+    u8 pad7c[0x0c];
+    u8 type;
+    u8 pad89[0x0b];
+    terrainpoly_s *poly;
+    f32 best_t;
+    u8 pad9c[0x0c];
+    terrainvec_s norm;
+    u8 padb4[0x48];
+    terrainvec_s local_verts[4];
+} terrainscan_s;
+
+extern terrainscan_s *lbl_8040AE5C;
 
 void fn_8004F590(void *arg0)
 {
@@ -549,4 +581,104 @@ void HVQM4BufaSetFree(HVQM4AudioQueue* queue, HVQM4AudioNode* node)
     }
     node->nextFree = NULL;
     OSRestoreInterrupts(interrupts);
+}
+
+s32 fn_8005241C(terrainvec_s *p, f32 r) {
+    f32 sum_r;
+    f32 r_sq;
+    f32 d_sq;
+    f32 dz;
+    f32 t;
+
+    if (p->z < -lbl_8040AE5C->rad - r) {
+        return 0;
+    }
+    sum_r = lbl_8040AE5C->rad + r;
+    if (p->z > sum_r + lbl_8040AE5C->len) {
+        return 0;
+    }
+    r_sq = sum_r * sum_r;
+    d_sq = p->x * p->x + p->y * p->y;
+    if (d_sq > r_sq) {
+        return 0;
+    }
+    dz = NuFsqrt(r_sq - d_sq);
+    t = p->z - dz;
+    if (t < 0.0f || t > lbl_8040AE5C->len) {
+        d_sq += p->z * p->z;
+        if (d_sq < r_sq) {
+            dz = 1.0f / NuFsqrt(d_sq);
+            lbl_8040AE5C->type = 20;
+            lbl_8040AE5C->best_t = 0.0f;
+            lbl_8040AE5C->norm.x = -p->x * dz;
+            lbl_8040AE5C->norm.y = -p->y * dz;
+            lbl_8040AE5C->norm.z = -p->z * dz;
+            return 1;
+        }
+        return 0;
+    }
+    d_sq = t / lbl_8040AE5C->len;
+    if (d_sq < lbl_8040AE5C->best_t) {
+        lbl_8040AE5C->type = 4;
+        lbl_8040AE5C->best_t = d_sq;
+        lbl_8040AE5C->norm.x = -p->x;
+        lbl_8040AE5C->norm.y = -p->y;
+        lbl_8040AE5C->norm.z = -dz;
+        return 1;
+    }
+    return 0;
+}
+
+s32 fn_80052224(s32 idx) {
+    f32 d_sq;
+    f32 dz;
+    f32 t;
+
+    if (lbl_8040AE5C->local_verts[idx].z < -lbl_8040AE5C->rad) {
+        return 0;
+    }
+    if (lbl_8040AE5C->local_verts[idx].z > lbl_8040AE5C->rad + lbl_8040AE5C->len) {
+        return 0;
+    }
+    d_sq = lbl_8040AE5C->local_verts[idx].x * lbl_8040AE5C->local_verts[idx].x +
+           lbl_8040AE5C->local_verts[idx].y * lbl_8040AE5C->local_verts[idx].y;
+    if (d_sq > lbl_8040AE5C->rad_sq) {
+        return 0;
+    }
+    dz = NuFsqrt(lbl_8040AE5C->rad_sq - d_sq);
+    t = lbl_8040AE5C->local_verts[idx].z - dz;
+    if (t < 0.0f || t > lbl_8040AE5C->len) {
+        d_sq += lbl_8040AE5C->local_verts[idx].z * lbl_8040AE5C->local_verts[idx].z;
+        if (d_sq < lbl_8040AE5C->rad_sq) {
+            f32 pen;
+            d_sq = NuFsqrt(d_sq);
+            pen = d_sq - lbl_8040AE5C->rad;
+            if (pen < lbl_8040AE5C->best_t) {
+                terrainpoly_s *poly = lbl_8040AE5C->poly;
+                dz = (lbl_8040AE5C->pos.x - poly->verts[idx].x) * poly->normal.x +
+                     (lbl_8040AE5C->pos.y - poly->verts[idx].y) * poly->normal.y +
+                     (lbl_8040AE5C->pos.z - poly->verts[idx].z) * poly->normal.z;
+                if (dz > 0.0f) {
+                    dz = 1.0f / d_sq;
+                    lbl_8040AE5C->best_t = pen;
+                    lbl_8040AE5C->type = 19;
+                    lbl_8040AE5C->norm.x = -lbl_8040AE5C->local_verts[idx].x * dz;
+                    lbl_8040AE5C->norm.y = -lbl_8040AE5C->local_verts[idx].y * dz;
+                    lbl_8040AE5C->norm.z = -lbl_8040AE5C->local_verts[idx].z * dz;
+                    return 1;
+                }
+            }
+        }
+        return 0;
+    }
+    d_sq = t / lbl_8040AE5C->len;
+    if (d_sq < lbl_8040AE5C->best_t) {
+        lbl_8040AE5C->type = 3;
+        lbl_8040AE5C->best_t = d_sq;
+        lbl_8040AE5C->norm.x = -lbl_8040AE5C->local_verts[idx].x;
+        lbl_8040AE5C->norm.y = -lbl_8040AE5C->local_verts[idx].y;
+        lbl_8040AE5C->norm.z = -dz;
+        return 1;
+    }
+    return 0;
 }
