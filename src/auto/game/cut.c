@@ -1377,7 +1377,9 @@ typedef struct CutSceneSlot {
 } CutSceneSlot;
 
 typedef struct CutSceneState {
-    u8 unk0[0x1A8];
+    u8 unk0[0x198];
+    s32 unk198;
+    u8 unk19C[0xC];
     u8 *entry;
     u8 unk1AC[0x440];
     s8 indices[96];
@@ -1779,11 +1781,6 @@ void fn_8011EDD8(s32 unused0, s32 unused1, s32 unused2, CutSceneLocator *locator
     }
 }
 
-typedef struct CutSceneRenderState {
-    u8 unk0[0x198];
-    s32 sceneIndex;
-} CutSceneRenderState;
-
 f32 NuSinApprox(s32);
 s32 fn_800274BC(s32);
 void fn_80025C38(s32, s32, s32, s32, u32, void *);
@@ -1792,7 +1789,7 @@ extern f32 lbl_80409968;
 extern f32 lbl_8040996C;
 extern void *lbl_8040AF70;
 
-void fn_8011EC88(CutSceneRenderState *scene)
+void fn_8011EC88(CutSceneState *scene)
 {
     if (lbl_8040993C > 0.0f && fn_800274BC(-1) != 0) {
         f32 scale;
@@ -1800,7 +1797,7 @@ void fn_8011EC88(CutSceneRenderState *scene)
         s32 height;
         s32 fullHeight = 0xE00;
 
-        if (scene != NULL && (scene->sceneIndex == 0x77 || lbl_8040B25C == 0x5F)) {
+        if (scene != NULL && (scene->unk198 == 0x77 || lbl_8040B25C == 0x5F)) {
             scale = lbl_8040996C;
         } else {
             scale = lbl_80409968;
