@@ -462,3 +462,18 @@ struct NUTURRETENTRY_s *FindTurret(struct NUTURRET_s *turrets, char *name)
     }
     return NULL;
 }
+
+struct NUTURRETENTRY_s *fn_801408D4(struct NUTURRET_s *turrets, s32 key)
+{
+    struct NUTURRETENTRY_s *entry;
+    s32 i;
+
+    if (turrets != NULL) {
+        entry = turrets->entries;
+        for (i = 0; i < turrets->count; i++, entry++) {
+            if (entry->unk6C == key)
+                return entry;
+        }
+    }
+    return NULL;
+}

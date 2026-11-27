@@ -6,7 +6,8 @@
 struct NUTURRETENTRY_s {
     u8 unk0[8];
     char name[0x10];
-    u8 unk18[0x6E - 0x18];
+    u8 unk18[0x6C - 0x18];
+    s16 unk6C;                   /* fn_801407F8 writes this lookup key */
     u16 flags;
     u16 initialFlags;
     char unk72;
