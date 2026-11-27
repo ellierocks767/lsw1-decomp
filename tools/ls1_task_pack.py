@@ -465,8 +465,8 @@ and rejected renames before using them as semantic facts.
 shows named globals, loops and switches. Neither is matching source.
 - Before adding a struct field or naming a global, run
   `python3 tools/ghidra_decompile.py xrefs <global>` and check the other READ/WRITE sites.
-- For callers, strings or data tables, use the REA MCP server (`open_binary` on the ELF that
-  `tools/ghidra_decompile.py status` prints, `provider_id: "ghidra"`).
+- For callers, strings or data tables, run the `rea` CLI on the ELF that
+  `tools/ghidra_decompile.py status` prints ([Ghidra and REA](docs/research.md#ghidra-and-rea)).
 - Paired-single code (`psq_l`, `ps_*`) decompiles to `halt_baddata`; read the assembly.
 - `jp_x86.s` (present when the function has a Japanese PC pair) is the same function built
   by MSVC. Read it for branch-heavy code, switches, call-order doubts, unknown globals or
