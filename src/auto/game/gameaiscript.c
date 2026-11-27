@@ -6385,3 +6385,65 @@ s32 Action_SnapToLocator(void *sys, void *process, struct gameaiscript_packet_s 
     }
     return 1;
 }
+s32 Action_BigJumpToLocator(void *sys, void *process, struct gameaiscript_packet_s *packet,
+    char **params, s32 count, s32 firstTime, f32 time)
+{
+    char locatorName[64];
+    f32 factor = 1.0f;
+    s32 personal = 0;
+    s32 indexed = 0;
+    s32 random = 0;
+    char *name = 0;
+    s32 i = 0;
+    u8 *object;
+    u8 *locator = 0;
+    char *value;
+
+    if (packet == 0 || packet->owner == 0 || (object = packet->owner->object) == 0)
+        return 1;
+    if (firstTime != 0) {
+        *(u8 **)((u8 *)packet + 0xb4) = *(u8 **)((u8 *)packet + 0xfc);
+        for (; i < count; i++) {
+            if ((value = NuStrIStr(params[i], str_ScriptParam_Name)) != 0)
+                name = value + 5;
+            else if (NuStrIStr(params[i], str_ScriptScope_Personal) != 0)
+                personal = 1;
+            else if (NuStrIStr(params[i], str_ScriptScope_Indexed) != 0)
+                indexed = 1;
+            else if ((value = NuStrIStr(params[i], str_ScriptTarget_Random)) != 0)
+                random = AIParamToFloat(packet, value + 9);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_JumpFactor)) != 0) {
+                factor = AIParamToFloat(packet, value + 12);
+                if (factor < 0.0f)
+                    factor = 0.0f;
+            }
+        }
+        if (name != 0) {
+            s8 index;
+            u8 *personalData;
+            if (indexed != 0 && object != 0 && (index = (s8)object[0x284]) != -1)
+                sprintf(locatorName, str_Format_StringInt, name, index);
+            else if (personal != 0 && object != 0 && (personalData = *(u8 **)(object + 0x64)) != 0)
+                sprintf(locatorName, str_Format_StringString, name, *(char **)(personalData + 0xc));
+            else if (random != 0)
+                sprintf(locatorName, str_Format_StringInt, name, NuRand(0) % random);
+            else
+                sprintf(locatorName, name);
+            *(u8 **)((u8 *)packet + 0xb4) = (u8 *)((s32 (*)(void *, char *))AIPathFindLocator)(sys, locatorName);
+        }
+        locator = *(u8 **)((u8 *)packet + 0xb4);
+        if (locator != 0) {
+            struct gameaiscript_vec_s *position = (struct gameaiscript_vec_s *)(locator + 0x10);
+            NuMtxToQuat(object, position, 0, factor);
+            *(struct gameaiscript_pathstate_s *)(object + 0x3ac) =
+                *(struct gameaiscript_pathstate_s *)(locator + 0x20);
+            *(struct gameaiscript_vec_s *)(object + 0x3c4) = *position;
+        }
+    }
+    {
+        s32 result = 1;
+        if ((*(u8 **)(object + 0xeec))[0x7df] == 0x24)
+            result = 0;
+        return result;
+    }
+}
