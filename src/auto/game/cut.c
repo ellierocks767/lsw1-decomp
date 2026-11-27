@@ -1380,6 +1380,7 @@ typedef struct CutSceneState {
     u8 unk1AC[0x440];
     s8 indices[96];
     CutSceneSlot slots[8];
+    s32 instanceCount;
 } CutSceneState;
 
 void fn_8011D4F8(void)
@@ -1522,7 +1523,9 @@ void fn_8003AD00(gcut_instance_view *);
 
 typedef struct CutSceneInstanceSlot {
     gcut_instance_view *instance;
-    u8 pad04[0x14];
+    u8 pad04[9];
+    s8 sceneIndex;
+    u8 pad0E[0xA];
 } CutSceneInstanceSlot;
 
 void fn_8011EC3C(u8 *scene) {
@@ -1575,4 +1578,17 @@ void fn_8011B45C(void)
             record->flags = (record->flags | 8) ^ 8;
         }
     }
+}
+
+gcut_instance_view *fn_8011EBF4(CutSceneState *state, s32 index)
+{
+    s32 i;
+
+    for (i = 0; i < state->instanceCount; ++i) {
+        CutSceneInstanceSlot *slots = (CutSceneInstanceSlot *)((u8 *)state + 0x650);
+        if (slots[i].sceneIndex == index) {
+            return slots[i].instance;
+        }
+    }
+    return NULL;
 }
