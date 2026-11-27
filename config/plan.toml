@@ -2672,3 +2672,7 @@ reason = "best 186/211 (work/NuAnimCurveSetApplyToJointBasic/v32.c): FP regalloc
 [[parked]]
 function = "ProcessSpaceLevel"
 reason = "best 100/174: extra floating-point save and different fighter-slot traversal; next: isolate zero comparison load and keep indexed enabled-field and base-fighter cursors independent"
+
+[[parked]]
+function = "fn_801451A4"
+reason = "best 136/163: threshold branches and fighter initialization schedule differ; next: recover scale constant lifetimes and isolate the indexed wing and counted inner loops"
