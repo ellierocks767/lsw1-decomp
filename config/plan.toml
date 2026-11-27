@@ -2680,3 +2680,7 @@ reason = "best 136/163: threshold branches and fighter initialization schedule d
 [[parked]]
 function = "fn_8014165C"
 reason = "best 71/97: the 12-byte position copy and byte progress increment still differ in scheduling; next: recover why both stack vectors stay addressable across construction and reproduce the indexed progress store as an 8-bit update"
+
+[[parked]]
+function = "fn_801417E0"
+reason = "best 90/94: both scale coefficients load directly into f4 instead of their separate retail temporaries; next: find the source expression or call argument lifetime that keeps each input coefficient separate from the computed scale"
