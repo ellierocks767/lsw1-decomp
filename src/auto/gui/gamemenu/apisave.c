@@ -752,3 +752,229 @@ void fn_800794E8(u8* menu)
     fn_800769B4(menu, lbl_80408B74, lbl_80408A57);
     fn_800769B4(menu, lbl_80408AAC, lbl_80408A57);
 }
+
+extern f32 lbl_8019BB70[];
+extern f32 lbl_8019BB74[];
+extern f32 lbl_8019BB78[];
+extern s32 lbl_80408214, lbl_80408238, lbl_8040823C;
+extern s32 lbl_80408BDC, lbl_80408BE0, lbl_80408BEC, lbl_80408BF4, lbl_80408BF8;
+extern s32 lbl_80408C04, lbl_80408C08;
+extern f32 lbl_80408BE4, lbl_80408BE8, lbl_80408C28, lbl_80408C3C, lbl_80408C44;
+void fn_8000759C(void *dst, void *src, s32 size);
+void fn_80042E28(void);
+void fn_80042E6C(s32 arg0, s32 arg1, s32 arg2);
+void fn_80042EE0(s32 arg0, s32 arg1, s32 arg2, s32 arg3);
+void fn_80042F58(s32 arg0);
+void fn_80042F8C(void);
+
+static inline s32 SaveChecksum(s32 *buf, s32 size)
+{
+    s32 sum = 0;
+    s32 i;
+    for (i = 0; i < size / 4; i++) {
+        sum += buf[i];
+    }
+    return sum;
+}
+
+void fn_8007A448(void)
+{
+    s32 cb;
+
+    if (lbl_80408C18 > lbl_8019BB70[0]) {
+        lbl_80408C18 -= lbl_8019BB74[0];
+    } else if (lbl_80408C2C > lbl_8019BB70[0]) {
+        lbl_80408C2C -= lbl_8019BB74[0];
+    }
+    if (lbl_80408C1C > lbl_8019BB70[0]) {
+        lbl_80408C1C -= lbl_8019BB74[0];
+    } else {
+        lbl_80408238 = 0;
+        if (lbl_80408C30 > lbl_8019BB70[0]) {
+            lbl_80408C30 -= lbl_8019BB74[0];
+        }
+    }
+    {
+        f32 t;
+        if ((t = lbl_80408BE4) > lbl_8019BB70[0]) {
+            lbl_80408BE4 = t - lbl_8019BB74[0];
+        } else if ((t = lbl_80408BE8) > lbl_8019BB70[0]) {
+            lbl_80408BE8 = t - lbl_8019BB74[0];
+            if (lbl_80408BE8 <= lbl_8019BB70[0]) {
+                lbl_80408BEC = 0;
+            }
+        }
+    }
+    if (lbl_80408C20 > lbl_8019BB70[0]) {
+        lbl_80408C20 -= lbl_8019BB74[0];
+    } else if (lbl_80408C34 > lbl_8019BB70[0]) {
+        lbl_80408C34 -= lbl_8019BB74[0];
+    }
+    if (lbl_80408C24 > lbl_8019BB70[0]) {
+        lbl_80408C24 -= lbl_8019BB74[0];
+    } else if (lbl_80408C38 > lbl_8019BB70[0]) {
+        lbl_80408C38 -= lbl_8019BB74[0];
+    }
+    if (lbl_80408C28 > lbl_8019BB70[0]) {
+        lbl_80408C28 -= lbl_8019BB74[0];
+    } else if (lbl_80408C3C > lbl_8019BB70[0]) {
+        lbl_80408C3C -= lbl_8019BB74[0];
+    }
+    if (lbl_80408C40 > lbl_8019BB70[0]) {
+        lbl_80408C40 -= lbl_8019BB74[0];
+    } else if (lbl_80408C44 > lbl_8019BB70[0]) {
+        lbl_80408C44 -= lbl_8019BB74[0];
+    }
+
+    if (lbl_8040821C != 2) {
+        lbl_80408C08 = 0;
+    }
+    if (lbl_8040823C != 0) {
+        if (lbl_80408BE0 != 0) {
+            lbl_80408C30 = lbl_8019BB78[0];
+        }
+        lbl_80408BE0 = 0;
+        lbl_80408BEC = 0;
+        lbl_80408BDC = 0;
+        lbl_80408BE4 = lbl_8019BB70[0];
+        lbl_80408BE8 = lbl_8019BB70[0];
+        lbl_80408BF0 = 1;
+    }
+
+    if (lbl_80408BC0 != 0) {
+        if (lbl_80408210 == 1 && lbl_8040821C == 2 && lbl_80408220 != 0) {
+            lbl_80408C18 = lbl_8019BB78[0];
+            if (lbl_80408C60 == 0 || lbl_80408C64 == 0) {
+                lbl_80408BC8 = 1;
+                lbl_80408BC0 = 0;
+                lbl_80408BC4 = 0;
+                return;
+            }
+            fn_80042E6C(lbl_80408BB4, lbl_80408C60, lbl_80408C64 + 4);
+            lbl_80408BC0 = 0;
+            lbl_80408BCC = 0;
+            if (lbl_80408210 != 1) {
+                lbl_80408BC4 = 1;
+                lbl_80408BC8 = 0;
+            } else {
+                lbl_80408BC4 = 0;
+                lbl_80408BC8 = 1;
+            }
+        }
+    } else if (lbl_80408BC4 != 0 && lbl_80408210 == 1) {
+        lbl_80408BC4 = 0;
+        if (lbl_80408214 == 0) {
+            if (SaveChecksum((s32 *)lbl_80408C60, lbl_80408C64) != *(s32 *)(lbl_80408C60 + lbl_80408C64)) {
+                lbl_80408BCC = 1;
+                lbl_80408234 = -1;
+            } else {
+                fn_8000759C((void *)lbl_80408C5C, (void *)lbl_80408C60, lbl_80408C64);
+                lbl_80408A30 = 1;
+            }
+        } else {
+            lbl_80408BC8 = 1;
+        }
+    }
+
+    if (lbl_80408BDC != 0) {
+        if (lbl_80408234 != -1) {
+            lbl_80408BE0 = 1;
+            lbl_80408BEC = 1;
+            lbl_80408BDC = 0;
+            lbl_80408BE4 = lbl_8019BB78[0];
+        } else {
+            lbl_80408BDC = 0;
+        }
+    } else if (lbl_80408BE0 != 0) {
+        if (lbl_80408BD0 == 0 && lbl_80408BD4 == 0 && lbl_80408BE4 <= lbl_8019BB70[0]) {
+            lbl_80408BD0 = 1;
+            lbl_80408BB4 = lbl_80408234;
+        }
+    }
+
+    if (lbl_80408BD0 != 0) {
+        if (lbl_80408210 == 1 && lbl_8040821C == 2 && lbl_80408220 != 0) {
+            lbl_80408238 = 1;
+            lbl_80408C1C = lbl_8019BB78[0];
+            if (lbl_80408C60 == 0 || lbl_80408C64 == 0) {
+                lbl_80408BD8 = 1;
+                lbl_80408BD0 = 0;
+                lbl_80408BD4 = 0;
+                return;
+            }
+            if (lbl_80408C6C != 0) {
+                cb = ((s32 (*)(void))lbl_80408C6C)();
+            } else {
+                cb = -1;
+            }
+            fn_8000759C((void *)lbl_80408C60, (void *)lbl_80408C5C, lbl_80408C64);
+            *(s32 *)(lbl_80408C60 + lbl_80408C64) = SaveChecksum((s32 *)lbl_80408C60, lbl_80408C64);
+            fn_80042EE0(lbl_80408BB4, lbl_80408C60, lbl_80408C64 + 4, cb);
+            lbl_80408BD0 = 0;
+            if (lbl_80408210 != 1) {
+                lbl_80408BD8 = 0;
+                lbl_80408BD4 = 1;
+            } else {
+                lbl_80408BD4 = 0;
+                lbl_80408BD8 = 1;
+            }
+            lbl_80408C08 = 0;
+        }
+    } else if (lbl_80408BD4 != 0 && lbl_80408210 == 1) {
+        lbl_80408BD4 = 0;
+        if (lbl_80408214 != 0) {
+            lbl_80408BD8 = 1;
+        }
+        if (lbl_80408BE0 != 0) {
+            lbl_80408BE0 = 0;
+            lbl_80408BE8 = lbl_8019BB78[0];
+        }
+    }
+
+    if (lbl_80408BF4 != 0) {
+        if (lbl_80408210 == 1 && lbl_8040821C == 2 && lbl_80408220 != 0) {
+            fn_80042F58(lbl_80408BB4);
+            lbl_80408BF4 = 0;
+            lbl_80408BF8 = 1;
+            lbl_80408C28 = lbl_8019BB78[0];
+        }
+    } else if (lbl_80408BF8 != 0 && lbl_80408210 == 1) {
+        lbl_80408BF8 = 0;
+    }
+
+    if (lbl_80408BFC != 0) {
+        if (lbl_80408210 == 1 && lbl_8040821C == 2) {
+            fn_80042E28();
+            lbl_80408C00 = 1;
+            lbl_80408C20 = lbl_8019BB78[0];
+            lbl_80408BFC = 0;
+            lbl_80408C04 = 0;
+            lbl_80408C08 = 0;
+        }
+    } else if (lbl_80408C00 != 0 && (lbl_80408210 == 3 || lbl_80408210 == 1)) {
+        if (lbl_80408214 == 0) {
+            lbl_80408C00 = 0;
+            lbl_80408C08 = 1;
+        } else {
+            lbl_80408C00 = 0;
+            lbl_80408C04 = 1;
+        }
+    }
+
+    if (lbl_80408C0C != 0) {
+        if (lbl_80408210 == 1 && lbl_8040821C == 2) {
+            fn_80042F8C();
+            lbl_80408C10 = 1;
+            lbl_80408C0C = 0;
+            lbl_80408C14 = 0;
+            lbl_80408C24 = lbl_8019BB78[0];
+        }
+    } else if (lbl_80408C10 != 0 && (lbl_80408210 == 3 || lbl_80408210 == 1)) {
+        if (lbl_80408214 == 0) {
+            lbl_80408C10 = 0;
+        } else {
+            lbl_80408C10 = 0;
+            lbl_80408C14 = 1;
+        }
+    }
+}
