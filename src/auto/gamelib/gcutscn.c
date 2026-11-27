@@ -1744,7 +1744,7 @@ void fn_8003E328(gcut_instance_view* instance, f32 frame, s32 skip)
     }
 }
 
-void fn_8003CEE0(gcut_rigid_view* rigid, gcut_matrix* matrix, void* time)
+void fn_8003CEE0(gcut_rigid_view* rigid, gcut_matrix* matrix, void* time, f32 frame)
 {
     gcut_anim* anim = *(gcut_anim**)((u8*)rigid + 0x50);
     f32 translate[3];
@@ -1807,5 +1807,115 @@ void fn_8003CEE0(gcut_rigid_view* rigid, gcut_matrix* matrix, void* time)
         }
     } else {
         *matrix = *(gcut_matrix*)rigid;
+    }
+}
+
+typedef struct gcut_debris { u8 pad[0x14]; s16 rate; } gcut_debris;
+extern gcut_debris** lbl_804083FC;
+extern f32 lbl_804083C8;
+extern char str_instNuGCutDebrisLocatorUpdate_CannotSeeDebris[];
+extern void NuMtxPreTranslate(gcut_matrix*, f32*);
+extern f32 NuAtan2(f32, f32);
+extern s32 NuAngSub(s32, s32);
+extern f32 NuFsqrt(f32);
+extern void fn_80063E14(s32*, s32, f32*, s32);
+extern void fn_80064730(s32, s32, s32, s32);
+extern void fn_80064088(s32, f32*, s32, s32, s32, f32);
+typedef struct gcut_debris_item { f32 accum; s32 active; } gcut_debris_item;
+static inline s32 gcut_debris_clip(gcut_locator_record* locator, void* time, f32* scale, f32 frame)
+{
+    gcut_anim* anim = *(gcut_anim**)((u8*)locator + 0x50);
+    s32 visible;
+    if (anim) {
+        if (anim->magic == 0x414e4934) {
+            f32* values = ((f32* (*)(gcut_anim*, s32, f32))fn_8001BFC4)(anim, 0, frame);
+            s32 result = (s32)values[7];
+            if (result)
+                *scale = values[6];
+            return result;
+        } else {
+            s8* types = anim->types;
+            f32* curves = anim->curves;
+            if (types[7] == 0)
+                visible = (s32)curves[7];
+            else
+                visible = (s32)NuAnimCurve2CalcVal(&curves[7], time, types[7]);
+            if (visible && scale) {
+                f32 value;
+                if (types[6] == 0)
+                    value = curves[6];
+                else
+                    value = NuAnimCurve2CalcVal(&curves[6], time, types[6]);
+                *scale = value;
+            }
+        }
+    } else {
+        visible = *((u8*)locator + 0x58) & 8;
+        if (visible)
+            *scale = *(f32*)((u8*)locator + 0x4c);
+    }
+    return visible;
+}
+void instNuGCutDebrisLocatorUpdate(gcut_locator_system* system, gcut_locator_runtime_item* item_,
+                                   gcut_locator_record* record, f32 frame, s32 arg)
+{
+    gcut_matrix matrix;
+    u8 time[24];
+    f32 dir[3];
+    f32 scale;
+    s32 handle;
+    gcut_debris_item* item = (gcut_debris_item*)item_;
+    gcut_locator_event* events = system->events;
+    s32 index = events[record->event].index;
+    s32 spawned = 0;
+    s32 visible;
+
+    if (index == 0xffff)
+        return;
+    if (lbl_804083FC[index] == 0)
+        fn_80009948(lbl_8019308C, 0xe31)(str_instNuGCutDebrisLocatorUpdate_CannotSeeDebris,
+                                         *(char**)&events[record->event]);
+    if (*(gcut_anim**)((u8*)record + 0x50))
+        ((void (*)(gcut_anim*, f32, void*))NuAnimData2CalcTime)(*(gcut_anim**)((u8*)record + 0x50), frame, time);
+
+    visible = gcut_debris_clip(record, time, &scale, frame);
+    if (visible) {
+        if (scale < -0.5f)
+            scale = (f32)lbl_804083FC[index]->rate / 60.0f;
+        if (scale > 0.0f) {
+            s32 count;
+            spawned = 1;
+            if ((*((u8*)record + 0x58) & 0x10) && item->active)
+                return;
+            item->accum += scale;
+            count = 0;
+            while (item->accum > 0.0f) {
+                item->accum -= 1.0f;
+                count++;
+            }
+            if (count) {
+                s16 yaw, pitch;
+                fn_8003CEE0((gcut_rigid_view*)record, &matrix, time, frame);
+                if (*((u8*)record + 0x58) & 4)
+                    NuMtxPreTranslate(&matrix, (f32*)((u8*)record + 0x40));
+                if (arg)
+                    fn_8000D134(&matrix, &matrix, (gcut_matrix*)arg);
+                instNuGCutLocatorUpdate(*(u32*)((u8*)record + 0x54), &matrix, dir);
+                yaw = NuAngSub((s32)(NuAtan2(dir[0], dir[2]) * 10430.378f), 0x4000);
+                pitch = (s32)(NuAtan2(NuFsqrt(dir[0] * dir[0] + dir[2] * dir[2]), -dir[1]) * 10430.378f);
+                if (*((u8*)record + 0x58) & 0x10) {
+                    handle = -1;
+                    fn_80063E14(&handle, index, &matrix.m[12], count);
+                    fn_80064730(handle, pitch, yaw, 0);
+                    item->active = 1;
+                } else {
+                    fn_80064088(index, &matrix.m[12], count, pitch, yaw, lbl_804083C8);
+                }
+            }
+        }
+    }
+    if (!spawned) {
+        item->active = spawned;
+        item->accum = 0.0f;
     }
 }
