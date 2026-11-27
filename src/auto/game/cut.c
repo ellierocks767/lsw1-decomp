@@ -1537,3 +1537,30 @@ void fn_8011EC3C(u8 *scene) {
         }
     } while (--remaining != 0);
 }
+
+s32 NuStrICmp(char *, char *);
+char *NuStrIStr(char *, char *);
+
+typedef struct CutScenePathEntry {
+    char *path;
+    u8 pad04[0x3C];
+} CutScenePathEntry;
+
+extern CutScenePathEntry lbl_801DF4E0[];
+extern char str_Path_CutDir[];
+
+s32 FindCutScene(char *name) {
+    CutScenePathEntry *entry = lbl_801DF4E0;
+    s32 index;
+
+    for (index = 0; index < 96; index++) {
+        char *path = entry->path;
+        char *cutName;
+        entry++;
+        cutName = NuStrIStr(path, str_Path_CutDir);
+        if (cutName != NULL && NuStrICmp(cutName + 4, name) == 0) {
+            return index;
+        }
+    }
+    return -1;
+}
