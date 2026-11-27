@@ -232,6 +232,13 @@ was claimed. `fn_8007F130` matches all 137 instructions (548 B), and
 warnings for `nuanim` and `nurndr-nugscn` were reviewed. The `fn_8007F130` match supports
 continuing the `aisys-1` item in stage 3.
 
+Revision 15 (2026-11-26) parks `fn_8007E97C` (596 B), the last open body in
+`aisys-1`, after the typed traversal reached 128/149 exact instructions. In
+both script loops, the draft omits a register copy at each state and condition
+list setup. The next pass can compare ProDG's register lifetimes at those
+calls with the matching `AIPathNodeUpdatePos`. The planner can advance to
+`aisys-2` while this function still needs a strict match.
+
 ## Rules that do not change
 
 - The strict verifier, pinned compilers and the retail DOL are the oracle. Never weaken

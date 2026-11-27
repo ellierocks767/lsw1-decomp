@@ -20,7 +20,7 @@
 # reports that the plan needs revision, or when evidence changes the order. Parking a function
 # needs a reason that names its best score and the next hypothesis.
 
-revision = 14
+revision = 15
 # The `# at revision N` comments record each item's size when the plan was written; they are
 # not read by tools.
 
@@ -300,8 +300,12 @@ functions = [
   "Action_PathConnectionMaxLength",
   "Action_SetInterrupt",
 ]
-note = "OpenSaga leads; include/game/ai.h. fn_8007F130 is verified (548 B); fn_8007E97C remains open."
+note = "OpenSaga leads; include/game/ai.h. fn_8007F130 is verified (548 B). Revision 15 parks fn_8007E97C, the only remaining function."
 # at revision 1: 32 functions, 21,384 bytes left
+
+[[parked]]
+function = "fn_8007E97C"
+reason = "Best 128/149 exact instructions (145 emitted, 63 distinct compiled candidates in this run). In both script loops the draft emits two instructions to form and pass each state and condition list address. Retail uses addi via r0 and copies it into r3 and a saved register. Next: use ProDG RTL to recover the first/next list accessor boundary that retains separate call-argument and loop lifetimes."
 
 [[stage.item]]
 id = "aisys-2"
