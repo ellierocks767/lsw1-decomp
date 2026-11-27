@@ -2565,3 +2565,7 @@ reason = "draft 79/208 not hand-attempted (time limit spent on fn_8013EA90); nex
 [[parked]]
 function = "fn_8013C620"
 reason = "code 51/51 but MATCH (unverified references): 0.0f literal is address-taken (lis/addi r30, lfs 0(r30)) so strict check cannot compare it to lbl_801AEC5C; extern lbl_801AEC5C[] form scores 30/51; next: a const/static rodata form that keeps the address hoist and names the symbol"
+
+[[parked]]
+function = "fn_80062DA0"
+reason = "best 69/150: reg alloc of hoisted global-base copies (r26-r29) and slot-field load/store interleave; next: inline slot-rebase helper taking dt, permuter from work/fn_80062DA0/try.c"
