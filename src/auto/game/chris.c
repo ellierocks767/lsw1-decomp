@@ -60,12 +60,12 @@ void fn_801410F4(void *arg0) {
 void fn_801433C0(void *records, s32 count)
 {
     s32 remaining;
-    u8 *cursor;
+    u32 cursor;
 
     /* Retail walks the 0x50-byte records with its cursor at offset 0x20. */
     remaining = count;
     if (count > 0) {
-        cursor = (u8 *)records + 0x20;
+        cursor = (u32)records + 0x20;
         do {
             *(s16 *)(cursor + 0x22) = 0;
             *(f32 *)(cursor - 0x20) = 80.0f;
