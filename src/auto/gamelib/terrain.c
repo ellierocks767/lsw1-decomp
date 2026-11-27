@@ -1,4 +1,5 @@
 #include "types.h"
+#include "numath/numath.h"
 
 
 typedef struct HVQM4AudioNode HVQM4AudioNode;
@@ -336,16 +337,16 @@ typedef struct terrainpoly_s {
     terrainvec_s normal;
     terrainvec_s normal2;
     u8 unk60;
-    u8 pad61;
+    u8 unk61;
     u8 flags;
-    u8 pad63;
+    u8 unk63;
 } terrainpoly_s;
 
 typedef struct terrainnode_s {
     terrainvec_s origin;
     u8 pad0c[0x20];
     s32 unk2c;
-    s16 unk30;
+    s16 index;
     u8 pad32[6];
 } terrainnode_s;
 
@@ -369,10 +370,38 @@ typedef struct terrainwallpt_s {
     u8 unk_f;
 } terrainwallpt_s;
 
+typedef struct NUTERRAININDEXEDENTRY_s {
+    u8 pad00[0x40];
+    u32 active;
+    u8 pad44[4];
+    s16 compactIndex;
+    u8 pad4A[0x22];
+} TerrainIndexedEntry;
+
+typedef struct NUTERRAINTRACKEDENTRY_s {
+    u32 active;
+    s16 index;
+    u8 pad06[0x12];
+} TerrainTrackedEntry;
+
 typedef struct terrainhdr_s {
     terrainnode_s *nodes;
-    u8 pad04[0x144];
+    u8 pad004[0x64];
+    TerrainIndexedEntry *indexedEntries;
+    u8 pad06C[0xDC];
     terrainwall_s *walls;
+    s16 compactCount;
+    u8 pad14E[2];
+    s32 remapCount;
+    u8 pad154[0x44];
+    TerrainTrackedEntry trackedEntries[64];
+    u8 pad798[0x1400];
+    s16 remapStart;
+    s16 remapLength;
+    u8 pad1B9C[0x18];
+    s16 *remap;
+    u8 pad1BB8[0x89E4];
+    s32 indexedCount;
 } terrainhdr_s;
 
 typedef struct terrainscan_s {
@@ -383,15 +412,17 @@ typedef struct terrainscan_s {
     s8 unk35;
     u8 pad36[6];
     f32 horiz_dist;
-    u8 pad40[0x0c];
+    u8 pad40[4];
+    f32 rotationX;
+    f32 rotationY;
     f32 len;
     f32 rad;
     f32 rad_sq;
-    u8 pad58[4];
+    f32 field58;
     f32 unk5c;
     u8 pad60[4];
     f32 unk64;
-    u8 pad68[4];
+    f32 field68;
     s16 unk6c;
     u8 pad6e[2];
     terrainvec_s pos;
@@ -403,10 +434,12 @@ typedef struct terrainscan_s {
     terrainpoly_s *hit_poly;
     terrainpoly_s *poly;
     f32 best_t;
-    u8 pad9c[8];
+    u8 pad9c[4];
+    f32 fieldA0;
     f32 unk_a4;
     terrainvec_s norm;
-    u8 padb4[0x48];
+    terrainvec_s scaledDirection;
+    u8 padc0[0x3c];
     terrainvec_s local_verts[4];
     u8 pad12c[0x1c];
     s32 inline_list[1];
@@ -419,7 +452,7 @@ extern s32 lbl_8040A588;
 extern s32 lbl_8040A5CC;
 extern s32 lbl_8040A5D0;
 extern s32 lbl_8040839C;
-extern s32 lbl_804083A0;
+extern u8 *lbl_804083A0;
 extern terrainwallpt_s *lbl_8040A5B4;
 extern s32 lbl_8040A5B8;
 extern s32 lbl_8040A5BC;
@@ -754,4 +787,318 @@ s32 fn_80052224(s32 idx) {
         return 1;
     }
     return 0;
+}
+
+void fn_8005592C(void);
+extern const f32 lbl_8019510C[];
+extern const f32 lbl_80195110[];
+extern const f32 lbl_80195114[];
+
+s32 fn_80056A38(u8 *flags)
+{
+    terrainscan_s *motion;
+    f32 scale;
+    f32 threshold;
+    s32 mode;
+
+    fn_8005592C();
+    motion = lbl_8040AE5C;
+    mode = motion->type;
+    switch (mode) {
+        case 0:
+            flags[0] = mode;
+            lbl_8040AE5C->start.x += lbl_8040AE5C->delta.x;
+            lbl_8040AE5C->start.y += lbl_8040AE5C->delta.y;
+            lbl_8040AE5C->start.z += lbl_8040AE5C->delta.z;
+            return 0;
+
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            motion->best_t -= motion->fieldA0;
+            if (motion->best_t < lbl_8019510C[0]) {
+                motion->best_t = lbl_8019510C[0];
+            }
+
+            threshold = lbl_80195110[0];
+            scale = lbl_8040AE5C->best_t;
+            lbl_8040AE5C->start.x += lbl_8040AE5C->delta.x * scale;
+            lbl_8040AE5C->start.y += lbl_8040AE5C->delta.y * scale;
+            lbl_8040AE5C->start.z += lbl_8040AE5C->delta.z * scale;
+            if (lbl_8040AE5C->scaledDirection.y < threshold) {
+                flags[0] = 0;
+            } else {
+                flags[0] = 1;
+                flags[1] = 1;
+                lbl_8040AE5C->start.y += lbl_8040AE5C->norm.y * lbl_80195114[0];
+            }
+            return 0;
+
+        case 17:
+        case 18:
+        case 19:
+        case 20:
+            return 1;
+    }
+    return 1;
+}
+
+extern void (*fn_80009948(char *file, s32 line))(char *, ...);
+extern char lbl_80194C94[];
+extern char lbl_80194D84[];
+extern u8 *lbl_804083A4;
+extern u8 *lbl_8040A5F0;
+
+void fn_8005A338(u8 **cursor, u8 **limit)
+{
+    u8 *end = *limit;
+    u8 *secondStart;
+    u8 *thirdStart;
+    u8 *regionEnd;
+    u8 *fourthStart;
+    u8 *previous;
+
+    if (lbl_804083A0 == NULL) {
+        lbl_804083A0 = *cursor;
+    }
+    previous = lbl_804083A4;
+    secondStart = *cursor + 0xC800;
+    *cursor = secondStart;
+    if (previous == NULL) {
+        lbl_804083A4 = secondStart;
+    }
+    previous = lbl_8040A5F0;
+    thirdStart = secondStart + 0xC800;
+    *cursor = thirdStart;
+    if (previous == NULL) {
+        lbl_8040A5F0 = thirdStart;
+    }
+    previous = (u8 *)lbl_8040A5B4;
+    fourthStart = thirdStart + 0x2000;
+    *cursor = fourthStart;
+    if (previous == NULL) {
+        lbl_8040A5B4 = (terrainwallpt_s *)fourthStart;
+    }
+    regionEnd = fourthStart + 0x600;
+    *cursor = regionEnd;
+    if (regionEnd > end) {
+        fn_80009948(lbl_80194C94, 0x665)(lbl_80194D84);
+    }
+}
+
+extern u8 lbl_802B1504[];
+extern u8 lbl_802B1565[];
+extern u8 lbl_802B1566[];
+extern u8 lbl_802B1567[];
+extern u8 *lbl_8040A594;
+extern s32 lbl_8040A5A0;
+
+void fn_8005592C(void)
+{
+    s32 mode = lbl_8040AE5C->type;
+    terrainpoly_s *source;
+    s32 index;
+    u8 flag;
+
+    switch (mode) {
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            break;
+
+        case 17:
+        case 18:
+        case 19:
+        case 20:
+            break;
+
+        case 0:
+            return;
+
+        default:
+            return;
+    }
+    if (lbl_8040AE5C->unk6c == -1) {
+        return;
+    }
+
+    source = lbl_8040AE5C->hit_poly;
+    if (source != NULL) {
+        flag = source->unk60;
+        if (flag != 0) {
+            lbl_802B1504[0x60] = flag;
+        }
+        flag = lbl_8040AE5C->hit_poly->unk61;
+        if (flag != 0) {
+            lbl_802B1565[0] = flag;
+        }
+        flag = lbl_8040AE5C->hit_poly->flags;
+        if (flag != 0) {
+            lbl_802B1566[0] = flag;
+        }
+        flag = lbl_8040AE5C->hit_poly->unk63;
+        if (flag != 0) {
+            lbl_802B1567[0] = flag;
+        }
+    }
+    index = lbl_8040AE5C->unk6c;
+    lbl_8040A594 = lbl_802B1504;
+    lbl_8040A5A0 = index;
+}
+
+extern const f32 lbl_801950CC[];
+extern u32 lbl_8040AE6C;
+
+void fn_800559FC(void)
+{
+    terrainscan_s *motion;
+    terrainvec_s *direction;
+    f32 sinX;
+    f32 cosX;
+    f32 cosY;
+    f32 sinY;
+    f32 rotatedZ;
+    f32 inverseLength;
+    f32 x;
+    f32 y;
+    f32 z;
+    f32 unit;
+
+    fn_8005592C();
+    switch ((s32)lbl_8040AE5C->type) {
+        case 4:
+        case 20:
+            lbl_8040AE6C |= 4;
+            /* fall through */
+        case 2:
+        case 3:
+        case 18:
+        case 19:
+            motion = lbl_8040AE5C;
+            direction = &motion->norm;
+            sinX = NuSinApprox((s32)motion->rotationX);
+            rotatedZ = direction->y * sinX
+                     + direction->z * NuCosApprox((s32)lbl_8040AE5C->rotationX);
+            cosX = NuCosApprox((s32)lbl_8040AE5C->rotationX);
+            direction->y = direction->y * cosX
+                         - direction->z * NuSinApprox((s32)lbl_8040AE5C->rotationX);
+            cosY = NuCosApprox((s32)lbl_8040AE5C->rotationY);
+            direction->z = rotatedZ * cosY
+                         - motion->norm.x * NuSinApprox((s32)lbl_8040AE5C->rotationY);
+            sinY = NuSinApprox((s32)lbl_8040AE5C->rotationY);
+            motion->norm.x = rotatedZ * sinY
+                                 + motion->norm.x * NuCosApprox((s32)lbl_8040AE5C->rotationY);
+
+            if ((lbl_8040AE5C->type & 0x10) == 0) {
+                f32 directionScale = lbl_8040AE5C->field58;
+                lbl_8040AE5C->norm.x *= directionScale;
+                lbl_8040AE5C->norm.y *= directionScale;
+                lbl_8040AE5C->norm.z *= directionScale;
+            }
+            /* fall through */
+        case 1:
+        case 17:
+            unit = lbl_801950CC[0];
+            if (lbl_8040AE5C->unk5c == unit) {
+                lbl_8040AE5C->scaledDirection.x = lbl_8040AE5C->norm.x;
+                lbl_8040AE5C->scaledDirection.y =
+                lbl_8040AE5C->norm.y;
+                lbl_8040AE5C->scaledDirection.z = lbl_8040AE5C->norm.z;
+                return;
+            }
+            y = lbl_8040AE5C->norm.y;
+            x = lbl_8040AE5C->norm.x;
+            z = lbl_8040AE5C->norm.z;
+            inverseLength = unit / NuFsqrt(z * z + (x * x + y * y * lbl_8040AE5C->field68));
+            lbl_8040AE5C->scaledDirection.x = lbl_8040AE5C->norm.x * inverseLength;
+            lbl_8040AE5C->scaledDirection.y =
+                lbl_8040AE5C->norm.y * lbl_8040AE5C->unk64 * inverseLength;
+            lbl_8040AE5C->scaledDirection.z = lbl_8040AE5C->norm.z * inverseLength;
+            return;
+    }
+}
+
+typedef struct NUTERRAINPLANARADJUSTMENT_s {
+    struct nuvec_s vector;
+    f32 fieldC;
+    f32 limit;
+} TerrainPlanarAdjustment;
+
+extern TerrainPlanarAdjustment *lbl_8040A5C0;
+
+void fn_80058F04(const struct nuvec_s *axis, struct nuvec_s *offset)
+{
+    TerrainPlanarAdjustment *adjustment = lbl_8040A5C0;
+    f32 vectorZ = adjustment->vector.z;
+    f32 vectorX = adjustment->vector.x;
+    f32 axisX = axis->x;
+    f32 axisZ = axis->z;
+    f32 limit = adjustment->limit;
+    f32 along = vectorX * axisX + vectorZ * axisZ;
+    f32 across = vectorX * axisZ - vectorZ * axisX;
+    f32 lower;
+    f32 acrossScale;
+    f32 acrossLimit;
+
+    if (along > limit) {
+        along = limit;
+    }
+    lower = -limit;
+    if (along < lower) {
+        along = lower;
+    }
+    acrossScale = 0.2f;
+    acrossLimit = limit * acrossScale;
+    if (across > acrossLimit) {
+        across = acrossLimit;
+    }
+    acrossLimit = lower * acrossScale;
+    if (across < acrossLimit) {
+        across = acrossLimit;
+    }
+
+    offset->x -= (along * axisX + across * axisZ) - vectorX;
+    offset->z -= (along * axis->z - across * axis->x) - adjustment->vector.z;
+    adjustment->vector.x = along * axis->x + across * axis->z;
+    adjustment->vector.z = along * axis->z - across * axis->x;
+}
+
+s32 fn_8005A160(s32 index)
+{
+    s32 i;
+    s32 remapIndex;
+
+    if (index < 0 || index >= lbl_8040AE4C->indexedCount ||
+        lbl_8040AE4C->indexedEntries[index].active == 0) {
+        return 0;
+    }
+
+    lbl_8040AE4C->compactCount--;
+    lbl_8040AE4C->remapCount--;
+    lbl_8040AE4C->indexedEntries[
+        lbl_8040AE4C->nodes[lbl_8040AE4C->compactCount].index].compactIndex =
+        lbl_8040AE4C->indexedEntries[index].compactIndex;
+    lbl_8040AE4C->nodes[lbl_8040AE4C->indexedEntries[index].compactIndex] =
+        lbl_8040AE4C->nodes[lbl_8040AE4C->compactCount];
+    lbl_8040AE4C->nodes[lbl_8040AE4C->compactCount].unk2c = -1;
+    lbl_8040AE4C->indexedEntries[index].active = 0;
+
+    for (i = 0, remapIndex = lbl_8040AE4C->remapStart;
+         i < lbl_8040AE4C->remapLength;
+         i++, remapIndex++) {
+        if (lbl_8040AE4C->remap[remapIndex] == lbl_8040AE4C->compactCount) {
+            lbl_8040AE4C->remap[remapIndex] = lbl_8040AE4C->remap[lbl_8040AE4C->remapCount];
+            break;
+        }
+    }
+
+    lbl_8040AE4C->remapLength--;
+    for (i = 0; i < 64; i++) {
+        if (lbl_8040AE4C->trackedEntries[i].index == index) {
+            lbl_8040AE4C->trackedEntries[i].active = 0;
+        }
+    }
+    return 1;
 }
