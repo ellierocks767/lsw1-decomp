@@ -2724,3 +2724,11 @@ reason = "best 24-30/58: target keeps t in f1 and reloads *p after lo select (lf
 [[parked]]
 function = "Shop_UpdateMenu"
 reason = "best 81/87: only float regs (global f13/limit f12 in target, swapped in mine in first clamp block); next: permuter burst / different float local form"
+
+[[parked]]
+function = "MoveSubItemsRight"
+reason = "best 104/195: structure and addressing right; mismatch is the 4x clamp-to-[lo,hi] block (target reuses cr7 for x<hi, lo reloaded, result in separate reg), ~12 clamp forms tried; next: find clamp source form then mirror to Left; best in work/hc/MoveSubItemsRight.best.c"
+
+[[parked]]
+function = "MoveSubItemsLeft"
+reason = "not attempted separately: exact mirror of Right (+0x18 start, -4 shifts, wrap to arg2-1, consts 801AF894..8A0, arg1+0x3C) blocked on the same clamp form; next: solve Right's clamp then port"
