@@ -17,6 +17,43 @@ void fn_80074B80(s32 a)
 extern s32 lbl_803D9020[];
 extern s32 lbl_804088B0;
 
+typedef struct {
+    struct nuvec_s position;
+    s32 id;
+    char name[16];
+    f32 lastEmission;
+    f32 periodStart;
+    f32 periodEnd;
+    s16 rotation[3];
+    u8 unk32;
+    u8 unk33;
+    s32 shotsRemaining;
+    f32 unk38;
+    u8 unk3C;
+    u8 unk3D;
+    u8 unk3E[2];
+    f32 unk40;
+    s16 unk44;
+    s16 unk46;
+    u8 unk48[0x6C - 0x48];
+} Entry6C;
+extern Entry6C lbl_803D8280[];
+extern f32 lbl_8019AEF4[];
+
+void fn_80075C78(s32 arg0) {
+    s32 i;
+    f32 *p;
+
+    Entry6C *b = lbl_803D8280;
+    for (i = 0, p = (f32 *)((s8 *)b + 0x40); i < 0x20; i++, p += 0x6C / 4) {
+        if (*(s32 *)((s8 *)p - 0x34) != -1 && *((s8 *)p - 0xE) == arg0) {
+            *p = lbl_8019AEF4[0];
+        }
+    }
+    lbl_803D9020[arg0] = 1;
+    lbl_804088B0 = arg0;
+}
+
 void fn_80075CD8(s32 arg0) {
     *(s32 *)(((s8 *)lbl_803D9020) + (arg0 * 4)) = 0;
     if ((s32) lbl_804088B0 == arg0) {
@@ -57,27 +94,6 @@ typedef struct {
     u8 unk64[0xB0 - 0x68];
 } PartType;
 
-typedef struct {
-    struct nuvec_s position;
-    s32 id;
-    char name[16];
-    f32 lastEmission;
-    f32 periodStart;
-    f32 periodEnd;
-    s16 rotation[3];
-    u8 unk32;
-    u8 unk33;
-    s32 shotsRemaining;
-    f32 unk38;
-    u8 unk3C;
-    u8 unk3D;
-    u8 unk3E[2];
-    f32 unk40;
-    s16 unk44;
-    s16 unk46;
-    u8 unk48[0x6C - 0x48];
-} Entry6C;
-extern Entry6C lbl_803D8280[];
 extern s32 lbl_804088AC;
 
 void fn_80074CD8(s32 i) {
@@ -742,5 +758,44 @@ void fn_8007452C(s32 index, f32 offset)
             }
             emitter->unk38 = lbl_804088A4;
         }
+    }
+}
+
+extern s32 lbl_80408218;
+extern s32 lbl_80408220;
+extern s32 lbl_8040822C;
+extern u16 lbl_80408BAA;
+extern s32 lbl_8040AE0C;
+void NuStrCpy(char *, const char *);
+
+void Menu_OpenSpecial(MenuFrame *arg0) {
+    s32 var_r3;
+    s32 var_r4;
+
+    lbl_80408C4C = 0;
+    arg0->max10 = lbl_80408BAA - 1;
+    NuStrCpy(lbl_803D992C, lbl_80408AC8);
+    lbl_8040A618 = 0;
+    lbl_8040A61C = 0x7F;
+    lbl_8040A620 = 0xFF;
+    arg0->max12 = 1;
+    if (lbl_8040821C != 2) {
+        Menu_Open(0x3EA, -1, -1);
+        return;
+    }
+    if (lbl_8040AE0C != 0) {
+        Menu_Open(0x3FD, -1, -1);
+        return;
+    }
+    if (lbl_80408220 == 0) {
+        Menu_Open(0x3EE, 1, -1);
+        return;
+    }
+    if (lbl_8040822C == 0 && lbl_80408218 < lbl_80408C50) {
+        Menu_Open(0x3EB, -1, -1);
+        return;
+    }
+    if (lbl_8040821C == 2 && lbl_8040822C == 0) {
+        Menu_Open(0x3FB, 1, -1);
     }
 }
