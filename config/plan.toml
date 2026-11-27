@@ -2532,3 +2532,7 @@ reason = "best 42/92: stmw r30 frame vs r29 (extra live reg), m2c-structured sou
 [[parked]]
 function = "SetCreatureLights"
 reason = "best 178/294: six &dir/&col local addresses CSE'd into r20-r24 (target recomputes, only &amb kept in r25), 12 saved GPRs vs 7; next: find source form that stops gcse of local struct addresses; fn_8013F548 (inline loop/peel?), permuter"
+
+[[parked]]
+function = "fn_8013D7E0"
+reason = "best 113/135: loop-invariant hoist set differs (target hoists D8,15FC,&sp18,&sp1C,DC,E0,8034 not D4); next: force D4 unhoisted / permuter"

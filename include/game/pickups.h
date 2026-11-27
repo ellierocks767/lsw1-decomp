@@ -13,7 +13,9 @@ struct NUPICKUP_s {
     f32 previousY;
     char unk28[4];
     f32 value2C;
-    char unk30[6];
+    char unk30[2];
+    u16 word32;
+    u16 word34;
     s16 kind36;
     u8 flags38;
     u8 active39;

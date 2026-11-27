@@ -185,9 +185,94 @@ void fn_8013D438(struct NUPICKUPPOOL_s* pool)
     }
 }
 
-extern void fn_8013D7E0(struct NUPICKUP_s *, s32);
 struct PickupHeight { f32 height; char unk4[0x30]; };
 extern struct PickupHeight lbl_801E1614[];
+extern f32 lbl_801AECD4[];
+extern f32 lbl_801AECD8[];
+extern f32 lbl_801AECDC[];
+extern f32 lbl_801AECE0[];
+extern s32 lbl_80348074[];
+extern u16 lbl_8040B05C;
+extern u16 lbl_8040B05E;
+extern struct PickupHeight lbl_801E15FC[];
+extern void NuVecSub(void *, void *, void *);
+extern f32 fn_8000ED40(f32);
+extern f32 fn_8005A470(void *, s32, f32, f32);
+extern s32 fn_800CFD80(s32 *, s32, s32);
+void fn_8013D7E0(struct NUPICKUP_s *base, s32 count)
+{
+    struct PickupVec d;
+    s32 below = -1;
+    s32 above = -1;
+    s32 i = 0;
+    s32 j;
+    s32 off;
+    s32 bestBelow;
+    s32 bestAbove;
+    f32 minBelow;
+    f32 minAbove;
+    f32 r;
+    f32 r2;
+    f32 dist;
+    struct NUPICKUP_s *p;
+    struct NUPICKUP_s *q;
+    if (base != NULL && i < count) {
+        f32 dflt = lbl_801AECD8[0];
+        do {
+            struct PickupHeight *tbl = lbl_801E15FC;
+            s32 *pb = &below;
+            s32 *pa = &above;
+            off = i << 6;
+            p = (struct NUPICKUP_s *)(off + (s32)base);
+            j = 0;
+            bestBelow = -1;
+            bestAbove = -1;
+            r = tbl[p->kind3E].height;
+            r2 = r * r;
+            minBelow = minAbove = lbl_801AECD4[0];
+            if (j < count) {
+                q = base;
+                do {
+                    if (i != j) {
+                        NuVecSub(&d, q, p);
+                        if (d.x * d.x + d.z * d.z < r2) {
+                            if (q->y < p->y && (dist = fn_8000ED40(d.y), dist < minBelow)) {
+                                minBelow = dist;
+                                bestBelow = j;
+                            } else if (q->y > p->y) {
+                                dist = fn_8000ED40(d.y);
+                                if (dist < minAbove) {
+                                    minAbove = dist;
+                                    bestAbove = j;
+                                }
+                            }
+                        }
+                    }
+                    j++;
+                    q++;
+                } while (j < count);
+            }
+            *pb = bestAbove;
+            *pa = bestBelow;
+            if (above != -1)
+                base[i].link18 = (s32)&base[above];
+            else
+                base[i].link18 = 0;
+            if (below != -1)
+                base[i].link1C = (s32)&base[below];
+            else
+                base[i].link1C = 0;
+            q = &base[i];
+            q->baseY = fn_8005A470(q, -1, dflt, lbl_801AECDC[0]);
+            if (q->baseY == lbl_801AECE0[0])
+                q->baseY = dflt;
+            i++;
+            fn_800CFD80(lbl_80348074, 0, 0);
+            q->word32 = lbl_8040B05C;
+            q->word34 = lbl_8040B05E;
+        } while (i < count);
+    }
+}
 void fn_8013D9FC(struct NUPICKUPPOOL_s *pool, s32 update)
 {
     s32 i = 0;
