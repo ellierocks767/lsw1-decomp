@@ -8,7 +8,6 @@ extern char str_Assert_Turret_OutOfMemory[];
 s32 fn_800716B0(s32);
 s32 fn_80071720(s32, s32, s32, s32, s32, f32);
 extern f32 lbl_801AEF54[];
-extern void *lbl_80409410;
 void fn_8002D9E8(void*, void*, void*, void*, void*, void*);
 void fn_8002DAD0(void*);
 void fn_8002DB1C(f32*);

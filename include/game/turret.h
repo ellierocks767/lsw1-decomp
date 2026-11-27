@@ -1,12 +1,13 @@
 #ifndef GAME_TURRET_H
 #define GAME_TURRET_H
 
-#include "types.h"
+#include "game/levels.h"
 
 struct NUTURRETENTRY_s {
     u8 unk0[8];
     char name[0x10];
-    u8 unk18[0x6C - 0x18];
+    struct nuhspecial_s special;
+    u8 unk24[0x6C - 0x24];
     s16 unk6C;                   /* fn_801407F8 writes this lookup key */
     u16 flags;
     u16 initialFlags;

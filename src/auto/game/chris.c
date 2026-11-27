@@ -1,5 +1,6 @@
 #include "types.h"
 #include "game/levels.h"
+#include "game/turret.h"
 #include "numath/nuvec.h"
 #include "numath/nuvec_ps.h"
 
@@ -420,8 +421,6 @@ void DebugMenu_HandleEntry4(void)
     }
 }
 
-#include "game/turret.h"
-
 void fn_8014093C(struct lbl_80409410_s *level)
 {
     struct NUTURRET_s *turrets;
@@ -476,4 +475,19 @@ struct NUTURRETENTRY_s *fn_801408D4(struct NUTURRET_s *turrets, s32 key)
         }
     }
     return NULL;
+}
+
+s32 fn_800135B0(struct nuhspecial_s *);
+s32 fn_8005A5F8(s32);
+
+void fn_801407F8(struct NUTURRET_s *turrets)
+{
+    struct NUTURRETENTRY_s *entry;
+    s32 i;
+
+    if (turrets != NULL) {
+        entry = turrets->entries;
+        for (i = 0; i < turrets->count; i++, entry++)
+            entry->unk6C = fn_8005A5F8(fn_800135B0(&entry->special));
+    }
 }
