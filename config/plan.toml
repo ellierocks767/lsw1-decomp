@@ -2428,7 +2428,3 @@ reason = "best 74/117: fwd/back callee-saved regs swapped, hoisted pb[0] load ge
 [[parked]]
 function = "AIScriptLoadScp"
 reason = "best 193/194: addi r28,r29,0x10 (states=&sc->states) scheduled before bl NuFParPushCom instead of after; goto loop + store order CB8,CBC,CC0,CD0 fixed the rest; next: permuter burst on placement of states/PushCom"
-
-[[parked]]
-function = "fn_800780C0"
-reason = "best 50/51: lbz lbl_80408A57 scheduled before li r4,0 at the text join; next: permuter run on work/hc/80c0p.c form"
