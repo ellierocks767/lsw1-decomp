@@ -2428,3 +2428,15 @@ reason = "best 74/117: fwd/back callee-saved regs swapped, hoisted pb[0] load ge
 [[parked]]
 function = "AIScriptLoadScp"
 reason = "best 193/194: addi r28,r29,0x10 (states=&sc->states) scheduled before bl NuFParPushCom instead of after; goto loop + store order CB8,CBC,CC0,CD0 fixed the rest; next: permuter burst on placement of states/PushCom"
+
+[[parked]]
+function = "fn_80075760"
+reason = "best 186/249: open-fail path not cross-jumped with version-fail li r3,-1; skip loop emits mr. instead of cmpwi/ble/mr; regalloc off by one in Entry6C loop; next: result-variable or nested-open structure, if(skip>0) do-while with current loop shape"
+
+[[parked]]
+function = "Menu_OpenFromRegistry"
+reason = "best 304/449: register allocation and branch layout diverge in the descriptor walk; next: cross-jump shared tails, persistent loop index outside the outer loop"
+
+[[parked]]
+function = "Menu_Open"
+reason = "best 145/205: branch layout and temp registers differ around the per-type dispatch; next: cross-jump identical calls per branch, statement reorder for temp regs"
