@@ -1743,3 +1743,69 @@ void fn_8003E328(gcut_instance_view* instance, f32 frame, s32 skip)
         }
     }
 }
+
+void fn_8003CEE0(gcut_rigid_view* rigid, gcut_matrix* matrix, void* time)
+{
+    gcut_anim* anim = *(gcut_anim**)((u8*)rigid + 0x50);
+    f32 translate[3];
+    f32 angles[3];
+    s32 rotation[3];
+    f32 translate2[3];
+    f32 angles2[3];
+    s32 rotation2[3];
+    if (anim) {
+        if (anim->magic == 0x414e4934) {
+            f32* values = fn_8001BFC4(anim, 0);
+            u8 flags = **(u8**)((u8*)*(gcut_anim**)((u8*)rigid + 0x50) + 0x34);
+            if (flags & 1) {
+                angles2[0] = values[3];
+                angles2[1] = values[4];
+                angles2[2] = values[5];
+                rotation2[0] = (s32)(angles2[0] * 10430.3779296875f);
+                rotation2[1] = (s32)(angles2[1] * 10430.3779296875f);
+                rotation2[2] = (s32)(angles2[2] * 10430.3779296875f);
+                fn_8000D010(matrix, rotation2);
+            } else {
+                NuMtxSetIdentity(matrix);
+            }
+            translate2[0] = values[0];
+            translate2[1] = values[1];
+            translate2[2] = values[2];
+            NuMtxTranslate(matrix, translate2);
+            matrix->m[2] = -matrix->m[2];
+            matrix->m[6] = -matrix->m[6];
+            matrix->m[8] = -matrix->m[8];
+            matrix->m[9] = -matrix->m[9];
+            matrix->m[11] = -matrix->m[11];
+            matrix->m[14] = -matrix->m[14];
+            NuMtxTranslate(matrix, (f32*)((u8*)rigid + 0x30));
+        } else {
+            f32* curves = anim->curves;
+            s8* types = anim->types;
+            if (**(u8**)((u8*)anim + 0x14) & 1) {
+                angles[0] = types[3] == 0 ? curves[3] : NuAnimCurve2CalcVal(&curves[3], time, types[3]);
+                angles[1] = types[4] == 0 ? curves[4] : NuAnimCurve2CalcVal(&curves[4], time, types[4]);
+                angles[2] = types[5] == 0 ? curves[5] : NuAnimCurve2CalcVal(&curves[5], time, types[5]);
+                rotation[0] = (s32)(angles[0] * 10430.3779296875f);
+                rotation[1] = (s32)(angles[1] * 10430.3779296875f);
+                rotation[2] = (s32)(angles[2] * 10430.3779296875f);
+                fn_8000D010(matrix, rotation);
+            } else {
+                NuMtxSetIdentity(matrix);
+            }
+            translate[0] = types[0] == 0 ? curves[0] : NuAnimCurve2CalcVal(&curves[0], time, types[0]);
+            translate[1] = types[1] == 0 ? curves[1] : NuAnimCurve2CalcVal(&curves[1], time, types[1]);
+            translate[2] = types[2] == 0 ? curves[2] : NuAnimCurve2CalcVal(&curves[2], time, types[2]);
+            NuMtxTranslate(matrix, translate);
+            matrix->m[2] = -matrix->m[2];
+            matrix->m[6] = -matrix->m[6];
+            matrix->m[8] = -matrix->m[8];
+            matrix->m[9] = -matrix->m[9];
+            matrix->m[11] = -matrix->m[11];
+            matrix->m[14] = -matrix->m[14];
+            NuMtxTranslate(matrix, (f32*)((u8*)rigid + 0x30));
+        }
+    } else {
+        *matrix = *(gcut_matrix*)rigid;
+    }
+}
