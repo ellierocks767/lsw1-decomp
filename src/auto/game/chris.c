@@ -1,5 +1,6 @@
 #include "types.h"
 #include "game/levels.h"
+#include "numath/nuvec.h"
 
 struct fn_80140918_s {
     s32 x;
@@ -152,4 +153,22 @@ void fn_80143468(struct CHRIS43468_s *state, u8 *data)
     state->field2C = data;
     *(f32 *)(data + 0x6372C) = 1.0f;
     *(f32 *)(data + 0x63730) = 1.0f;
+}
+
+struct MINIKITMESSAGE_s {
+    u8 pad00[0x7E];
+    s16 field7E;
+    s16 field80;
+};
+
+f32 NuFmod(f32 dividend, f32 divisor);
+extern f32 lbl_803E8394[];
+
+void GameMsgUpdate_MiniKit(struct MINIKITMESSAGE_s *message)
+{
+    s32 phase;
+
+    phase = (s32)(NuFmod(lbl_803E8394[0], 4.0f) * 0.25f * 65536.0f);
+    message->field80 = phase;
+    message->field7E = (s16)(NuSinApprox((phase & 0xFFFF) * 2) * 1820.0f);
 }
