@@ -2719,7 +2719,7 @@ reason = "best 24-30/58: target keeps t in f1 and reloads *p after lo select (lf
 
 [[parked]]
 function = "MoveSubItemsRight"
-reason = "best 104/195: structure and addressing right; mismatch is the 4x clamp-to-[lo,hi] block (target reuses cr7 for x<hi, lo reloaded, result in separate reg), ~12 clamp forms tried; next: find clamp source form then mirror to Left; best in work/hc/MoveSubItemsRight.best.c"
+reason = "best 153/195 (was 104): lo/hi are rodata literals 0.0f/1.0f; clamp = MAX(0.0f, MIN(t, 1.0f)); lbl_802E9C1C is a 3-float struct; early-block store order [2],timer,C8,CC,[0],[1],scroll,C4 matched; post-loop temp reuses `one` (f31); remaining: t/hi f11<->f12 swap in loop and post-loop; next: different t/one variable roles or permuter burst on work/hc/MoveSubItemsRight.best.c, then mirror to Left"
 
 [[parked]]
 function = "MoveSubItemsLeft"
