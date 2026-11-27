@@ -1662,3 +1662,40 @@ void *fn_8011C3A8(void *scene, const char *name, s32 useCharacterTable)
     }
     return NULL;
 }
+
+void NuGCutSceneDestroy(s32 *);
+void fn_8003AA94(gcut_instance_view *);
+
+void fn_8011EB70(CutSceneState *scene)
+{
+    CutSceneInstanceSlot *slot = (CutSceneInstanceSlot *)((u8 *)scene + 0x650);
+    gcut_instance_view *emptyInstance = NULL;
+    s32 remaining = 8;
+    s32 offset;
+    u32 sceneSlots;
+    s32 *emptyScene;
+
+    /* Keep the NULL tests and calls on the same ABI argument register. */
+    do {
+        register gcut_instance_view *instance asm("r3") = slot->instance;
+        if (instance != NULL) {
+            fn_8003AA94(instance);
+            slot->instance = emptyInstance;
+        }
+        slot++;
+    } while (--remaining != 0);
+
+    sceneSlots = (u32)scene->slots;
+    emptyScene = NULL;
+    offset = 0;
+    remaining = 8;
+    do {
+        s32 **entry = (s32 **)(offset + sceneSlots);
+        register s32 *cutscene asm("r3") = *entry;
+        if (cutscene != NULL) {
+            NuGCutSceneDestroy(cutscene);
+            *entry = emptyScene;
+        }
+        offset += sizeof(CutSceneSlot);
+    } while (--remaining != 0);
+}
