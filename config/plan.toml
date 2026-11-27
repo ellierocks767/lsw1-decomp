@@ -2684,3 +2684,7 @@ reason = "best 43/49: same initial lbzu and bgt 30 as fn_8011BCBC; next: retry t
 [[parked]]
 function = "fn_8011E1EC"
 reason = "best 47/71: path-table float reads fold into one record pointer and the reload/product schedule differs; next: expose independent float field bases through an inline helper, then tune the post-store reload separately"
+
+[[parked]]
+function = "fn_8011AC30"
+reason = "best 22/26: ProDG coalesces both loop-entry pointer copies or reloads globals and shifts the guard; next: type both owning global declarations and check whether ProDG retains the preheader copies"
