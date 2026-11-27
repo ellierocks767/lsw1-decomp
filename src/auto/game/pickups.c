@@ -958,6 +958,7 @@ extern f32 lbl_801AEC04[];
 extern f32 lbl_801AEC08[];
 extern f32 lbl_804099B0;
 
+#define AI (*(struct FpMoveView **)(*(u8 **)(sys + 0x1380) + 4))
 s32 Action_FollowPlayer_Level(u8 *sys, void *processor, u8 *packet, s32 *params, s32 count, s32 firstTime)
 {
     s32 i;
@@ -971,21 +972,16 @@ s32 Action_FollowPlayer_Level(u8 *sys, void *processor, u8 *packet, s32 *params,
             *(f32 *)(packet + 0x134) = AIParamToFloat(processor, params[i]);
         }
     }
-    {
-    u8 *t = *(u8 **)(sys + 0x1380);
-    if (t) {
-        struct FpMoveView *ai;
+    if (*(u8 **)(sys + 0x1380)) {
         if (*(s8 *)(*(u8 **)(packet + 0x50) + 0x284) != -1 && lbl_804099B0 > lbl_801AEC04[0]) {
-            ai = *(struct FpMoveView **)(t + 4);
-            AIMoveInstruction(packet, &ai->field124, ai->field9c, &ai->field10c, 1, lbl_801AEC08[0]);
+            AIMoveInstruction(packet, &AI->field124, AI->field9c, &AI->field10c, 1, lbl_801AEC08[0]);
         } else {
-            ai = *(struct FpMoveView **)(t + 4);
-            AIMoveInstruction(packet, &ai->field124, ai->field9c, &ai->field10c, 1, *(f32 *)(packet + 0x134));
+            AIMoveInstruction(packet, &AI->field124, AI->field9c, &AI->field10c, 1, *(f32 *)(packet + 0x134));
         }
-    }
     }
     return 0;
 }
+#undef AI
 
 struct PickupPlayerView {
     char unk0[0x28F];
