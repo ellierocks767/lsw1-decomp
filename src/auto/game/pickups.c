@@ -1002,6 +1002,90 @@ extern struct PickupForceView *lbl_8040AEFC;
 extern s32 lbl_8040AFB8;
 extern s32 fn_800B9ED4(void);
 
+struct PickupDrawDef { char unk0[0x22]; u8 flags; char unk23; void *special; char unk28[0xc]; };
+struct PickupDrawCtx { f32 m[12]; };
+struct PickupDrawSub { char unk0[0x42]; u8 alpha; };
+struct PickupDrawView { char unk0[0x1a8]; struct PickupDrawSub *sub; };
+extern f32 lbl_801AEDAC[], lbl_801AEDB0[], lbl_801AEDB4[], lbl_801AEDC0[];
+extern f32 MenuHeader[];
+extern s32 lbl_80408EA8;
+extern u8 *lbl_80408F94;
+extern f32 lbl_8040904C;
+extern s32 fn_800130F4(void *);
+extern void fn_8000DDD0(void *, s32);
+extern void fn_8000DD40(void *, s32);
+extern void fn_8000E3C0(void *, s32);
+extern void NuMtxTranslate(void *, void *);
+extern s8 NuSpecialFindMultiWC(void *, void *);
+extern void fn_80027C58(struct PickupVec *, s32, s32, s32, s32, f32);
+void fn_8013EA90(struct NUPICKUPPOOL_s *pool, struct NUPICKUP_s *first, s32 count)
+{
+    struct NUPICKUP_s *p;
+    struct PickupDrawCtx *mp;
+    struct PickupVec v;
+    struct PickupDrawCtx ctx;
+    struct PickupVec pos;
+    s32 i = 0;
+    f32 max2 = lbl_80409A08 * lbl_80409A08;
+    f32 dx, dz, dist, f;
+    f32 one, amp;
+    u8 kind;
+    if (pool->state710 != 0 || count == 0)
+        return;
+    p = first;
+    mp = &ctx;
+    fn_8000DDD0(mp, 0);
+    if (i >= count)
+        return;
+    one = lbl_801AEDB4[0];
+    amp = lbl_801AEDAC[0];
+    for (; i < count; i++, p++) {
+        if (lbl_80408EA8 == 0) {
+            if (p->active39 == 0)
+                continue;
+            if (lbl_80408F94[(s8)p->unk3F] == 0)
+                continue;
+            if (!(p->flags38 & 4))
+                continue;
+            kind = p->kind3E;
+            if ((((struct PickupDrawDef *)lbl_801E15E8)[(s8)kind].flags & 1) && p->kind36 != -1
+                && lbl_803EAF84[p->kind36] == 0)
+                continue;
+            if (fn_800130F4(*(void **)((u8 *)lbl_801E15E8 + 0x24 + (s8)kind * 0x34)) == 0)
+                return;
+        }
+        dz = MenuHeader[0xe4 / 4] - ((struct PickupVec *)p)->z;
+        dx = MenuHeader[0xdc / 4] - ((struct PickupVec *)p)->x;
+        dist = dx * dx + dz * dz;
+        if (lbl_80408EA8 == 0 && !(dist < max2))
+            continue;
+        pos.x = ((struct PickupVec *)p)->x;
+        pos.y = p->y;
+        pos.z = ((struct PickupVec *)p)->z;
+        if (p->kind3E == 5) {
+            fn_8000DD40(mp, (s32)(NuSinApprox(p->angle30 * 2) * amp));
+            fn_8000E3C0(mp, p->angle30);
+            NuMtxTranslate(mp, p);
+        } else if (p->kind3E == 4) {
+            fn_8000DDD0(mp, p->angle30);
+            NuMtxTranslate(mp, p);
+        }
+        p->enabled3C = NuSpecialFindMultiWC(*(void **)((u8 *)lbl_801E15E8 + 0x24 + p->kind3E * 0x34), mp);
+        if (p->link18 == 0 && dist < lbl_801AEDB0[0]) {
+            f32 s = one - dist / lbl_801AEDB0[0];
+            v = *(struct PickupVec *)p;
+            v.y = p->baseY + lbl_8040904C;
+            if (p->kind3E == 5) {
+                f = (f32)(s32)((struct PickupDrawView *)lbl_80409410)->sub->alpha * s;
+                fn_80027C58(&v, (s32)f, p->word32, 0, p->word34, lbl_801E15E8[5].height14);
+            } else {
+                f = (f32)(s32)((struct PickupDrawView *)lbl_80409410)->sub->alpha * s;
+                fn_80027C58(&v, (s32)f, p->word32, 0, p->word34, lbl_801AEDC0[0]);
+            }
+        }
+    }
+}
+
 s32 fn_8013EDCC(void)
 {
     struct PickupPlayerView **pp = gPlayer1Pointer;
