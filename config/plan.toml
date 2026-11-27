@@ -2488,3 +2488,15 @@ reason = "best 155/196: exact 196 insns and -0x70 frame; 0.1f vs 43300000 lis or
 [[parked]]
 function = "fn_8009DCE8"
 reason = "best 232/291: exact -0x38 frame and subfic r5, r3, 0x2800 matched; 0.1f vs 43300000 lis order and f9/f11 regalloc shift (same quirk as fn_8009E310); next: check how sw/sh float cast and 0.1f are written"
+
+[[parked]]
+function = "fn_80041E30"
+reason = "best 84/90: lbl_802935A0+0x640 folded into reloc; next: advance pointer sequentially from lbl_802935A0"
+
+[[parked]]
+function = "fn_800411EC"
+reason = "best 91/103: exact 103 insns, global zeroing store order around memset; next: reorder global stores"
+
+[[parked]]
+function = "fn_800414F8"
+reason = "best 75/95: switch matched 100%, serial copy struct and res regalloc left; next: use 12-byte struct copy for lbl_8040A474/80"
