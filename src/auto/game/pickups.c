@@ -703,3 +703,245 @@ void PartImpact_Coin(void *arg0) {
 #undef NuCosApprox
 #undef fn_8000CB50
 #undef fn_8006DD1C
+
+struct FpMoveView {
+    u8 pad0[0x9c];
+    f32 field9c;
+    u8 padA0[0x6c];
+    f32 field10c[3];
+    u8 pad118[0xc];
+    f32 field124[3];
+};
+
+extern s32 (*lbl_80408D2C)(s32, void *);
+extern f32 AIParamToFloat(void *, s32);
+extern void AIMoveInstruction(void *, void *, f32, void *, s32, f32);
+extern f32 lbl_801AEC04[];
+extern f32 lbl_801AEC08[];
+extern f32 lbl_804099B0;
+
+s32 Action_FollowPlayer_Level(u8 *sys, void *processor, u8 *packet, s32 *params, s32 count, s32 firstTime)
+{
+    s32 i;
+    u8 *target;
+    if (!packet || !sys || !*(void **)(sys + 0x1380))
+        return 1;
+    if (firstTime) {
+        for (i = 0; i < count; i++) {
+            if (lbl_80408D2C && lbl_80408D2C(params[i], packet + 0xb0))
+                continue;
+            *(f32 *)(packet + 0x134) = AIParamToFloat(processor, params[i]);
+        }
+    }
+    {
+    u8 *t = *(u8 **)(sys + 0x1380);
+    if (t) {
+        struct FpMoveView *ai;
+        if (*(s8 *)(*(u8 **)(packet + 0x50) + 0x284) != -1 && lbl_804099B0 > lbl_801AEC04[0]) {
+            ai = *(struct FpMoveView **)(t + 4);
+            AIMoveInstruction(packet, &ai->field124, ai->field9c, &ai->field10c, 1, lbl_801AEC08[0]);
+        } else {
+            ai = *(struct FpMoveView **)(t + 4);
+            AIMoveInstruction(packet, &ai->field124, ai->field9c, &ai->field10c, 1, *(f32 *)(packet + 0x134));
+        }
+    }
+    }
+    return 0;
+}
+
+struct PickupPlayerView {
+    char unk0[0x28F];
+    u8 flag28F;
+    char unk290[0xDF4];
+    u8 count1084;
+    s8 count1085;
+};
+struct PickupForceView {
+    char unk0[0x122];
+    s16 kind122;
+    char unk124[4];
+    s32 flag128;
+    char unk12C[0xC8];
+};
+extern struct PickupPlayerView *gPlayer1Pointer[];
+extern u8 gDifficulty[];
+extern s32 lbl_80408888;
+extern struct PickupForceView *lbl_8040AEFC;
+extern s32 lbl_8040AFB8;
+extern s32 fn_800B9ED4(void);
+
+s32 fn_8013EDCC(void)
+{
+    struct PickupPlayerView **pp = gPlayer1Pointer;
+    s32 a = 0, b = 0;
+    do {
+        struct PickupPlayerView *p = *pp++;
+        if (p != NULL && p->count1084 != 0 && p->flag28F == 0) {
+            b += p->count1084;
+            a += p->count1084 - p->count1085;
+        }
+    } while ((s32)pp <= (s32)&gPlayer1Pointer[1]);
+    if (a > 0 && lbl_80408888 > 0) {
+        struct PickupForceView *f = lbl_8040AEFC;
+        s32 n = lbl_80408888;
+        do {
+            if (f->flag128 < 0 && f->kind122 == 0xE8)
+                a--;
+            f++;
+        } while (--n != 0);
+    }
+    {
+        s32 t;
+        s32 gd = gDifficulty[0];
+        if ((u32)gd > 5U)
+            t = a + 9;
+        else
+            t = a + 8;
+        a = t - gd;
+    }
+    if (a > b)
+        a = b;
+    else if (a < 0)
+        a = 0;
+    if (*(s32 *)((u8 *)lbl_80409410 + 0x198) == 0x49)
+        a *= 2;
+    else if (lbl_80409410->mode19C == 10)
+        a *= 3;
+    if (b != 0) {
+        s32 r = fn_800B9ED4();
+        if (lbl_8040AFB8 != 0) {
+            if (r < (a << 14) / b)
+                return 1;
+        } else if (r < (a << 16) / b)
+            return 1;
+    }
+    return 0;
+}
+
+struct PickupFlagPlayer { char unk0[0x20C]; s32 flags20C; };
+struct PickupDropActor { char unk0[0x30]; f32 pos[3]; char unk3C[0xE6]; s16 kind122; char unk124[4]; s32 flags128; };
+#define gFlagPlayers ((struct PickupFlagPlayer **)gPlayer1Pointer)
+
+static inline s32 pickup_player_ready(struct PickupFlagPlayer *pl)
+{
+    s32 r = 0;
+    if (pl != NULL && (pl->flags20C & 0x1000000))
+        r = 1;
+    return r;
+}
+
+void fn_8013C8E8(struct PickupDropActor *actor)
+{
+    if (actor->flags128 & 0x400000) {
+        struct PickupFlagPlayer *target;
+        s32 a = pickup_player_ready(gFlagPlayers[0]);
+        s32 b = pickup_player_ready((struct PickupFlagPlayer *)gPlayerPointers[0]);
+        if (a != 0) {
+            if (b != 0) {
+                struct PickupFlagPlayer **arr = gFlagPlayers;
+                s32 r = fn_800B9ED4();
+                if (r < 0)
+                    r += 0x7FFF;
+                target = arr[r >> 15];
+            } else if (a != 0) {
+                target = gFlagPlayers[0];
+            } else {
+                goto other;
+            }
+        } else {
+other:
+            if (b != 0)
+                target = (struct PickupFlagPlayer *)gPlayerPointers[0];
+            else
+                target = NULL;
+        }
+        if (target != NULL) {
+            struct NUPICKUP_s p;
+            u8 kind;
+            s32 *src;
+            s16 k = actor->kind122;
+            if (k == 0xDC) {
+                kind = 0;
+            } else {
+                kind = 2;
+                if (k == 0xE0)
+                    kind = 1;
+            }
+            p.kind3E = kind;
+            src = (s32 *)&actor->pos[0];
+            ((s32 *)&p)[0] = src[0];
+            ((s32 *)&p)[1] = src[1];
+            ((s32 *)&p)[2] = src[2];
+            fn_8013DF98(&p, target, lbl_801E15E8[(s8)kind].award);
+        }
+    }
+}
+
+extern f32 lbl_801AECB0[];
+extern s8 NuPortalWhichRoom(void *);
+
+void PartStop_Coin(void *arg0) {
+    f32 temp_r11;
+    s16 temp_r0;
+    s32 temp_r0_2;
+    s32 temp_r7;
+    s32 temp_r8;
+    s32 temp_r9;
+    s32 temp_r9_2;
+    s8 var_r3;
+    void *temp_r31;
+    void *temp_r6;
+    void *temp_r7_2;
+
+    temp_r7 = (*(s32 *)((s8 *)((void *)lbl_80409410) + (0x710)));
+    if (temp_r7 == 0) {
+        temp_r9 = (*(s32 *)((s8 *)((void *)lbl_80409410) + (0x750)));
+        temp_r9_2 = temp_r9 + 1;
+        temp_r31 = (*(s32 *)((s8 *)((void *)lbl_80409410) + (0x718))) + (temp_r9 << 6);
+        (*(s32 *)((s8 *)((void *)lbl_80409410) + (0x750))) = temp_r9_2;
+        if (temp_r9_2 >= (s32) lbl_80408888) {
+            (*(s32 *)((s8 *)((void *)lbl_80409410) + (0x750))) = temp_r7;
+        }
+        (*(s8 *)((s8 *)(temp_r31) + (0x39))) = 1;
+        temp_r0 = (*(s16 *)((s8 *)(arg0) + (0x122)));
+        if (temp_r0 == 0xDC) {
+            (*(u8 *)((s8 *)(temp_r31) + (0x3E))) = (u8) temp_r7;
+        } else if (temp_r0 == 0xE0) {
+            (*(u8 *)((s8 *)(temp_r31) + (0x3E))) = 1U;
+        } else {
+            (*(u8 *)((s8 *)(temp_r31) + (0x3E))) = 2U;
+        }
+        (*(s8 *)((s8 *)(temp_r31) + (0x3A))) = 0;
+        temp_r7_2 = arg0 + 0x30;
+        (*(s8 *)((s8 *)(temp_r31) + (0x3D))) = 0;
+        temp_r6 = temp_r31 + 0xC;
+        (*(s8 *)((s8 *)(temp_r31) + (0x3B))) = 0;
+        (*(s16 *)((s8 *)(temp_r31) + (0x30))) = 0;
+        temp_r0_2 = (*(s32 *)((s8 *)(arg0) + (0x30)));
+        temp_r8 = (*(s32 *)((s8 *)(temp_r7_2) + (8)));
+        temp_r11 = (*(f32 *)((s8 *)(temp_r7_2) + (4)));
+        (*(s32 *)((s8 *)(temp_r31) + (0xC))) = temp_r0_2;
+        (*(f32 *)((s8 *)(temp_r31) + (4))) = temp_r11;
+        (*(s32 *)((s8 *)(temp_r31) + (0))) = temp_r0_2;
+        (*(s32 *)((s8 *)(temp_r31) + (8))) = temp_r8;
+        (*(s32 *)((s8 *)(temp_r6) + (8))) = temp_r8;
+        (*(f32 *)((s8 *)(temp_r6) + (4))) = temp_r11;
+        (*(s8 *)((s8 *)(temp_r31) + (0x3C))) = 1;
+        (*(s16 *)((s8 *)(temp_r31) + (0x34))) = 0;
+        (*(f32 *)((s8 *)(temp_r31) + (0x20))) = (f32) ((*(f32 *)((s8 *)(temp_r31) + (4))) - *(s32 *)((u8 *)lbl_801E15E8 + 0x14 + ((s8) (*(u8 *)((s8 *)(temp_r31) + (0x3E))) * 0x34)));
+        (*(s16 *)((s8 *)(temp_r31) + (0x36))) = -1;
+        (*(s16 *)((s8 *)(temp_r31) + (0x32))) = 0;
+        if ((s32) (*(s32 *)((s8 *)((void *)lbl_80409410) + (0x1C0))) != 0) {
+            var_r3 = NuPortalWhichRoom(temp_r31);
+        } else {
+            var_r3 = -1;
+        }
+        (*(s8 *)((s8 *)(temp_r31) + (0x3F))) = var_r3;
+        (*(s8 *)((s8 *)(temp_r31) + (0x38))) = 0x1E;
+        (*(f32 *)((s8 *)(temp_r31) + (0x24))) = (f32) (*(f32 *)((s8 *)(temp_r31) + (4)));
+        (*(s32 *)((s8 *)(temp_r31) + (0x1C))) = 0;
+        (*(f32 *)((s8 *)(temp_r31) + (0x28))) = (f32) lbl_801AECB0[0];
+        (*(s32 *)((s8 *)(temp_r31) + (0x18))) = 0;
+        (*(s32 *)((s8 *)(arg0) + (0x128))) = (s32) ((*(s32 *)((s8 *)(arg0) + (0x128))) & 0x7FFFFFFF);
+    }
+}
