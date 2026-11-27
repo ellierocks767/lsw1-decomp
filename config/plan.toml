@@ -2560,3 +2560,15 @@ reason = "best 49/64: data-pointer reg alloc/scheduling in node loop; next: poin
 [[parked]]
 function = "fn_8004B66C"
 reason = "best 44/76: target reloads nextOffset (0x60) repeatedly but caches endOffset; next: volatile/typedef variants"
+
+[[parked]]
+function = "fn_8004EFB4"
+reason = "best 101/108: r10/r11 swap on slot ptr + arg order of A570/A574 scheduling; next: permuter long run or different slot-ptr expression"
+
+[[parked]]
+function = "fn_8004B79C"
+reason = "best 78/85: struct+control flow match; store scheduling of the init stores (0x54..0x68 emitted late, li r11/r10 swap for result vs endOffset); next: permuter/ordering of comma stores"
+
+[[parked]]
+function = "fn_8004D4D0"
+reason = "best 54/76: struct-block copy and s16 list loop shape ok; mismatch first loop pretest vs bottom test and hdr reg choice (r9 vs r11), zero reg sharing; next: permuter"

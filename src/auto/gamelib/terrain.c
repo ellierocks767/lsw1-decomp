@@ -666,6 +666,55 @@ s32 fn_8004AEB4(HVQM4PlayerState* player)
     return 1;
 }
 
+s32 fn_8004B8F0(s32, s32, HVQM4DvdStream*);
+
+s32 fn_8004BAB4(HVQM4DvdStream* stream, u32 offset)
+{
+    s32 status;
+    u32 delta;
+    u32 block;
+    u32 start;
+    void (*cb)(s32, s32, s32);
+    volatile HVQM4DvdStream* v = stream;
+
+    if (v->result == -1) {
+        return 0;
+    }
+    if (offset == v->limitOffset) {
+        return 1;
+    }
+    if ((u32)v->nextOffset > offset && offset >= (u32)v->limitOffset) {
+        delta = offset - v->limitOffset;
+        return (fn_8004B8F0(0, delta, stream) ^ delta) == 0;
+    } else {
+        stream->seeking = 1;
+        if (stream->result == 0) {
+            do {
+                status = DVDGetCommandBlockStatus(stream);
+                if (status != stream->driveStatus) {
+                    cb = stream->onStatusChange;
+                    stream->driveStatus = status;
+                    if (cb != NULL) {
+                        cb(stream->callbackArg0, stream->callbackArg1, status);
+                    }
+                }
+            } while (stream->result == 0);
+        }
+        stream->seeking = 0;
+        block = offset / 98304;
+        start = block * 0x18000;
+        v->limitOffset = start;
+        v->readOffset = 0;
+        v->nextOffset = start;
+        *(s32*)((u8*)stream + 0x44) = (s32)stream->ringBuffer + (block * 0x18000) % 2162688;
+        if (v->result == 2) {
+            v->result = 1;
+        }
+        delta = offset % 98304;
+    }
+    return (fn_8004B8F0(0, delta, stream) ^ delta) == 0;
+}
+
 void fn_8004BD4C(s32 length, HVQM4DvdStream* stream)
 {
     volatile HVQM4DvdStream* state = stream;
