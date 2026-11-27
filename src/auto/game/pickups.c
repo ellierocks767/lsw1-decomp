@@ -216,8 +216,10 @@ void fn_8013D7E0(struct NUPICKUP_s *base, s32 count)
     f32 dist;
     struct NUPICKUP_s *p;
     struct NUPICKUP_s *q;
+    f32 *pd = lbl_801AECD8;
+    f32 *pmin = lbl_801AECD4;
     if (base != NULL && i < count) {
-        f32 dflt = lbl_801AECD8[0];
+        f32 dflt = *pd;
         do {
             struct PickupHeight *tbl = lbl_801E15FC;
             s32 *pb = &below;
@@ -229,7 +231,7 @@ void fn_8013D7E0(struct NUPICKUP_s *base, s32 count)
             bestAbove = -1;
             r = tbl[p->kind3E].height;
             r2 = r * r;
-            minBelow = minAbove = lbl_801AECD4[0];
+            minBelow = minAbove = *pmin;
             if (j < count) {
                 q = base;
                 do {
@@ -263,7 +265,7 @@ void fn_8013D7E0(struct NUPICKUP_s *base, s32 count)
             else
                 base[i].link1C = 0;
             q = &base[i];
-            q->baseY = fn_8005A470(q, -1, dflt, lbl_801AECDC[0]);
+            q->baseY = fn_8005A470(q, -1, lbl_801AECD8[0], lbl_801AECDC[0]);
             if (q->baseY == lbl_801AECE0[0])
                 q->baseY = dflt;
             i++;

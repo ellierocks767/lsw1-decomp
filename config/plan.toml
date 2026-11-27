@@ -2529,5 +2529,5 @@ reason = "best 178/294: six &dir/&col local addresses CSE'd into r20-r24 (target
 
 [[parked]]
 function = "fn_8013D7E0"
-reason = "best 113/135: loop-invariant hoist set differs (target hoists D8,15FC,&sp18,&sp1C,DC,E0,8034 not D4); next: force D4 unhoisted / permuter"
+reason = "retried: best 126/135: pd/pmin pointer locals fix hoist set but D8 lis sits before the base beq (target: after bge) and D4 goes through a rematerialised lis+addi+lfs 0 instead of lis+lfs @l; next: find a form that keeps D4 as lo_sum in-loop (not hoisted) with tbl hoisted, e.g. pd declared after the base test via early return"
 
