@@ -802,9 +802,14 @@ struct deb_transform_slot {
     struct numtx_s transformC0;
     u8 unk100[2];
     s16 definition;
-    u8 unk104[0x17C];
+    u8 unk104[0xC];
+    struct nuvec_s pos;
+    u8 unk11C[0x164];
     f32 unk280;
-    u8 unk284[0x68];
+    struct nuvec_s boundsMin;
+    struct nuvec_s boundsMax;
+    struct numtx_s boundsMtx;
+    u8 unk2DC[0x10];
 };
 
 static inline void DebInitTransform80(s32 slot)
@@ -2671,4 +2676,72 @@ void fn_800608E0(s32 arg0, f32 farg0) {
             }
         }
     }
+}
+
+f32 fn_8000ED40(f32);
+extern f32 lbl_80195670[];
+extern f32 lbl_80195674[];
+extern f32 lbl_80195678[];
+
+struct deb_bounds_def {
+    u8 unk00[0x1C];
+    f32 unk1C;
+    f32 unk20;
+    u8 unk24[0x24];
+    f32 unk48;
+    f32 unk4C;
+    f32 unk50;
+    f32 unk54;
+    struct nuvec_s offset;
+    struct nuvec_s angle;
+    u8 unk70[0x30];
+    f32 unkA0;
+    f32 unkA4;
+    u8 unkA8[0xA4];
+    f32 unk14C;
+};
+
+#define DEB_MAX(a, b) ((a) > (b) ? (a) : (b))
+
+void fn_80060BF8(struct deb_bounds_def *def, struct deb_transform_slot *slot) {
+    struct numtx_s mtx;
+    struct nuvec_s min;
+    struct nuvec_s max;
+    f32 pad;
+    f32 a;
+    f32 zero;
+
+    mtx = slot->transform80;
+    NuMtxTranslate(&mtx, &slot->pos);
+    max.x = fn_8000ED40(def->angle.x) * (def->unk1C + def->unk20) + def->unk4C * def->unkA4 + def->offset.x;
+    max.y = fn_8000ED40(def->angle.y) * (def->unk1C + def->unk20) + (fn_8000ED40(def->unk48) + def->unk50) * def->unkA4 + def->offset.y;
+    max.z = fn_8000ED40(def->angle.z) * (def->unk1C + def->unk20) + def->unk54 * def->unkA4 + def->offset.z;
+    NuVecMtxRotate(&max, &max, &slot->transformC0);
+    zero = lbl_80195670[0];
+    if (max.x < zero) {
+        max.x = -max.x;
+    }
+    if (max.y < zero) {
+        max.y = -max.y;
+    }
+    if (max.z < zero) {
+        max.z = -max.z;
+    }
+    pad = def->unk14C / lbl_80195674[0];
+    max.x = max.x + pad + lbl_80195678[0];
+    max.y = max.y + pad + lbl_80195678[0];
+    max.z = max.z + pad + lbl_80195678[0];
+    min.x = -max.x;
+    min.y = -max.y;
+    min.z = -max.z;
+    a = def->unkA0;
+    if (a > zero) {
+        max.y += a * def->unkA4 * def->unkA4;
+    } else if (a < zero) {
+        min.y += a * def->unkA4 * def->unkA4;
+    }
+    slot->unk280 = DEB_MAX(DEB_MAX(max.x, max.z), DEB_MAX(max.y, -min.y));
+    slot->boundsMin = min;
+    slot->boundsMax = max;
+    slot->boundsMtx = mtx;
 }
