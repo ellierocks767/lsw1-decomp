@@ -2384,3 +2384,7 @@ reason = "best 165/169: active list and shift seed swap r28/r29; next: compare t
 [[parked]]
 function = "fn_8012A8C8"
 reason = "best 298/308: outer state register and hatch state stores differ; next: trace the switch constant reused in the transition store and the join of the two completion paths"
+
+[[parked]]
+function = "fn_80098858"
+reason = "best 190/198: ProDG anchors the candidate induction pointer at rail_point (+8); next: inspect loop strength reduction and compare candidate pointer selection"
