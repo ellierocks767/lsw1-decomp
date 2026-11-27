@@ -245,7 +245,13 @@ void fn_80145F18(struct lbl_80409410_s *level, const struct CHRISVALUE_s *entry)
 }
 
 struct CHRISFIGHTER_s {
-    u8 pad000[0x110];
+    struct numtx_s transform;
+    u8 pad040[0x4C];
+    f32 field8C;
+    u8 pad090[0x30];
+    s32 pitch;
+    s32 yaw;
+    u8 pad0C8[0x48];
     s32 enabled;
     u8 pad114[0x1C];
 };
@@ -521,7 +527,7 @@ struct NUTURRETENTRY_s *CreateTurret(struct NUTURRET_s *turrets, char *name, u8 
     return entry;
 }
 
-struct CHRISACTIONVECTOR_s {
+struct CHRISVEC4_s {
     struct nuvec_s xyz;
     f32 w;
 };
@@ -531,9 +537,9 @@ void fn_80144D64(struct nuvec_s *start, struct nuvec_s *end, s32 mode, f32 value
 
 void ProcessSpaceLevelActionList(struct CHRIS43468_s *state)
 {
-    struct CHRISACTIONVECTOR_s from, to, rotated, transformed;
-    struct CHRISACTIONVECTOR_s *fromPtr, *toPtr;
-    struct CHRISACTIONVECTOR_s *rotatedPtr, *transformedPtr;
+    struct CHRISVEC4_s from, to, rotated, transformed;
+    struct CHRISVEC4_s *fromPtr, *toPtr;
+    struct CHRISVEC4_s *rotatedPtr, *transformedPtr;
     struct CHRISACTION_s *actions;
     s32 advanced = 0;
     f32 one, time, first, second;
@@ -601,4 +607,69 @@ void ProcessSpaceLevelActionList(struct CHRIS43468_s *state)
             state->actionKind = 4;
         }
     }
+}
+
+s32 fn_8000ABDC(f32 a, f32 b);
+void fn_8000E318(struct numtx_s *matrix, s32 angle);
+void fn_8000E498(struct numtx_s *matrix, s32 angle);
+void fn_8000E608(struct numtx_s *matrix, s32 angle);
+
+void fn_801435B8(struct CHRISFIGHTER_s *fighter, struct nuvec_s *direction,
+                 s32 fixedBank, f32 weight)
+{
+    struct CHRISVEC4_s localDirection, axis;
+    struct nuvec_s *local = &localDirection.xyz;
+    struct nuvec_s *rotation;
+    struct CHRISVEC4_s *axisPtr;
+    s32 yaw, pitch;
+    s16 turn;
+    f32 zero, one, limit, bank;
+
+    NuVecInvMtxRotate(local, direction, &fighter->transform);
+    yaw = (s16)fn_8000ABDC(localDirection.xyz.x, localDirection.xyz.z);
+    fighter->yaw = yaw;
+    NuVecRotateY(local, local, -yaw);
+    pitch = (s16)fn_8000ABDC(localDirection.xyz.y, localDirection.xyz.z);
+    fighter->pitch = pitch;
+    fn_8000E498(&fighter->transform, yaw);
+    fn_8000E318(&fighter->transform, -pitch);
+
+    if (fixedBank) {
+        fn_8000E608(&fighter->transform, 0x200);
+        return;
+    }
+
+    axisPtr = &axis;
+    rotation = &axisPtr->xyz;
+    yaw = (s16)fn_8000ABDC(direction->x, direction->z);
+    NuVecRotateY(rotation, direction, -yaw);
+    pitch = (s16)fn_8000ABDC(axis.xyz.y, axis.xyz.z);
+
+    one = 1.0f;
+    zero = 0.0f;
+    axis.xyz.x = one;
+    axisPtr->xyz.y = zero;
+    axisPtr->xyz.z = zero;
+    axisPtr->w = zero;
+    NuVecRotateZ(rotation, rotation, (s16)fighter->field8C + 0x4000);
+    NuVecRotateX(rotation, rotation, -pitch);
+    NuVecRotateY(rotation, rotation, yaw);
+    NuVecInvMtxRotate(rotation, rotation, &fighter->transform);
+
+    turn = (s16)fn_8000ABDC(axis.xyz.x, axis.xyz.y);
+    limit = lbl_80408E9C * 24000.0f;
+    if ((f32)turn > limit) {
+        turn = (s16)limit;
+    }
+    limit = lbl_80408E9C * -24000.0f;
+    if ((f32)turn < limit) {
+        turn = (s16)limit;
+    }
+    bank = turn;
+    if (weight > 2.0f) {
+        bank = zero;
+    } else if (weight > one) {
+        bank *= 2.0f - weight;
+    }
+    fn_8000E608(&fighter->transform, -(s16)bank);
 }
