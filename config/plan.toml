@@ -2528,3 +2528,7 @@ reason = "best 54/85: target copies the 12-byte pos through r3=&sp8 and re-reads
 [[parked]]
 function = "PartStop_Coin"
 reason = "best 42/92: stmw r30 frame vs r29 (extra live reg), m2c-structured source; next: typed pool/pickup structs with m2c ordering, then permuter run"
+
+[[parked]]
+function = "SetCreatureLights"
+reason = "best 178/294: six &dir/&col local addresses CSE'd into r20-r24 (target recomputes, only &amb kept in r25), 12 saved GPRs vs 7; next: find source form that stops gcse of local struct addresses; fn_8013F548 (inline loop/peel?), permuter"
