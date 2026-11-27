@@ -271,3 +271,23 @@ void AddWaterSplash(void *arg0, void *arg1) {
     NewRumble(*(s32 *)(*(s32 **)((s8 *)((*(void **)((s8 *)(arg0) + (0xEEC)))) + (0x61C))), lbl_801AA144[0]);
     fn_800AC058(*(s32 *)(*(s32 **)((s8 *)((*(void **)((s8 *)(arg0) + (0xEEC)))) + (0x61C))), 1);
 }
+
+s32 fn_800282E4(f32, f32, f32);
+extern f32 lbl_801AA154[];
+
+void fn_8010BC24(void) {
+    if (lbl_8040B244 > lbl_801AA154[0]) {
+        fn_800282E4(lbl_8040B240, lbl_8040B244, lbl_8040B248);
+    }
+}
+
+s32 fn_80074D14(s32, s32, s32);
+
+void fn_8010B780(void *arg0, s32 arg1, s32 arg2) {
+    if ((arg0 != NULL) && (arg1 >= 0) && (arg1 <= 5)) {
+        arg1 = *(s32 *)((arg1 * 0x14) + (*(s32 *)((s8 *)(arg0) + (8))));
+        if (arg1 != -1) {
+            fn_80074D14(arg1, arg2, 1);
+        }
+    }
+}
