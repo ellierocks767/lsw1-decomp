@@ -2512,7 +2512,7 @@ reason = "best 523/1224: scratch copies and triangle normal aggregate writebacks
 
 [[parked]]
 function = "fn_8013C8E8"
-reason = "retried: best 74/85: kind/pos copy now match; target keeps mr copies of both ready flags and an unthreaded second beq cr7 on a (b==0 path), mine folds it (thread_jumps before cse sees same pseudo); next: find a source where the else-if (a) test uses a different pseudo than the a&&b test (u8 flags give copies but clrlwi)"
+reason = "retried: best 74/85: kind/pos copy match; left: target mr-copies both ready flags (s16 inline return reproduces them, 72/85) and keeps an unthreaded beq cr7 re-test of a on the b==0 path; an inline pickup_both(x,y) param copy reproduces the unthreaded test (76 exact) but materialises x&&y; next: combine s16 return with a test form whose first a-compare uses a different pseudo than the else-if (a)"
 
 [[parked]]
 function = "SetCreatureLights"
