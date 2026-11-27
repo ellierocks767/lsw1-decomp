@@ -248,3 +248,7 @@ add_relocations:
 - source: .text:0x8009FCC0
   type: ha
   target: gPlayer1Pointer
+# fn_8009D5D0: @l use(s) 0x8009D838 (callee-saved r18)
+- source: .text:0x8009D61C
+  type: ha
+  target: lbl_8019E7E8

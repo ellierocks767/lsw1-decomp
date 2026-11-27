@@ -1747,3 +1747,105 @@ void fn_8009FB78(s32 *arg0)
         fn_8009DAE8();
     }
 }
+
+void NuCameraGet(void *);
+f32 NuSinApprox(s32);
+f32 fn_8000ED40(f32);
+void fn_8007B298(char *, f32, f32, f32, f32, f32, f32, s32, u8, u8, u8, f32, s32, void *, s32, s32);
+void fn_8007BE20(void *, f32, f32, f32, f32, f32, f32, s32, u8, u8, u8);
+void fn_8007BF24(void);
+void fn_800D6968(s32, f32, f32, f32, s32, f32, f32, f32, s32);
+void fn_800E2BA4(s32, s32 *, char **, s32 *, s32 *);
+void fn_8014BEB0(s32);
+
+extern char *lbl_803DED88[];
+extern f32 lbl_80408E98;
+extern f32 lbl_80408EDC;
+extern f32 lbl_80408EE0;
+extern f32 lbl_80408EE4;
+extern s32 lbl_80408EE8;
+extern s32 lbl_80409074[];
+extern s32 lbl_804094EC;
+
+void fn_8009D5D0(char *arg0, s32 arg1, f32 farg0)
+{
+    u8 cam[0x68];
+    s32 a[16];
+    s32 b[16];
+    char *lines[4];
+    s32 idx;
+    f32 cur;
+    f32 target;
+    f32 step;
+    s32 i;
+
+    if (arg1 == 0) {
+        cur = 0.0f;
+        target = 1.0f;
+    } else {
+        cur = 1.0f;
+        target = 0.0f;
+    }
+    if (farg0 == 0.0f) {
+        farg0 = 0.1f;
+    }
+    step = lbl_80408E98 / fn_8000ED40(farg0);
+    while (cur != target) {
+        if (lbl_80408EE8 == 0) {
+            if (cur > target) {
+                cur -= step;
+                if (cur < target) {
+                    cur = target;
+                }
+            } else if (cur < target) {
+                cur += step;
+                if (cur > target) {
+                    cur = target;
+                }
+            }
+        }
+        if (fn_800274BC(-1) != 0) {
+            AXFXSetHooks(0xB00, 0, 1.0f);
+            NuCameraGet(cam);
+            NuCameraCalcFrustrumPlanes((Mtx44Blk *)cam);
+            fn_8007BF24();
+            if (arg0 != NULL) {
+                if (NuStrICmp(arg0, "icons") == 0) {
+                    f32 x;
+                    if (arg1 == 0) {
+                        f32 start = lbl_80408EDC + 0.25f;
+                        x = ((lbl_80408EDC - start) * NuSinApprox((s32)(cur * 16384.0f))) + start;
+                    } else {
+                        x = lbl_80408EDC;
+                    }
+                    lbl_804094EC = 1;
+                    fn_800D6968(lbl_80409074[0], -x, lbl_80408EE0, 0.0f, 0xC9, lbl_80408EE4, cur, cur, 1);
+                    lbl_804094EC = 1;
+                    fn_800D6968(lbl_80409074[1], x, -lbl_80408EE0, 0.0f, 0xC8, lbl_80408EE4, cur, cur, 1);
+                } else if (NuStrICmp(arg0, "crawl") == 0 && lbl_804093C8 != -1) {
+                    f32 y = 0.75f;
+                    fn_800E2BA4(lbl_804093C8, &idx, lines, a, b);
+                    for (i = 0; i < 4; i++) {
+                        if (lines[i] != NULL) {
+                            fn_8007BE20(lines[i], 0.0f, y, 1.0f, 0.5f, 0.5f, 0.5f, 0, 0, 0xBF, 0xFF);
+                            y -= 0.15f;
+                        }
+                    }
+                    for (i = 0; i < 5; i++) {
+                        if (lbl_803DED88[idx] != NULL) {
+                            fn_8007B298(lbl_803DED88[idx], -0.85f, y, 1.0f, 0.5f, 0.5f, 0.5f, 3, 0, 0xBF, 0xFF, 1.7f, 3, NULL, 0, 0x80);
+                            y -= 0.4f;
+                        }
+                        idx++;
+                    }
+                } else if (arg0 == lbl_803DED88[0xD0 / 4]) {
+                    fn_8014BEB0((s32)(cur * 128.0f));
+                } else {
+                    fn_8007BE20(arg0, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0, (u8)(s32)(cur * 0.0f), (u8)(s32)(cur * 191.0f), (u8)(s32)(cur * 255.0f));
+                }
+            }
+            fn_80027564();
+        }
+        NuRndrFootPrints(-1);
+    }
+}
