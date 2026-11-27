@@ -47,6 +47,61 @@ void fn_800A20AC(void)
     fn_800B9D44(lbl_803E0298 + 4);
 }
 
+struct CRLEVEL_s {
+    char pad0[8];
+    s32 count;
+    char padC[0xC];
+    void *sets;
+    char pad1C[4];
+    char *defs;
+};
+extern struct CRLEVEL_s *lbl_80408DF0;
+
+struct CRANIMSET_s {
+    char pad0[4];
+    void *hgobj;
+    void **mtx;
+    void **anims;
+    char pad10[0x44];
+};
+struct CRROOTDATA_s {
+    char pad0[0x270];
+    f32 pos[3];
+    char pad27C[0x20];
+};
+void fn_800AC7AC();
+extern f32 lbl_8019FA7C[];
+void NuHGobjEvalAnim2Root(void *hgobj, void *anim, f32 time, s32 njanims, void *janim, void *mtx_array, void *rootfn, void *rootdata);
+
+void fn_800A2370(void)
+{
+    char mtx[0x4000];
+    struct CRROOTDATA_s root;
+    s32 i;
+    s32 j;
+    struct CRANIMSET_s *set = lbl_80408DF0->sets;
+    f32 zero;
+
+    for (i = 0; i <= 30; i++, set++) {
+        j = 0;
+        if (j < lbl_80408DF0->count) {
+            zero = lbl_8019FA7C[0];
+            do {
+                if (set != NULL && set->anims[j] != NULL && set->hgobj != NULL) {
+                    root.pos[0] = zero;
+                    root.pos[1] = zero;
+                    root.pos[2] = zero;
+                    NuHGobjEvalAnim2Root(set->hgobj, set->anims[j], zero, 0, 0, mtx, fn_800AC7AC, &root);
+                    *(f32 *)((char *)set->mtx[j] + 0x34) = root.pos[0];
+                    *(f32 *)((char *)set->mtx[j] + 0x38) = root.pos[1];
+                    *(f32 *)((char *)set->mtx[j] + 0x3C) = root.pos[2];
+                }
+                j++;
+            } while (j < lbl_80408DF0->count);
+        }
+    }
+}
+
 extern u8 NuTimeBar_DefaultColours[];
 extern u8 lbl_801D53C8[];
 extern s32 lbl_8040B044;
@@ -211,15 +266,6 @@ void fn_800868B4(void *, void *);
 s32 fn_8008F180(void *, u8, f32, f32, f32);
 void *fn_800A55D4(u8, s32);
 extern f32 lbl_8019FB9C[];
-struct CRLEVEL_s {
-    char pad0[8];
-    s32 count;
-    char padC[0xC];
-    void *sets;
-    char pad1C[4];
-    char *defs;
-};
-extern struct CRLEVEL_s *lbl_80408DF0;
 extern s32 lbl_80408FB4;
 
 void fn_800A4C78(char *arg0) {
