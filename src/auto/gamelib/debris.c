@@ -2053,3 +2053,40 @@ debparticle_s *fn_8005C6C8(debinst_s *inst, debdef_s *def, f32 time) {
     }
     return p;
 }
+
+char *strcpy(char *, const char *);
+
+struct DebSetVec_8038E840 { s32 a, b, c; };
+
+struct DebSet_8038E840 {
+    s32 unk0;
+    s32 count2;
+    s32 count1;
+    u8 pad0C[0x1C - 0x0C];
+    char names2[8][16];
+    s32 a2[8];
+    s32 b2[8];
+    s32 c2[8];
+    struct DebSetVec_8038E840 v2[8];
+    u8 pad15C[0x180 - 0x15C];
+    char names1[8][16];
+    s32 x1[8];
+    u8 pad220[0x240 - 0x220];
+    f32 f1[8];
+    struct DebSetVec_8038E840 v1[8];
+    u8 pad2C0[0x2D4 - 0x2C0];
+};
+
+extern struct DebSet_8038E840 lbl_8038E840[];
+
+void fn_800659B8(s32 set, s32 index) {
+    s32 i;
+
+    for (i = index; i < lbl_8038E840[set].count1 - 1; i++) {
+        lbl_8038E840[set].x1[i] = lbl_8038E840[set].x1[i + 1];
+        lbl_8038E840[set].f1[i] = lbl_8038E840[set].f1[i + 1];
+        lbl_8038E840[set].v1[i] = lbl_8038E840[set].v1[i + 1];
+        strcpy(lbl_8038E840[set].names1[i], lbl_8038E840[set].names1[i + 1]);
+    }
+    lbl_8038E840[set].count1--;
+}
