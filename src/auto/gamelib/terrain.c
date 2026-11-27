@@ -323,16 +323,28 @@ void fn_8004BDD0(void *arg0) {
 
 f32 NuCosApprox(s32);
 f32 NuSinApprox(s32);
+struct nuterrainpoly_s {
+    u8 unk00[0x18];
+    struct nuvec_s vertices[4];
+    struct nuvec_s normal;
+};
+
 struct nuterrainquery_s {
     u8 unk00[0x4C];
     f32 height;
     f32 radius;
-    u8 unk54[0x34];
+    f32 radiusSquared;
+    u8 unk58[0x18];
+    struct nuvec_s point;
+    u8 unk7C[0xC];
     u8 hitKind;
-    u8 unk89[0xF];
+    u8 unk89[0xB];
+    struct nuterrainpoly_s *poly;
     f32 hitFraction;
     u8 unk9C[0xC];
     struct nuvec_s normal;
+    u8 unkB4[0x48];
+    struct nuvec_s vertices[4];
 };
 
 extern struct nuterrainquery_s *lbl_8040AE5C;
@@ -624,6 +636,89 @@ s32 fn_8005241C(struct nuvec_s *point, f32 radius)
         y = point->y;
         lbl_8040AE5C->normal.z = -depth;
         lbl_8040AE5C->normal.y = -y;
+        return 1;
+    }
+
+    return 0;
+}
+
+extern const f32 lbl_80195044[];
+extern const f32 lbl_80195048[];
+
+s32 fn_80052224(s32 index)
+{
+    f32 z = lbl_8040AE5C->vertices[index].z;
+    f32 radius = lbl_8040AE5C->radius;
+    f32 x;
+    f32 y;
+    f32 radiusSquared;
+    f32 distance;
+    f32 depth;
+    f32 height;
+    f32 zero;
+    f32 offset;
+    f32 fraction;
+    f32 pointY;
+    f32 normalZ;
+    struct nuterrainpoly_s *poly;
+    struct nuterrainquery_s *query;
+
+    if (z < -radius || z > radius + lbl_8040AE5C->height) {
+        return 0;
+    }
+
+    x = lbl_8040AE5C->vertices[index].x;
+    radiusSquared = lbl_8040AE5C->radiusSquared;
+    y = lbl_8040AE5C->vertices[index].y;
+    distance = x * x + y * y;
+    if (distance > radiusSquared) {
+        return 0;
+    }
+
+    depth = NuFsqrt(radiusSquared - distance);
+    z = lbl_8040AE5C->vertices[index].z;
+    zero = lbl_80195044[0];
+    offset = z - depth;
+    if (offset < zero || offset > (height = lbl_8040AE5C->height)) {
+        distance = z * z + distance;
+        if (!(distance < lbl_8040AE5C->radiusSquared)) {
+            return 0;
+        }
+
+        distance = NuFsqrt(distance);
+        query = lbl_8040AE5C;
+        fraction = distance - query->radius;
+        if (!(fraction < query->hitFraction)) {
+            return 0;
+        }
+
+        poly = query->poly;
+        depth = ((query->point.x - poly->vertices[index].x) * poly->normal.x
+               + (query->point.y - poly->vertices[index].y) * poly->normal.y)
+              + (query->point.z - poly->vertices[index].z) * poly->normal.z;
+        if (!(depth > zero)) {
+            return 0;
+        }
+
+        query->hitKind = 0x13;
+        depth = lbl_80195048[0] / distance;
+        query->hitFraction = fraction;
+        lbl_8040AE5C->normal.x = -lbl_8040AE5C->vertices[index].x * depth;
+        lbl_8040AE5C->normal.y = -lbl_8040AE5C->vertices[index].y * depth;
+        lbl_8040AE5C->normal.z = -lbl_8040AE5C->vertices[index].z * depth;
+        return 1;
+    }
+
+    distance = offset / height;
+    if (distance < lbl_8040AE5C->hitFraction) {
+        normalZ = -depth;
+        lbl_8040AE5C->hitKind = 3;
+        lbl_8040AE5C->hitFraction = distance;
+
+        lbl_8040AE5C->normal.x = -lbl_8040AE5C->vertices[index].x;
+        pointY = lbl_8040AE5C->vertices[index].y;
+        lbl_8040AE5C->normal.z = normalZ;
+        lbl_8040AE5C->normal.y = -pointY;
         return 1;
     }
 
