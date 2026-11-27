@@ -1699,3 +1699,10 @@ void fn_8011EB70(CutSceneState *scene)
         offset += sizeof(CutSceneSlot);
     } while (--remaining != 0);
 }
+
+void fn_8011B294(f32 value)
+{
+    if (lbl_8040A764 != 0) {
+        *(f32 *)lbl_8040A75C = fn_8000ED40(value);
+    }
+}
