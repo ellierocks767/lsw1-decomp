@@ -2472,3 +2472,7 @@ reason = "best 170/176: 0 length diffs, only align/lbl_804083CC schedule at @40 
 [[parked]]
 function = "fn_8005BE2C"
 reason = "best 249/284 (284 vs 284 insns, permuter 1530): f28/f29 swap in quadratic roots + r6/r7 swap + unk18 max_t scheduling; next: inspect SolveQuadratic inline / focused permuter on quadratic+cmd block"
+
+[[parked]]
+function = "fn_800A1EE8"
+reason = "best 26/27: mr r3, r0 scheduled before stw r0, lbl_80408F7C before bl memset (permuter 1750 iters stuck); next: check memset declaration or heap-reset macro/inline"
