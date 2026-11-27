@@ -351,6 +351,49 @@ void fn_800A4C78(char *arg0) {
     }
 }
 
+s32 fn_800B9ED4(void);
+extern f32 lbl_80408E9C;
+void fn_800A5A3C(char *obj);
+
+static inline void creatureResetTimer(char *obj)
+{
+    *(s16 *)(obj + 0x50) = 1;
+    *(f32 *)(obj + 0x24) = 0.0f;
+    *(f32 *)(obj + 0x28) = (f32)fn_800B9ED4() * 1.5259022e-05f * 7.0f + 8.0f;
+    *(f32 *)(obj + 0x20) = 0.0f;
+}
+
+void fn_800A5C64(char *obj)
+{
+    f32 dt;
+    f32 a;
+    f32 b;
+    f32 lim;
+
+    if (*(s32 *)(obj + 0x60) != 0) {
+        if (*(s16 *)(obj + 0x4E) == 1) {
+            dt = lbl_80408E9C;
+            a = *(f32 *)(obj + 0x20);
+            b = *(f32 *)(obj + 0x24);
+            lim = *(f32 *)(obj + 0x28);
+            a += dt;
+            b += dt;
+            *(f32 *)(obj + 0x20) = a;
+            *(f32 *)(obj + 0x24) = b;
+            if (b >= lim) {
+                if (*(s16 *)(obj + 0x50) == 1) {
+                    fn_800A5A3C(obj);
+                } else {
+                    creatureResetTimer(obj);
+                }
+            }
+            *(s16 *)(obj + 0x4E) = *(s16 *)(obj + 0x50);
+        } else {
+            creatureResetTimer(obj);
+        }
+    }
+}
+
 void ResetPlayerContexts(void *);
 void fn_80103EA8(void *);
 
@@ -406,7 +449,6 @@ void fn_800A30A8(char *obj, s32 unused) {
     *(f32 *)(obj + 0x77C) = 0.0f;
 }
 
-s32 fn_800B9ED4(void);
 
 void ResetPlayerContexts(void *arg) {
     char *obj = arg;
