@@ -6313,3 +6313,75 @@ s32 Action_SetLocator_Level(void *sys, void *process, struct gameaiscript_packet
     }
     return 1;
 }
+
+s32 Action_SnapToLocator(void *sys, void *process, struct gameaiscript_packet_s *packet,
+    char **params, s32 count, s32 firstTime, f32 time)
+{
+    char locatorName[64];
+    s32 personal = 0;
+    s32 indexed = 0;
+    s32 random = 0;
+    s32 checkTerrain = 1;
+    char *name = 0;
+    u8 *object = 0;
+    u8 *locator;
+    char *value;
+    s32 i;
+
+    if (firstTime != 0) {
+        if (packet != 0 && packet->owner != 0 && packet->owner->object != 0)
+            object = packet->owner->object;
+        for (i = 0; i < count; i++) {
+            if ((value = NuStrIStr(params[i], str_ScriptParam_Name)) != 0)
+                name = value + 5;
+            else if (NuStrIStr(params[i], str_ScriptScope_Personal) != 0)
+                personal = 1;
+            else if (NuStrIStr(params[i], str_ScriptScope_Indexed) != 0)
+                indexed = 1;
+            else if ((value = NuStrIStr(params[i], str_ScriptTarget_Random)) != 0)
+                random = AIParamToFloat(packet, value + 9);
+            else if ((value = NuStrIStr(params[i], str_ScriptCategory_Character)) != 0)
+                object = (u8 *)GetNamedGameObject(sys, value + 10, 0);
+            else if (NuStrIStr(params[i], str_ScriptFlag_DontCheckTerrain) != 0)
+                checkTerrain = 0;
+        }
+        if (object == 0) {
+            if (packet == 0 || packet->owner == 0 || packet->owner->object == 0)
+                return 1;
+            object = packet->owner->object;
+        }
+        locator = *(u8 **)(object + 0x39c);
+        if (name != 0) {
+            s8 index;
+            u8 *personalData;
+            if (indexed != 0 && object != 0 && (index = (s8)object[0x284]) != -1)
+                sprintf(locatorName, str_Format_StringInt, name, index);
+            else if (personal != 0 && object != 0 && (personalData = *(u8 **)(object + 0x64)) != 0)
+                sprintf(locatorName, str_Format_StringString, name, *(char **)(personalData + 0xc));
+            else if (random != 0)
+                sprintf(locatorName, str_Format_StringInt, name, NuRand(0) % random);
+            else
+                sprintf(locatorName, name);
+            locator = (u8 *)((s32 (*)(void *, char *))AIPathFindLocator)(sys, locatorName);
+        }
+        if (locator != 0) {
+            *(struct gameaiscript_vec_s *)(*(u8 **)(object + 0x2f0) + 0x6c) =
+                *(struct gameaiscript_vec_s *)(locator + 0x10);
+            *(u16 *)(object + 0x27e) = *(u16 *)(locator + 0x1e);
+            *(u16 *)(object + 0x1066) = *(u16 *)(locator + 0x1e);
+            *(u16 *)(object + 0x1068) = *(u16 *)(locator + 0x1e);
+            *(struct gameaiscript_pathstate_s *)(object + 0x3ac) =
+                *(struct gameaiscript_pathstate_s *)(locator + 0x20);
+            *(struct gameaiscript_vec_s *)(object + 0x9c) = lbl_803E04C4
+                = *(struct gameaiscript_vec_s *)(object + 0x90) = *(struct gameaiscript_vec_s *)(object + 0xa8)
+                = *(struct gameaiscript_vec_s *)(*(u8 **)(object + 0x2f0) + 0x6c);
+            *(struct gameaiscript_vec_s *)(object + 0x1c4) = *(struct gameaiscript_vec_s *)(object + 0x1dc)
+                = *(struct gameaiscript_vec_s *)(object + 0x6c);
+            *(struct gameaiscript_vec_s *)(object + 0x78) = lbl_801D5964;
+            InitPlayerShadow(object);
+            if (checkTerrain != 0)
+                SetPlayerOnSurface(object, 0);
+        }
+    }
+    return 1;
+}
