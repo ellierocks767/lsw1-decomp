@@ -2740,3 +2740,7 @@ reason = "best 178/199: &step re-addi'd (not CSE'd) before NuVecAddPS, f12/f13 s
 [[parked]]
 function = "DrawTopShelf"
 reason = "best 259/340 (work/DrawTopShelf/try.c, macro-built 6 blocks, results discarded, per-block temps): lbl_80401864 addr hoisted before fadds in target (r31=&lbl, r30=obj swap), sc store order 48/50/li/4c, f29/f30 swap for k; next: pointer temps per block, permuter on try.c"
+
+[[parked]]
+function = "Shop_DrawCodes"
+reason = "best 279/391: frame 0xc8 vs 0xc0, &m cached in r31 (target re-adds per use), induction-var and lis/addi hoist order differ; next: permuter burst on the loop or restructure to 5 induction vars"
