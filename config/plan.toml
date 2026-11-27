@@ -2515,10 +2515,6 @@ function = "fn_8013C8E8"
 reason = "retried: best 74/85: kind/pos copy now match; target keeps mr copies of both ready flags and an unthreaded second beq cr7 on a (b==0 path), mine folds it (thread_jumps before cse sees same pseudo); next: find a source where the else-if (a) test uses a different pseudo than the a&&b test (u8 flags give copies but clrlwi)"
 
 [[parked]]
-function = "PartStop_Coin"
-reason = "best 42/92: stmw r30 frame vs r29 (extra live reg), m2c-structured source; next: typed pool/pickup structs with m2c ordering, then permuter run"
-
-[[parked]]
 function = "SetCreatureLights"
 reason = "best 178/294: six &dir/&col local addresses CSE'd into r20-r24 (target recomputes, only &amb kept in r25), 12 saved GPRs vs 7; next: find source form that stops gcse of local struct addresses; fn_8013F548 (inline loop/peel?), permuter"
 

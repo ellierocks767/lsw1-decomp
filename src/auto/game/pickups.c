@@ -472,7 +472,7 @@ void fn_8013D2F4(struct NUPICKUP_s *base, s32 count, s32 offsets)
     }
 }
 
-struct PickupCollectDef { char unk0[0x1c]; s32 award; char unk20[2]; u8 flags; char unk23[0xd]; f32 radius; };
+struct PickupCollectDef { char unk0[0x14]; f32 height14; char unk18[4]; s32 award; char unk20[2]; u8 flags; char unk23[0xd]; f32 radius; };
 struct PickupCollectOwner { char unk0[0x61c]; s32 *handle; };
 struct PickupCollectActor { char unk0[0xeec]; struct PickupCollectOwner *owner; };
 extern struct PickupCollectDef lbl_801E15E8[];
@@ -1093,71 +1093,75 @@ void fn_8013C8E8(struct PickupDropActor *actor)
     }
 }
 
-extern f32 lbl_801AECB0[];
-extern s8 NuPortalWhichRoom(void *);
+extern s8 NuPortalWhichRoom(void *, void *);
 
-void PartStop_Coin(void *arg0) {
-    f32 temp_r11;
-    s16 temp_r0;
-    s32 temp_r0_2;
-    s32 temp_r7;
-    s32 temp_r8;
-    s32 temp_r9;
-    s32 temp_r9_2;
-    s8 var_r3;
-    void *temp_r31;
-    void *temp_r6;
-    void *temp_r7_2;
+struct PickupCoin {
+    struct PickupVec3 pos;
+    struct PickupVec3 posC;
+    s32 link18;
+    s32 link1C;
+    f32 baseY;
+    f32 previousY;
+    f32 value28;
+    f32 value2C;
+    u16 angle30;
+    u16 word32;
+    u16 word34;
+    s16 kind36;
+    u8 flags38;
+    u8 active39;
+    u8 unk3A;
+    u8 unk3B;
+    u8 enabled3C;
+    u8 unk3D;
+    s8 kind3E;
+    s8 room3F;
+};
 
-    temp_r7 = (*(s32 *)((s8 *)((void *)lbl_80409410) + (0x710)));
-    if (temp_r7 == 0) {
-        temp_r9 = (*(s32 *)((s8 *)((void *)lbl_80409410) + (0x750)));
-        temp_r9_2 = temp_r9 + 1;
-        temp_r31 = (*(s32 *)((s8 *)((void *)lbl_80409410) + (0x718))) + (temp_r9 << 6);
-        (*(s32 *)((s8 *)((void *)lbl_80409410) + (0x750))) = temp_r9_2;
-        if (temp_r9_2 >= (s32) lbl_80408888) {
-            (*(s32 *)((s8 *)((void *)lbl_80409410) + (0x750))) = temp_r7;
-        }
-        (*(s8 *)((s8 *)(temp_r31) + (0x39))) = 1;
-        temp_r0 = (*(s16 *)((s8 *)(arg0) + (0x122)));
-        if (temp_r0 == 0xDC) {
-            (*(u8 *)((s8 *)(temp_r31) + (0x3E))) = (u8) temp_r7;
-        } else if (temp_r0 == 0xE0) {
-            (*(u8 *)((s8 *)(temp_r31) + (0x3E))) = 1U;
-        } else {
-            (*(u8 *)((s8 *)(temp_r31) + (0x3E))) = 2U;
-        }
-        (*(s8 *)((s8 *)(temp_r31) + (0x3A))) = 0;
-        temp_r7_2 = arg0 + 0x30;
-        (*(s8 *)((s8 *)(temp_r31) + (0x3D))) = 0;
-        temp_r6 = temp_r31 + 0xC;
-        (*(s8 *)((s8 *)(temp_r31) + (0x3B))) = 0;
-        (*(s16 *)((s8 *)(temp_r31) + (0x30))) = 0;
-        temp_r0_2 = (*(s32 *)((s8 *)(arg0) + (0x30)));
-        temp_r8 = (*(s32 *)((s8 *)(temp_r7_2) + (8)));
-        temp_r11 = (*(f32 *)((s8 *)(temp_r7_2) + (4)));
-        (*(s32 *)((s8 *)(temp_r31) + (0xC))) = temp_r0_2;
-        (*(f32 *)((s8 *)(temp_r31) + (4))) = temp_r11;
-        (*(s32 *)((s8 *)(temp_r31) + (0))) = temp_r0_2;
-        (*(s32 *)((s8 *)(temp_r31) + (8))) = temp_r8;
-        (*(s32 *)((s8 *)(temp_r6) + (8))) = temp_r8;
-        (*(f32 *)((s8 *)(temp_r6) + (4))) = temp_r11;
-        (*(s8 *)((s8 *)(temp_r31) + (0x3C))) = 1;
-        (*(s16 *)((s8 *)(temp_r31) + (0x34))) = 0;
-        (*(f32 *)((s8 *)(temp_r31) + (0x20))) = (f32) ((*(f32 *)((s8 *)(temp_r31) + (4))) - *(s32 *)((u8 *)lbl_801E15E8 + 0x14 + ((s8) (*(u8 *)((s8 *)(temp_r31) + (0x3E))) * 0x34)));
-        (*(s16 *)((s8 *)(temp_r31) + (0x36))) = -1;
-        (*(s16 *)((s8 *)(temp_r31) + (0x32))) = 0;
-        if ((s32) (*(s32 *)((s8 *)((void *)lbl_80409410) + (0x1C0))) != 0) {
-            var_r3 = NuPortalWhichRoom(temp_r31);
-        } else {
-            var_r3 = -1;
-        }
-        (*(s8 *)((s8 *)(temp_r31) + (0x3F))) = var_r3;
-        (*(s8 *)((s8 *)(temp_r31) + (0x38))) = 0x1E;
-        (*(f32 *)((s8 *)(temp_r31) + (0x24))) = (f32) (*(f32 *)((s8 *)(temp_r31) + (4)));
-        (*(s32 *)((s8 *)(temp_r31) + (0x1C))) = 0;
-        (*(f32 *)((s8 *)(temp_r31) + (0x28))) = (f32) lbl_801AECB0[0];
-        (*(s32 *)((s8 *)(temp_r31) + (0x18))) = 0;
-        (*(s32 *)((s8 *)(arg0) + (0x128))) = (s32) ((*(s32 *)((s8 *)(arg0) + (0x128))) & 0x7FFFFFFF);
+struct PickupStopActor { char unk0[0x30]; struct PickupVec3 pos; char unk3C[0xE6]; s16 kind122; char unk124[4]; u32 flags128; };
+
+#define COIN_POOL ((struct NUPICKUPPOOL_s *)lbl_80409410)
+#define COIN_PORTAL (*(void **)((u8 *)lbl_80409410 + 0x1C0))
+
+void PartStop_Coin(struct PickupStopActor *actor) {
+    struct NUPICKUPPOOL_s *pool = COIN_POOL;
+    if (pool->state710 == 0) {
+        struct PickupCoin *p;
+        s16 k;
+        s8 room;
+        u32 zero;
+        p = (struct PickupCoin *)pool->buffers[1] + pool->state750++;
+        if (pool->state750 >= lbl_80408888)
+            pool->state750 = 0;
+        p->active39 = 1;
+        k = actor->kind122;
+        if (k == 0xDC)
+            p->kind3E = 0;
+        else if (k == 0xE0)
+            p->kind3E = 1;
+        else
+            p->kind3E = 2;
+        p->unk3A = 0;
+        zero = 0;
+        p->unk3D = zero;
+        p->unk3B = zero;
+        p->angle30 = zero;
+        p->posC = p->pos = actor->pos;
+        p->baseY = p->pos.y - lbl_801E15E8[p->kind3E].height14;
+        p->enabled3C = 1;
+        p->word32 = zero;
+        p->word34 = zero;
+        p->kind36 = -1;
+        if (COIN_PORTAL != NULL)
+            room = NuPortalWhichRoom(COIN_PORTAL, p);
+        else
+            room = -1;
+        p->room3F = room;
+        p->link18 = 0;
+        p->previousY = p->pos.y;
+        p->link1C = 0;
+        p->value28 = 5.0f;
+        p->flags38 = 0x1E;
+        actor->flags128 &= 0x7FFFFFFF;
     }
 }
