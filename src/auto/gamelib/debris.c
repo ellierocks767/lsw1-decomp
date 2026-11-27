@@ -1136,3 +1136,145 @@ void fn_8005E80C(s32 *arg0) {
         }
     }
 }
+
+void fn_8006E3E0(void *);
+
+typedef struct debparticle_s {
+    struct nuvec_s pos;
+    f32 time;
+    struct nuvec_s vel;
+    f32 inv_life;
+} debparticle_s;
+
+typedef struct debchunk_s {
+    u8 pad00[0x20];
+    debparticle_s particles[32];
+} debchunk_s;
+
+typedef struct debinst_s {
+    debchunk_s *chunks[0x20];
+    u8 pad80[0x40];
+    struct numtx_s mtx;
+    s16 unk100;
+    s16 unk102;
+    s16 unk104;
+    s16 unk106;
+    s16 unk108;
+    s16 unk10a;
+    u8 pad10c[0x10];
+    struct nuvec_s pos_off;
+    struct nuvec_s vel_off;
+    u8 pad134[0x10];
+    void (*cb)(struct debinst_s *, void *, debparticle_s *);
+    u8 pad148[0x198];
+    f32 start_time;
+    f32 last_time;
+    u8 pad2e8[4];
+} debinst_s;
+
+typedef struct debdef_s {
+    u8 pad00[0x2e];
+    u8 unk2e;
+    u8 pad2f[0x19];
+    f32 unk48;
+    f32 unk4c;
+    f32 unk50;
+    f32 unk54;
+    f32 unk58;
+    f32 unk5c;
+    f32 unk60;
+    u8 pad64[0x40];
+    f32 life;
+    u8 pada8[0x200];
+    s32 unk2a8;
+    u8 pad2ac[0x15c];
+    s16 repeat_count;
+    u8 pad40a[2];
+    f32 repeat_dt;
+    f32 ramp_time;
+} debdef_s;
+
+debparticle_s *fn_8005ACFC(debinst_s *inst, debdef_s *def, f32 time) {
+    struct nuvec_s v;
+    s16 idx;
+    debparticle_s *p;
+    s32 rot_y;
+    s32 rot_z;
+    f32 speed;
+    s32 i;
+
+    if (inst->unk10a >= inst->unk106) {
+        inst->unk10a = 0;
+    }
+    if (def->unk2e == 7) {
+        return NULL;
+    }
+    p = inst->chunks[inst->unk10a / 32]->particles;
+    p += (s16)(inst->unk10a % 32);
+    inst->unk10a++;
+    p->time = time;
+    inst->last_time = time;
+    p->inv_life = 64.0f / def->life;
+
+    rot_y = (s32)((2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk50 - def->unk50) + def->unk5c);
+    rot_z = (s32)((2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk54 - def->unk54) + def->unk60);
+
+    if (def->ramp_time != 0.0f && (lbl_804083BC - inst->start_time) < def->ramp_time) {
+        v.y = def->unk58 * ((lbl_804083BC - inst->start_time) / def->ramp_time);
+    } else {
+        v.y = def->unk58;
+    }
+
+    v.z = 0.0f;
+    v.x = 0.0f;
+    NuVecRotateZ(&v, &v, rot_z);
+    NuVecRotateY(&v, &v, rot_y);
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->pos.x = v.x;
+    p->pos.y = v.y;
+    p->pos.z = v.z;
+
+    {
+        f32 r = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk4c - def->unk4c;
+        v.z = 0.0f;
+        v.y = r + def->unk48;
+        v.x = 0.0f;
+    }
+    NuVecRotateZ(&v, &v, rot_z);
+    NuVecRotateY(&v, &v, rot_y);
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->vel.x = v.x;
+    p->vel.y = v.y;
+    p->vel.z = v.z;
+
+    if (inst->cb != NULL) {
+        inst->cb(inst, def, p);
+    }
+
+    p->pos.x += inst->pos_off.x;
+    p->pos.y += inst->pos_off.y;
+    p->pos.z += inst->pos_off.z;
+    p->vel.x += inst->vel_off.x;
+    p->vel.y += inst->vel_off.y;
+    p->vel.z += inst->vel_off.z;
+
+    for (i = 0; i < def->repeat_count; i++) {
+        debparticle_s *p2;
+        s32 chunk;
+        s16 rem;
+        debparticle_s *base;
+        if (inst->unk10a >= inst->unk106) {
+            inst->unk10a = 0;
+        }
+        base = inst->chunks[inst->unk10a / 32]->particles;
+        p2 = &base[(s16)(inst->unk10a % 32)];
+        inst->unk10a++;
+        *p2 = *p;
+        p2->time += (f32)(i + 1) * def->repeat_dt;
+    }
+
+    if (def->unk2a8 == 0) {
+        fn_8006E3E0(def);
+    }
+    return p;
+}
