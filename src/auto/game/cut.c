@@ -1444,3 +1444,23 @@ void fn_8011D4F8(void)
     lbl_8040B260 = -1;
     lbl_80409944 = 0;
 }
+
+typedef struct CutSceneFlagRecord {
+    u32 key;
+    u8 unk4[4];
+    u16 flags;
+    u8 unkA[0x36];
+} CutSceneFlagRecord;
+
+extern CutSceneFlagRecord *lbl_8040A760;
+
+void fn_8011B428(void)
+{
+    CutSceneFlagRecord *record = lbl_8040A760;
+
+    if (record != NULL) {
+        for (; record->key != 0; ++record) {
+            record->flags |= 8;
+        }
+    }
+}
