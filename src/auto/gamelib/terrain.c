@@ -243,40 +243,6 @@ void HVQM4PlayerExBufaSetFree(HVQM4PlayerState* player, HVQM4AudioNode* node)
     HVQM4BufaSetFree(player->audio, node);
 }
 
-HVQM4VideoNode* HVQM4BufvGetFree(HVQM4VideoQueue* queue)
-{
-    register HVQM4VideoNode* found asm("r30") = NULL;
-    HVQM4VideoNode* cur;
-    s32 interrupts = OSDisableInterrupts();
-
-    cur = queue->freeHead;
-    if (cur != NULL) {
-        do {
-            if (cur->busy == 0) {
-                found = cur;
-                if (found == queue->freeHead) {
-                    if (found->nextFree == found) {
-                        queue->freeHead = NULL;
-                    } else {
-                        queue->freeHead = found->nextFree;
-                        goto unlink;
-                    }
-                } else {
-unlink:
-                    found->prevFree->nextFree = found->nextFree;
-                    found->nextFree->prevFree = found->prevFree;
-                }
-                cur->prevFree = NULL;
-                cur->nextFree = NULL;
-                break;
-            }
-            cur = cur->nextFree;
-        } while (cur != queue->freeHead);
-    }
-    OSRestoreInterrupts(interrupts);
-    return found;
-}
-
 s32 fn_8004A578(s32, s32 *);
 extern s32 lbl_80408378;
 
@@ -725,17 +691,18 @@ void HVQM4BufaSetFree(HVQM4AudioQueue* queue, HVQM4AudioNode* node)
 
 HVQM4AudioNode* HVQM4BufaGetFree(HVQM4AudioQueue* queue)
 {
-    register HVQM4AudioNode* node asm("r30");
-    HVQM4AudioNode* next;
     s32 interrupts = OSDisableInterrupts();
+    HVQM4AudioNode* node = queue->freeHead;
+    HVQM4AudioNode* next;
 
-    node = queue->freeHead;
     if (node != NULL) {
-        next = node->nextFree;
-        if (next == NULL) {
-            queue->freeTail = next;
-        }
-        queue->freeHead = next;
+        do {
+            next = node->nextFree;
+            if (next == NULL) {
+                queue->freeTail = next;
+            }
+            queue->freeHead = next;
+        } while (0);
         node->nextFree = NULL;
     }
     OSRestoreInterrupts(interrupts);
@@ -744,17 +711,18 @@ HVQM4AudioNode* HVQM4BufaGetFree(HVQM4AudioQueue* queue)
 
 HVQM4AudioNode* HVQM4BufaGetSend(HVQM4AudioQueue* queue)
 {
-    register HVQM4AudioNode* node asm("r30");
-    HVQM4AudioNode* next;
     s32 interrupts = OSDisableInterrupts();
+    HVQM4AudioNode* node = queue->sendHead;
+    HVQM4AudioNode* next;
 
-    node = queue->sendHead;
     if (node != NULL) {
-        next = node->nextSend;
-        if (next == NULL) {
-            queue->sendTail = next;
-        }
-        queue->sendHead = next;
+        do {
+            next = node->nextSend;
+            if (next == NULL) {
+                queue->sendTail = next;
+            }
+            queue->sendHead = next;
+        } while (0);
         node->nextSend = NULL;
     }
     OSRestoreInterrupts(interrupts);
@@ -763,17 +731,18 @@ HVQM4AudioNode* HVQM4BufaGetSend(HVQM4AudioQueue* queue)
 
 HVQM4VideoNode* HVQM4BufvGetDisp(HVQM4VideoQueue* queue)
 {
-    register HVQM4VideoNode* node asm("r30");
-    HVQM4VideoNode* next;
     s32 interrupts = OSDisableInterrupts();
+    HVQM4VideoNode* node = queue->displayHead;
+    HVQM4VideoNode* next;
 
-    node = queue->displayHead;
     if (node != NULL) {
-        next = node->nextDisplay;
-        if (next == NULL) {
-            queue->displayTail = next;
-        }
-        queue->displayHead = next;
+        do {
+            next = node->nextDisplay;
+            if (next == NULL) {
+                queue->displayTail = next;
+            }
+            queue->displayHead = next;
+        } while (0);
         node->nextDisplay = NULL;
     }
     OSRestoreInterrupts(interrupts);

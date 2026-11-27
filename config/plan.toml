@@ -2544,3 +2544,7 @@ reason = "best 523/1224: scratch copies and triangle normal aggregate writebacks
 [[parked]]
 function = "fn_8004BC1C"
 reason = "best 36/37: target enters loop at the DVDGetCommandBlockStatus call skipping the 'mr r3,r31' (extra b at +0x14); next: find loop shape that hoists the arg move above the loop head, permuter burst"
+
+[[parked]]
+function = "HVQM4BufvGetFree"
+reason = "best 40/44 without register asm (44/44 only with asm(\"r30\") on found, rejected as unnatural): found is CSE'd into cur in the unlink loads; next: different loop/found structure so found stays a separate pseudo, body in work/hc"
