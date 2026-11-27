@@ -623,14 +623,23 @@ void fn_80074840(void)
 typedef struct Part {
     u8 unk000[0x30];
     struct nuvec_s position;
-    u8 unk03C[0x8C - 0x3C];
+    u8 unk03C[0x80 - 0x3C];
+    struct nuvec_s velocity;
     struct nuvec_s boundsMin;
     struct nuvec_s boundsMax;
-    u8 unk0A4[0xD4 - 0xA4];
+    struct nuvec_s hitPos;
+    struct nuvec_s hitNormal;
+    u8 unk0BC[0xD4 - 0xBC];
     void *owner;
     u8 unk0D8[0xDC - 0xD8];
     f32 radius;
-    u8 unk0E0[0x104 - 0xE0];
+    f32 hitRadius;
+    u8 unk0E4[0xE8 - 0xE4];
+    f32 gravity;
+    u8 unk0EC[0xF4 - 0xEC];
+    f32 step;
+    f32 age;
+    u8 unk0FC[0x104 - 0xFC];
     u32 flags;
     u8 unk108[0x114 - 0x108];
     s32 rotationRates[2];
@@ -655,7 +664,9 @@ typedef struct Part {
     s32 *unk1C4;
     u8 unk1C8[0x1DC - 0x1C8];
     s32 unk1DC;
-    u8 unk1E0[0x1F4 - 0x1E0];
+    u8 unk1E0[0x1E4 - 0x1E0];
+    s32 debris;
+    u8 unk1E8[0x1F4 - 0x1E8];
 } Part;
 
 s32 fn_8005EB80(s32 *);
@@ -887,3 +898,31 @@ void fn_80074374(s32 keep)
         }
     }
 }
+
+typedef struct PartStateBits {
+    u32 b80 : 1;
+    u32 b40 : 1;
+    u32 hit : 1;
+    u32 b10 : 1;
+    u32 hasDebris : 1;
+    u32 mode : 2;
+    u32 rest : 25;
+} PartStateBits;
+
+typedef struct PartWorld {
+    u8 unk00[0x35];
+    u8 kind;
+    u8 unk36[0x98 - 0x36];
+    f32 bounce;
+    f32 push;
+} PartWorld;
+
+s32 fn_80059C44(struct nuvec_s *, struct nuvec_s *, f32, s32);
+s32 fn_8005A82C(void);
+extern f32 lbl_80199A64[];
+extern f32 lbl_80199A68[];
+extern f32 lbl_80199A6C[];
+extern struct nuvec_s lbl_80348074;
+extern f32 lbl_80408898;
+extern PartWorld *lbl_8040AE5C;
+

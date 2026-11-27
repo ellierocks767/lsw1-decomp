@@ -2388,3 +2388,7 @@ reason = "best 298/308: outer state register and hatch state stores differ; next
 [[parked]]
 function = "fn_80098858"
 reason = "best 190/198: ProDG anchors the candidate induction pointer at rail_point (+8); next: inspect loop strength reduction and compare candidate pointer selection"
+
+[[parked]]
+function = "fn_80072028"
+reason = "best 212/250: preamble reg alloc + mr r10,r9 copy of lbl_8040AE5C + addi form of lbl_80348074.y in nested check; next: permuter burst or different local/pointer shape"
