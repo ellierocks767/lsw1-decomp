@@ -2480,3 +2480,7 @@ reason = "best 26/27: mr r3, r0 scheduled before stw r0, lbl_80408F7C before bl 
 [[parked]]
 function = "fn_8009E8B4"
 reason = "best 173/179: 1 missing mr r9, r0 after lwz r0, lbl_804093B0 before cmpwi r0, 0x7e (inlined fn_800A1CEC matched all 10 stack-copy insns); next: check nested if or local copy of lbl_804093B0"
+
+[[parked]]
+function = "fn_8009E310"
+reason = "best 155/196: exact 196 insns and -0x70 frame; 0.1f vs 43300000 lis order causes r8/r9/r10 regalloc shift in &3 and &0xC; next: check how 0x2814/0xE08 and 0.1f are derived"
