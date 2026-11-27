@@ -592,3 +592,53 @@ void fn_80109720(void) {
         }
     }
 }
+
+s32 NuStrCpy(void *, void *);
+s32 fn_80074C00(void *, s32);
+typedef struct PartDef { char name[0x28]; s8 enabled; u8 pad[0x87]; } PartDef;
+extern PartDef lbl_803D5680[];
+
+typedef struct PartName { s32 id; char name[0x10]; } PartName;
+typedef struct PartTable { s32 n; s32 total; PartName *items; } PartTable;
+
+s32 fn_80109550(void *heap, void *end, s32 total, s32 n, s32 *names, s32 arg5) {
+    PartTable *t;
+    s32 i;
+    PartDef *p;
+
+    t = (PartTable *)((*(s32 *)heap + 0xF) & ~0xF);
+    *(s32 *)heap = (s32)(t + 1);
+    if (t != 0) {
+        memset(t, 0, sizeof(PartTable));
+        t->n = n;
+        t->total = total;
+        t->items = (PartName *)((*(s32 *)heap + 0xF) & ~0xF);
+        *(s32 *)heap = ((*(s32 *)heap + 0xF) & ~0xF) + total * sizeof(PartName);
+        if (t->items != 0) {
+            i = 0;
+            memset(t->items, -1, total * sizeof(PartName));
+            for (; i < t->n; i++) {
+                NuStrCpy(t->items[i].name, (void *)names[i]);
+                t->items[i].id = -1;
+                t->items[i].id = fn_80074C00(t->items[i].name, arg5);
+            }
+            if (i < t->total) {
+                p = lbl_803D5680;
+                do {
+                    t->items[i].id = -1;
+                    if (p->enabled > 0) {
+                        NuStrCpy(t->items[i].name, p->name);
+                        t->items[i].id = fn_80074C00(t->items[i].name, arg5);
+                        i++;
+                    }
+                    p++;
+                    if (i >= t->total) break;
+                } while ((s32)p <= (s32)&lbl_803D5680[63]);
+            }
+            for (; i < t->total; i++)
+                t->items[i].id = -1;
+            return (s32)t;
+        }
+    }
+    return 0;
+}
