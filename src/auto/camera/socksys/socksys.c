@@ -812,7 +812,9 @@ struct socksys_rail_s {
     u8 pad30[4];
     struct socksys_rotation_s *camera_rotations;
     struct socksys_rotation_s *midpoint_rotations;
-    u8 pad3c[0x104 - 0x3c];
+    u8 pad3c[0xd8 - 0x3c];
+    u32 overlapExclusionMask[1];
+    u8 padDC[0x104 - 0xdc];
 };
 
 struct socksys_rails_s {
@@ -882,4 +884,16 @@ void fn_8009758C(struct socksys_rails_s *system, struct socksys_position_s *posi
         position->normalized_position = position->segment_position /
             (rail->flag2f ? (f32)(rail->segment_count + 1) : (f32)(s32)rail->segment_count);
     }
+}
+
+s32 fn_8009CAEC(const struct socksys_rail_s *rail, s32 index)
+{
+    // Signed operands keep ProDG from turning the mask into a right shift.
+    s32 flags = (s32)rail->overlapExclusionMask[index / 32];
+    s32 mask = (s32)(1U << (index & 31));
+
+    if (flags & mask) {
+        return 1;
+    }
+    return 0;
 }
