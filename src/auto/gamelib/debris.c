@@ -804,12 +804,19 @@ struct deb_transform_slot {
     s16 definition;
     u8 unk104[0xC];
     struct nuvec_s pos;
-    u8 unk11C[0x164];
+    u8 unk11C[0x154];
+    s16 unk270;
+    s16 portalRoom;
+    u8 unk274[3];
+    u8 visible;
+    u8 unk278[4];
+    s32 portal;
     f32 unk280;
     struct nuvec_s boundsMin;
     struct nuvec_s boundsMax;
     struct numtx_s boundsMtx;
-    u8 unk2DC[0x10];
+    f32 unk2DC;
+    u8 unk2E0[0xC];
 };
 
 static inline void DebInitTransform80(s32 slot)
@@ -977,9 +984,11 @@ void fn_8005FF74(s32 effect, void *arg1, s32 arg2, s16 angleZ, s16 angleY, void 
 }
 
 typedef struct debrisnode_s {
-    u8 pad00[8];
+    s32 unk00;
+    void *obj;
     s8 *deb;
-    u8 pad0c[0x4c];
+    struct numtx_s mtx;
+    struct nuvec_s pos;
     struct debrisnode_s *prev;
     struct debrisnode_s *next;
     u16 unk60;
@@ -2744,4 +2753,144 @@ void fn_80060BF8(struct deb_bounds_def *def, struct deb_transform_slot *slot) {
     slot->boundsMin = min;
     slot->boundsMax = max;
     slot->boundsMtx = mtx;
+}
+
+void fn_80016660(s32, s32, s32 *);
+s32 fn_800166C4(s32, s32);
+s32 NuPortalClipTest(s32, struct nuvec_s *, s32, f32);
+void *NuCameraGetViewMtx(void);
+void fn_8000D134(struct numtx_s *, struct numtx_s *, struct numtx_s *);
+void NuAnimCurveSetEval(void *);
+s32 fn_80023628(struct nuvec_s *, struct nuvec_s *, struct numtx_s *, s32, f32);
+void fn_80026F0C(s32, s32, s32, struct numtx_s *, s32, f32, f32, f32, f32, f32);
+extern s32 lbl_8019567C[];
+extern const f32 lbl_80195680[];
+extern s32 lbl_8038E6EC[];
+extern s32 lbl_804084A4;
+
+struct deb_draw_obj {
+    u8 unk00[0x2C];
+    u8 unk2C;
+    u8 unk2D;
+    s8 unk2E;
+    u8 unk2F[9];
+    f32 unk38;
+    f32 unk3C;
+    u8 unk40[4];
+    f32 unk44;
+    u8 unk48[0xF8];
+    f32 unk140;
+    f32 unk144;
+    u8 unk148[0x160];
+    s32 unk2A8;
+    u8 unk2AC[0x43];
+    u8 unk2EF;
+    u8 unk2F0[0xD8];
+    s16 slots[8];
+};
+
+s32 fn_80060F58(s32 arg0, s32 list) {
+    struct numtx_s mtx;
+    struct nuvec_s pos;
+    struct nuvec_s min;
+    struct nuvec_s max;
+    debrisnode_s *node;
+    struct deb_draw_obj *obj;
+    struct deb_transform_slot *slot;
+    s32 draw;
+    s32 found;
+    s32 i;
+    f32 scale;
+    f32 radius;
+
+    fn_80016660(0, 0xC, lbl_8019567C);
+    node = lbl_8038E6D8[list];
+    if (node != NULL) {
+        do {
+            if (node->unk00 != 0) {
+                obj = node->obj;
+                slot = (struct deb_transform_slot *)node->deb;
+                if (obj->unk2A8 == 0) {
+                    fn_8006E3E0(obj);
+                    if (obj->unk2A8 == 0) {
+                        goto next;
+                    }
+                }
+                draw = 1;
+                if (node->deb != NULL) {
+                    found = 0;
+                    for (i = 0; i <= 7; i++) {
+                        if (obj->slots[i] != -1 && (struct deb_transform_slot *)(lbl_80408404 + obj->slots[i] * 0x2EC) == slot) {
+                            found = 1;
+                            break;
+                        }
+                    }
+                    if (!found && obj->unk3C > lbl_80195680[0] && obj->unk2EF == 0 && slot->unk2DC > obj->unk3C) {
+                        draw = 0;
+                    }
+                    if (slot->visible == 0) {
+                        draw = 0;
+                    }
+                    if (draw && obj->unk2C == 0 && obj->unk2EF == 0 && !found) {
+                        if (slot->unk280 == lbl_80195680[0] || lbl_804084A4 != 0) {
+                            fn_80060BF8(obj, slot);
+                        }
+                        radius = slot->unk280;
+                        min = slot->boundsMin;
+                        max = slot->boundsMax;
+                        mtx = slot->boundsMtx;
+                        if (lbl_804084A4 == 0 && slot->portal != 0 && slot->portalRoom != -1 &&
+                            NuPortalClipTest(slot->portal, &slot->pos, slot->portalRoom, radius) == 0) {
+                            draw = 0;
+                        }
+                        if (fn_80023628(&min, &max, &mtx, 0, *lbl_80195680) == 0) {
+                            draw = 0;
+                        }
+                    }
+                    if (draw) {
+                        mtx = ((struct deb_transform_slot *)node->deb)->transform80;
+                        pos.x = ((struct deb_transform_slot *)node->deb)->pos.x;
+                        pos.y = ((struct deb_transform_slot *)node->deb)->pos.y;
+                        pos.z = ((struct deb_transform_slot *)node->deb)->pos.z;
+                    }
+                } else {
+                    if (obj->unk3C > lbl_80195680[0] && obj->unk2EF == 0 && fn_80064A58(&node->pos) > obj->unk3C) {
+                        draw = 0;
+                    }
+                    if (draw) {
+                        mtx = node->mtx;
+                        pos.x = node->pos.x;
+                        pos.y = node->pos.y;
+                        pos.z = node->pos.z;
+                    }
+                }
+                if (draw) {
+                    NuMtxTranslate(&mtx, &pos);
+                    if (list == 4) {
+                        fn_8000D134(&mtx, &mtx, NuCameraGetViewMtx());
+                        scale = lbl_804083C0;
+                    } else {
+                        scale = lbl_804083BC;
+                    }
+                    if (obj->unk2E == 7) {
+                        fn_80026F0C(node->unk00, ((struct deb_draw_obj *)node->obj)->unk2A8,
+                                    lbl_8038E6EC[((struct deb_draw_obj *)node->obj)->unk2E], &mtx, 4, scale,
+                                    obj->unk140, obj->unk144, obj->unk38, obj->unk44);
+                    } else if (obj->unk2EF != 0) {
+                        NuAnimCurveSetEval(obj->unk2F0);
+                        fn_80026F0C(node->unk00, ((struct deb_draw_obj *)node->obj)->unk2A8,
+                                    lbl_8038E6EC[((struct deb_draw_obj *)node->obj)->unk2E], &mtx, 6, scale,
+                                    obj->unk140, obj->unk144, obj->unk38, obj->unk44);
+                    } else {
+                        fn_80026F0C(node->unk00, ((struct deb_draw_obj *)node->obj)->unk2A8,
+                                    lbl_8038E6EC[((struct deb_draw_obj *)node->obj)->unk2E], &mtx, 0, scale,
+                                    obj->unk140, obj->unk144, obj->unk38, obj->unk44);
+                    }
+                }
+            }
+next:
+            node = node->next;
+        } while (node != NULL);
+    }
+    return fn_800166C4(0, 0xC);
 }
