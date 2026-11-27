@@ -2440,3 +2440,93 @@ s32 fn_80063834(s32 slot, void *arg1, f32 radius, f32 yscale, u8 mask)
     }
     return 0;
 }
+
+typedef struct deb_ring_s {
+    u8 pad0[0x102];
+    s16 type;
+    u8 pad104[0x148 - 0x104];
+    struct deb_ring_s *next;
+    struct deb_ring_s *prev;
+    u8 pad150[0x158 - 0x150];
+    s16 delay;
+    u8 pad15a[0x268 - 0x15A];
+    s16 timers[4];
+    u8 pad270[0x275 - 0x270];
+    u8 has_timers;
+} deb_ring_s;
+
+extern s32 lbl_8040AEB0;
+
+static inline void DebRingUnlink(deb_ring_s **head, deb_ring_s *node) {
+    deb_ring_s *prev = node->prev;
+    if (prev == NULL) {
+        deb_ring_s *next = node->next;
+        *head = next;
+        if (next != NULL) {
+            next->prev = prev;
+        }
+    } else {
+        prev->next = node->next;
+        if (node->next != NULL) {
+            node->next->prev = node->prev;
+        }
+    }
+    node->prev = NULL;
+    node->next = NULL;
+}
+
+static inline void DebRingPush(deb_ring_s **head, deb_ring_s *node) {
+    if (*head != NULL) {
+        (*head)->prev = node;
+    }
+    node->next = *head;
+    *head = node;
+}
+
+void fn_80062B38(void) {
+
+
+    deb_ring_s *node = ((deb_ring_s **)lbl_8038E714)[lbl_8040AEB0];
+    if (node != NULL) {
+        do {
+            deb_ring_s *next = node->next;
+            if (((u8 *)((s32 *)lbl_804083FC)[node->type])[0x2EC] != 0) {
+                DebRingUnlink(&((deb_ring_s **)lbl_8038E714)[lbl_8040AEB0], node);
+                DebRingPush(&((deb_ring_s **)lbl_8038E714)[(lbl_8040AEB0 + 1) & 0x1F], node);
+                node->delay--;
+                if (node->has_timers) {
+                    s32 i;
+                    for (i = 0; i < 4; i++) {
+                        if (node->timers[i] > 0 && node->timers[i] != 9999) {
+                            node->timers[i]--;
+                        }
+                    }
+                }
+            } else if (node->delay > 0x1F) {
+                node->delay -= 0x20;
+                if (node->has_timers) {
+                    s32 i;
+                    for (i = 0; i < 4; i++) {
+                        if (node->timers[i] > 0 && node->timers[i] != 9999) {
+                            node->timers[i] -= 0x20;
+                        }
+                    }
+                }
+            } else {
+                DebRingUnlink(&((deb_ring_s **)lbl_8038E714)[lbl_8040AEB0], node);
+                DebRingPush(&((deb_ring_s **)lbl_8038E714)[(lbl_8040AEB0 + node->delay) & 0x1F], node);
+                if (node->has_timers) {
+                    s32 i;
+                    for (i = 0; i < 4; i++) {
+                        if (node->timers[i] > 0 && node->timers[i] != 9999) {
+                            node->timers[i] -= node->delay;
+                        }
+                    }
+                }
+                node->delay = 0;
+            }
+            node = next;
+        } while (node != NULL);
+    }
+    lbl_8040AEB0 = (lbl_8040AEB0 + 1) & 0x1F;
+}
