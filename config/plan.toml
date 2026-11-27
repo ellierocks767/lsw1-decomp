@@ -2454,16 +2454,8 @@ function = "fn_80052590"
 reason = "best 446/455: hitKind default immediates schedule early and the alternate-plane hit flag update lacks a query-pointer reload; next: vary normal and flag lvalue types together to retain the reload after the three normal stores."
 
 [[parked]]
-function = "fn_800533F8"
-reason = "best 226/282: batch-loop frame and paired plane evaluation schedules differ; next: separate signed count tests from unsigned skip headers and split dot products into staged component loads."
-
-[[parked]]
 function = "fn_80052CAC"
 reason = "best 281/467: three vector locals recover the frame, but constant hoisting and condition layout differ; next: type the 16-byte endpoints and keep separately computed XZ distances around the normalizer"
-
-[[parked]]
-function = "fn_80053860"
-reason = "best 210/324: typed endpoint assignments reproduce the 12-byte copies and the frame now matches, but bounds temporaries and inner-loop register copies differ; next: stage each axis extent before the radius term and split list flags from segment metadata"
 
 [[parked]]
 function = "fn_80050C5C"
