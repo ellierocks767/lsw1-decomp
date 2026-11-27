@@ -2448,3 +2448,7 @@ reason = "best 145/205: branch layout and temp registers differ around the per-t
 [[parked]]
 function = "fn_80072028"
 reason = "best 212/250: preamble reg alloc + mr r10,r9 copy of lbl_8040AE5C + addi form of lbl_80348074.y in nested check; next: permuter burst or different local/pointer shape"
+
+[[parked]]
+function = "fn_80052590"
+reason = "best 446/455: hitKind default immediates schedule early and the alternate-plane hit flag update lacks a query-pointer reload; next: vary normal and flag lvalue types together to retain the reload after the three normal stores."
