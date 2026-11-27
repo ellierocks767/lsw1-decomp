@@ -1,6 +1,7 @@
 #include "types.h"
 #include "game/levels.h"
 #include "numath/nuvec.h"
+#include "numath/nuvec_ps.h"
 
 struct fn_80140918_s {
     s32 x;
@@ -232,5 +233,99 @@ void fn_80145F18(struct lbl_80409410_s *level, const struct CHRISVALUE_s *entry)
         if (value != 0.0f) {
             data->field63728 = value / 11.0f;
         }
+    }
+}
+
+struct CHRISFIGHTER_s {
+    u8 pad000[0x110];
+    s32 enabled;
+    u8 pad114[0x1C];
+};
+
+struct CHRISWING_s {
+    u8 pad000[0x30];
+    struct nuvec_s position;
+    u8 pad03C[4];
+    struct CHRISFIGHTER_s fighters[5];
+    struct nuvec_s velocity;
+    f32 field63C;
+    struct nuvec_s localPosition;
+    u8 pad64C[4];
+    struct nuvec_s nextPosition;
+    u8 pad65C[0xC];
+    s32 enabled;
+    s32 mode;
+    u8 pad670[4];
+    s32 field674;
+    f32 remainingTime;
+    f32 speed;
+};
+
+s32 ProcessStarFighter(struct CHRISFIGHTER_s *fighter, struct CHRISBUFFER_s *buffer);
+extern struct numtx_s lbl_803E0158;
+extern struct nuvec_s lbl_803E0188;
+
+void ProcessWing(struct CHRISWING_s *wing, struct CHRISBUFFER_s *buffer)
+{
+    struct nuvec_s step;
+    struct CHRISFIGHTER_s *fighter;
+    s32 mode, count;
+    u32 enabledAddress;
+    s32 result = 0;
+
+    if (wing->enabled == 0) {
+        return;
+    }
+
+    mode = wing->mode;
+    if (mode <= 1) {
+        if (mode >= 0) {
+            struct nuvec_s *velocity = &wing->velocity;
+            struct nuvec_s *position = &wing->position;
+            struct nuvec_s *stepVec;
+            f32 time, localZ;
+
+            if (mode == 0) {
+                NuVecSub(velocity, &lbl_803E0188, position);
+                wing->field63C = 1.0f;
+                NuVecNorm(velocity, velocity);
+                NuVecScale(velocity, velocity, wing->speed);
+            }
+            stepVec = &step;
+            NuVecScale(stepVec, velocity, lbl_80408E9C);
+            NuVecAddPS(position, position, stepVec);
+            NuVecInvMtxTransform(&wing->localPosition, position, &lbl_803E0158);
+            time = wing->remainingTime - lbl_80408E9C;
+            wing->remainingTime = time;
+            if (time < 0.0f ||
+                (((localZ = wing->localPosition.z) > 800.0f) && wing->mode == 1) ||
+                (localZ < 0.0f && wing->mode == 0)) {
+                wing->enabled = 0;
+            }
+        }
+    }
+
+    fighter = wing->fighters;
+    /* The enabled-field cursor advances independently of the fighter argument. */
+    enabledAddress = (u32)&fighter->enabled;
+    count = sizeof(wing->fighters) / sizeof(*fighter);
+    do {
+        s32 enabled = *(s32 *)enabledAddress;
+
+        enabledAddress += sizeof(*fighter);
+        if (enabled != 0) {
+            result |= ProcessStarFighter(fighter, buffer);
+        }
+        fighter++;
+        count--;
+    } while (count != 0);
+    if (result == 0) {
+        wing->field674 = 1;
+    }
+    if (wing->field674 != 0) {
+        struct nuvec_s *stepVec = &step;
+
+        NuVecScale(stepVec, &wing->velocity, lbl_80408E9C);
+        NuVecAddPS(&wing->nextPosition, &wing->position, stepVec);
     }
 }
