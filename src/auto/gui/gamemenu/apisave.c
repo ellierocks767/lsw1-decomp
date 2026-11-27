@@ -166,7 +166,7 @@ void fn_800790C8(u8* menu)
 }
 
 extern s32 lbl_80408A54;
-extern char *lbl_80408B7C;
+extern char *lbl_80408B7C, *lbl_80408B88;
 
 void fn_80079434(u8* menu)
 {
@@ -659,4 +659,96 @@ block_10:
         fn_80076194();
         Menu_Open(0x3EE, 1, -1);
     }
+}
+
+s32 fn_80078F68(void)
+{
+    s32 id = gRegisteredMenuDefinitions[gMenuStack[gMenuDepth].id].id;
+    return id >= 0x3E8 && id <= 0x3FF;
+}
+
+s32 fn_8007900C(void)
+{
+    s32 id = gRegisteredMenuDefinitions[gMenuStack[gMenuDepth].id].id;
+    switch (id) {
+    case 0x3F4:
+    case 0x3F5:
+    case 0x3F6:
+        return 1;
+    }
+    return 0;
+}
+
+s32 fn_80078FA4(void)
+{
+    switch (gRegisteredMenuDefinitions[gMenuStack[gMenuDepth].id].id) {
+    case 0x3E9:
+    case 0x3EF:
+    case 0x3F1:
+    case 0x3F6:
+    case 0x3F7:
+        return 1;
+    }
+    return 0;
+}
+
+void fn_800793C0(void)
+{
+    f32 one = 1.0f;
+    f32 half = 0.5f;
+    fn_8007B298(lbl_80408B88, 0.0f, 0.0f, one, half, half, half, 0, 255, 127, 0, 1.5f, 2, 0, 0,
+                lbl_80408A54);
+}
+
+extern char *lbl_80408B1C;
+
+void fn_80079304(u8* menu)
+{
+    f32 one = 1.0f;
+    f32 half = 0.5f;
+    fn_8007B298(lbl_80408B1C, 0.0f, 0.0f, one, half, half, half, 0, 255, 127, 0, 1.5f, -1, 0, 0,
+                lbl_80408A54);
+    {
+        f32 time = lbl_8040AF18;
+        f32 offset = lbl_80408A84;
+        s32 action = lbl_80408AB0;
+        *(f32*)(menu + 0x9c) = time - offset;
+        fn_800769B4(menu, action, lbl_80408A57);
+    }
+    {
+        f32 time = lbl_8040AF18;
+        s32 action = lbl_80408AAC;
+        *(f32*)(menu + 0x9c) = time;
+        fn_800769B4(menu, action, lbl_80408A57);
+    }
+}
+
+extern f32 lbl_8019B938[], lbl_8019B93C[], lbl_8019B940[], lbl_8019B944[], lbl_8019B948[];
+extern u8 lbl_8040A61B, lbl_8040A61F, lbl_8040A623;
+extern f32 lbl_8040AF1C;
+
+void fn_80078EE4(void)
+{
+    fn_8007B298(lbl_803D992C, 0.0f, lbl_8040AF1C - 0.2f, 1.0f, 0.5f, 0.5f, 0.5f, 0, lbl_8040A61B,
+                lbl_8040A61F, lbl_8040A623, 1.2f, 1, 0, 0, lbl_80408A54);
+}
+
+extern s32 lbl_80408A68, lbl_80408B74;
+extern char *lbl_80408B70;
+
+void fn_800794E8(u8* menu)
+{
+    char buf[0x80];
+    sprintf(buf, lbl_80408B70, lbl_80408A68);
+    fn_8007B298(buf, 0.0f, 0.0f, 1.0f, 0.5f, 0.5f, 0.5f, 0, 255, 127, 0, 1.3f, 3, 0, 0,
+                lbl_80408A54);
+    {
+        f32 time = lbl_8040AF18;
+        f32 offset = lbl_80408A84;
+        s32 action = lbl_80408AB0;
+        *(f32*)(menu + 0x9c) = time - (offset + offset);
+        fn_800769B4(menu, action, lbl_80408A57);
+    }
+    fn_800769B4(menu, lbl_80408B74, lbl_80408A57);
+    fn_800769B4(menu, lbl_80408AAC, lbl_80408A57);
 }
