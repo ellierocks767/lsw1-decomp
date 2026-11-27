@@ -2436,3 +2436,15 @@ reason = "best 193/194: addi r28,r29,0x10 (states=&sc->states) scheduled before 
 [[parked]]
 function = "fn_80072028"
 reason = "best 212/250: preamble reg alloc + mr r10,r9 copy of lbl_8040AE5C + addi form of lbl_80348074.y in nested check; next: permuter burst or different local/pointer shape"
+
+[[parked]]
+function = "NuGCutSceneSysPostBackgroundLoad"
+reason = "best 18/19: final stw uses r9 (cur) not r10 (prev), copy-propagated; next: permuter burst"
+
+[[parked]]
+function = "fn_8003A878"
+reason = "best 133/135: li r10,0 + stb after stw c4/c8 vs li r0 before; next: permuter with focus markers on prelude stores"
+
+[[parked]]
+function = "NuAnimDataFixPtrs"
+reason = "best 113/126: second flags store (oris r11) folded by GCC, prelude only; next: non-foldable second flags update or permuter"
