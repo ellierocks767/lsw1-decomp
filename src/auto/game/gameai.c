@@ -1,4 +1,5 @@
 #include "game/ai.h"
+#include "game/creature.h"
 
 struct fn_8012CD28_s {
     s32 x;
@@ -30,7 +31,8 @@ s32 fn_8008F22C(s32 *);
 s32 fn_8008F234(s32 *);
 s32 fn_8008F23C(s32 *);
 s32 fn_8008F244(s32 *);
-s32 fn_8008F24C(s32 *);
+struct gaiv3;
+void fn_8008F24C(void (*)(const struct gaiv3 *, s32, s32, s32));
 s32 fn_8008F254(s32 *);
 s32 fn_8008F25C(s32 *);
 s32 fn_8008F264(s32 *);
@@ -54,7 +56,7 @@ u8 fn_8012CD50(char *name);
 s32 fn_8012CE08(s32 arg0);
 u8 fn_8012CE4C(s32 arg0);
 u8 fn_8012CE74(char *name);
-extern s32 fn_8012CF28[];
+void fn_8012CF28(const struct gaiv3 *, s32, s32, s32);
 s32 fn_8012D068(s32 arg0);
 s32 GameAIActionParseSpeed(char *name, u8 *out);
 extern s32 fn_8012D13C[];
@@ -436,6 +438,9 @@ struct gaibox_s {
     f32 y;
     f32 z;
     s16 yrot;
+    u8 flags;
+    u8 unk2B[5];
+    u64 objectMask;
 };
 
 s32 fn_8012C994(struct gaibox_s *box, f32 *pos, f32 r) {
@@ -603,6 +608,378 @@ s32 fn_8012A3F4(u8 *w, struct gaihandle *h) {
                 h->obj = o;
                 return 1;
             }
+        }
+    }
+    return 0;
+}
+
+extern f32 lbl_801ACEC8[];
+extern f32 lbl_801ACECC[];
+extern struct NUGAMEOBJECT_s *lbl_80409430;
+extern s32 lbl_8040B058;
+
+void fn_80129F6C(struct gaibox_s *box)
+{
+    struct NUGAMEOBJECT_s *object;
+    s32 i;
+    f32 offset[3];
+    s32 flags;
+
+    box->objectMask = 0;
+    box->flags &= ~7;
+    object = lbl_80409430;
+    i = 0;
+    if (i < lbl_8040B058) {
+        f32 minValue = lbl_801ACEC8[0];
+        f32 minY = lbl_801ACECC[0];
+        do {
+            if ((object->flags20C & 0x80080000) == 0x80080000 &&
+                object->playerPacket != NULL &&
+                (object->unk28F == 0 || object->unk103C > minValue)) {
+                NuVecSub(offset, object->position, box->pos);
+                NuVecRotateY(offset, offset, -box->yrot);
+                if (offset[0] >= -box->x && offset[1] >= minY &&
+                    offset[2] >= -box->z && offset[0] <= box->x &&
+                    offset[1] <= box->y && offset[2] <= box->z) {
+                    box->objectMask |= 1ULL << object->maskIndex;
+                    if (object->playerPacket != NULL && (object->flags20C & 0x01000000)) {
+                        box->flags |= 1;
+                    }
+                    flags = object->motionFlags;
+                    if (flags & 1) {
+                        box->flags |= 4;
+                    } else if (!(flags & 4)) {
+                        box->flags |= 2;
+                    }
+                }
+            }
+            i++;
+            object++;
+        } while (i < lbl_8040B058);
+    }
+}
+
+struct gameai_special_s {
+    void *scene;
+    s32 index;
+    s32 unk8;
+};
+
+struct gameai_controller_flags_s {
+    u32 reverse : 1;
+    u32 unk : 31;
+};
+
+struct gameai_controller_s {
+    u8 links[8];
+    void *connection;
+    struct gameai_special_s special;
+    s32 cutscene;
+    u8 unk1C[0x88];
+    struct gameai_controller_flags_s flags;
+};
+
+struct gameai_controller_system_s {
+    s32 capacity;
+    s32 unk4;
+    u8 available[8];
+    u8 active[8];
+};
+
+s32 FindCutScene(char *);
+s32 NuSpecialFind(void *, struct gameai_special_s *, char *, s32);
+void fn_80007680(void *, void *);
+void *fn_800076C4(void *);
+void (*fn_80009948(const char *, s32))(const char *, ...);
+u8 *fn_8008A6D4(void *, void *, char *, char *, s32 *);
+s32 fn_8011EBF4(void *, s32);
+extern char str_Assert_AIPathCnxController_TooMany[];
+extern char str_SourceFile_GameAI[];
+
+struct gameai_controller_s *AIPathCnxControllerCreate(
+    struct gameai_controller_system_s *system, void *ai, void *path, char *from,
+    char *to, char *object, char *cutscene)
+{
+    struct gameai_controller_s *controller = NULL;
+    s32 cutsceneInstance = 0;
+    void *connection;
+    struct gameai_special_s special;
+    s32 direction;
+
+    if (system != NULL && from != NULL && to != NULL && (object != NULL || cutscene != NULL)) {
+        if (cutscene != NULL) {
+            s32 index;
+            connection = fn_8008A6D4(ai, path, from, to, &direction);
+            index = FindCutScene(cutscene);
+            if (index != -1) {
+                cutsceneInstance = fn_8011EBF4(lbl_80409410, index);
+            }
+            if (connection != NULL && cutsceneInstance != 0) {
+                u8 *available = system->available;
+                controller = fn_800076C4(available);
+                if (controller != NULL) {
+                    fn_80007680(available, controller);
+                    fn_80007610(system->active, controller);
+                    controller->connection = connection;
+                    controller->flags.reverse = direction;
+                    controller->cutscene = cutsceneInstance;
+                } else {
+                    fn_80009948(str_SourceFile_GameAI, 0xF6F)(str_Assert_AIPathCnxController_TooMany, system->capacity);
+                }
+            }
+        } else {
+            NuSpecialFind(*(void **)((u8 *)ai + 0x1388), &special, object, 1);
+            connection = fn_8008A6D4(ai, path, from, to, &direction);
+            if (connection != NULL && fn_800130F4(&special) != 0) {
+                u8 *available = system->available;
+                controller = fn_800076C4(available);
+                if (controller != NULL) {
+                    fn_80007680(available, controller);
+                    fn_80007610(system->active, controller);
+                    controller->connection = connection;
+                    controller->flags.reverse = direction;
+                    controller->special = special;
+                } else {
+                    fn_80009948(str_SourceFile_GameAI, 0xF83)(str_Assert_AIPathCnxController_TooMany, system->capacity);
+                }
+            }
+        }
+    }
+    return controller;
+}
+
+struct gameai_path_bits_s {
+    u32 words[8];
+};
+
+struct gameai_update_node_s {
+    u32 unk0;
+    struct gaiv3 position;
+    u8 unk10[0x2C];
+    struct gameai_special_s special;
+    u8 unk48[0x10];
+};
+
+struct gameai_update_connection_s {
+    u8 first;
+    u8 second;
+    u8 unk2[0x26];
+};
+
+struct gameai_update_path_s {
+    u8 unk0[0x12];
+    u16 connectionCount;
+    u8 unk14[4];
+    struct gameai_path_bits_s updatedNodes;
+    struct gameai_path_bits_s previousInsideNodes;
+    struct gameai_path_bits_s insideNodes;
+    struct gameai_update_node_s *nodes;
+    struct gameai_update_connection_s *connections;
+};
+
+struct gameai_update_paths_s {
+    u8 count;
+    struct gameai_update_path_s **paths;
+};
+
+struct gameai_update_system_s {
+    u8 unk0[0xC];
+    struct gameai_update_paths_s *pathSystem;
+    u8 unk10[0x18];
+    s32 boxCount;
+    struct gaibox_s *boxes;
+    u8 unk30[0x1348];
+    u8 nextBox;
+};
+
+void AIPathNodeUpdatePos(struct gameai_update_system_s *, struct gameai_update_path_s *, struct gameai_update_node_s *);
+s32 AIScriptProcess(void *, void *, void *, void *, f32);
+extern f32 lbl_80408E9C;
+
+void fn_80129CCC(struct gameai_update_system_s *system)
+{
+    if (system != NULL) {
+        s32 i;
+
+        if (system->pathSystem != NULL) {
+            for (i = 0; i < system->pathSystem->count; ++i) {
+                struct gameai_update_path_s *path;
+                memset(&system->pathSystem->paths[i]->updatedNodes, 0, 0x20);
+                path = system->pathSystem->paths[i];
+                path->previousInsideNodes = path->insideNodes;
+                memset(&system->pathSystem->paths[i]->insideNodes, 0, 0x20);
+            }
+            for (i = 0; i < system->pathSystem->count; ++i) {
+                s32 j;
+                for (j = 0; j < system->pathSystem->paths[i]->connectionCount; ++j) {
+                    struct gameai_update_path_s *path = system->pathSystem->paths[i];
+                    struct gameai_update_connection_s *connection = &path->connections[j];
+                    struct gameai_update_node_s *node = &path->nodes[connection->first];
+                    if (fn_800130F4(&node->special)) {
+                        AIPathNodeUpdatePos(system, system->pathSystem->paths[i], node);
+                    }
+
+                    node = &system->pathSystem->paths[i]->nodes[connection->second];
+                    if (fn_800130F4(&node->special)) {
+                        AIPathNodeUpdatePos(system, system->pathSystem->paths[i], node);
+                    }
+                }
+            }
+        }
+
+        if (system->nextBox < system->boxCount) {
+            fn_80129F6C(&system->boxes[system->nextBox]);
+            if (++system->nextBox >= system->boxCount) {
+                system->nextBox = 0;
+            }
+        }
+
+        for (i = 0; i < ((struct gaisys_s *)lbl_80409410)->nprocs; ++i) {
+            struct gaisys_s *scripts = lbl_80409410;
+            AIScriptProcess(system, NULL, NULL, &scripts->procs[i], lbl_80408E9C);
+        }
+    }
+}
+
+struct gameai_joint_model_s {
+    u8 unk0[0xA0];
+    u32 jointMask;
+};
+
+struct gameai_model_entry_s {
+    u8 unk0[0x20];
+    struct gameai_joint_model_s *model;
+    u8 unk24[0x24];
+};
+
+struct gameai_joint_object_s {
+    u8 unk0[0x60];
+    f32 unk60;
+    f32 unk64;
+};
+
+struct gameai_joint_entry_s {
+    u32 unk0;
+    struct gameai_joint_object_s *object;
+    u8 unk8[0x4C];
+};
+
+struct gameai_joint_table_s {
+    u8 unk0[0x18];
+    struct gameai_joint_entry_s *joints;
+    s16 *jointIndices;
+    struct gameai_model_entry_s *models;
+};
+
+s32 NuAngAdd(s32, s32);
+void fn_8000DC80(void *, const struct gaiv3 *);
+void fn_8000E498(void *, s32);
+void fn_80027404(struct gameai_joint_object_s *, void *, s32, s16 *);
+s32 fn_8009536C(struct gameai_joint_entry_s *, s16 *, u32);
+extern const f32 lbl_801ACFA4[];
+extern s32 lbl_804093AC;
+
+void fn_8012CF28(const struct gaiv3 *position, s32 angle, s32 model, s32 adjust)
+{
+    f32 matrix[16];
+    s16 joints[32];
+    struct gaiv3 adjusted;
+    struct gameai_joint_table_s *table = lbl_80408DF0;
+    s16 index = table->jointIndices[model];
+    if (index != -1) {
+        struct gameai_joint_entry_s *entry = &table->joints[index];
+        s32 count = fn_8009536C(entry, joints, table->models[model].model->jointMask);
+        if (count > 0) {
+            s16 adjustedAngle = NuAngAdd(angle, 0x8000);
+            fn_8000DC80(matrix, position);
+            fn_8000E498(matrix, adjustedAngle);
+            if (lbl_804093AC == 0x4C) {
+                if (!adjust) {
+                    return;
+                }
+                fn_80027404(entry->object, matrix, count, joints);
+            } else {
+                fn_80027404(entry->object, matrix, count, joints);
+            }
+            if (adjust) {
+                adjusted = *position;
+                adjusted.y += entry->object->unk64 * lbl_801ACFA4[0] + entry->object->unk60;
+            }
+        }
+    }
+}
+
+struct gameai_position_state_s {
+    u8 unk0[0x6C];
+    struct gaiv3 position;
+};
+
+struct gameai_position_object_s {
+    u8 unk0[0x78];
+    struct gaiv3 unk78;
+    u8 unk84[0xC];
+    struct gaiv3 position;
+    struct gaiv3 unk9C;
+    struct gaiv3 unkA8;
+    u8 unkB4[0x13C];
+    f32 radius;
+    u8 unk1F4[0x14];
+    u32 motionFlags;
+    u8 unk20C[0x80];
+    u8 drawResult;
+    u8 unk28D[0x63];
+    struct gameai_position_state_s *state;
+    u8 unk2F4[0x53];
+    u8 unk347;
+    u8 unk348[0xBA4];
+    void *playerPacket;
+    u8 unkEF0[0x34];
+    u32 flagsF24;
+    u8 unkF28[0xC];
+    f32 unkF34;
+    u8 unkF38[0x152];
+    u8 unk108A;
+    u8 unk108B;
+    f32 unk108C;
+};
+
+struct numtx_s;
+s32 NuCameraClipTestBoundingSphere(struct gaiv3 *, struct numtx_s *, f32);
+void InitPlayerShadow(void *);
+s32 SetPlayerOnSurface(void *, s32);
+s32 fn_800ABA78(void *);
+void ResetPlayerContexts(void *);
+extern struct gaiv3 lbl_803E04C4;
+extern struct numtx_s lbl_801B0F08;
+extern f32 lbl_804099AC;
+extern f32 lbl_804099B0;
+extern const f32 lbl_801ACF0C[];
+
+s32 fn_8012A718(struct gameai_position_object_s *object, struct gameai_update_node_s *node)
+{
+    u32 blocked = object->motionFlags & 0x400;
+
+    if (!blocked &&
+        (object->unkF34 >= lbl_804099AC ||
+         (object->drawResult == 0 && !(object->flagsF24 & 8) && lbl_804099B0 > lbl_801ACF0C[0]))) {
+        struct gaiv3 center = node->position;
+        center.y += object->radius;
+        if (NuCameraClipTestBoundingSphere(&center, &lbl_801B0F08, object->radius)) {
+            object->state->position = node->position;
+            object->unk9C = lbl_803E04C4 = object->position = object->unkA8 = object->state->position;
+            object->unk78 = lbl_801D5964;
+            InitPlayerShadow(object);
+            SetPlayerOnSurface(object, 0);
+            {
+                f32 value = lbl_801ACF0C[0];
+                object->unk108A = blocked;
+                object->unk108B = blocked;
+                object->unk347 = blocked;
+                object->unk108C = value;
+            }
+            fn_800ABA78(object);
+            ResetPlayerContexts(object->playerPacket);
+            return 1;
         }
     }
     return 0;

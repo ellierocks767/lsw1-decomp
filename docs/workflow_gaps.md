@@ -67,6 +67,7 @@ median of 48 distinct candidates per park.
 | 28 | [Pointer-array cursors retained byte displacements](#28-pointer-array-cursors-retained-byte-displacements) | exact-instruction gain (draft replay) | fixed: two captured aisys drafts 240 → 248 exact, compile errors 0 → 0; no strict match |
 | 29 | [Automatic ordering crossed dependencies](#29-automatic-ordering-crossed-dependencies) | usable search candidates | direct scalar/call/repeated-lvalue barriers added; native fixture wrong results 12/24 → 0/2; aliases still require review |
 | 30 | [Parallel worktrees oversubscribed the cores](#30-parallel-worktrees-oversubscribed-the-cores) | score and build latency | fixed: `tools/jobs.py` divides cores across active worktrees (floor 2); 17-worktree sweep fan-out 272 → 34 jobs |
+| 31 | [Finished claims blocked the next item in local sweeps](#31-finished-claims-blocked-the-next-item-in-local-sweeps) | candidates routed to the active sweep | fixed: `socksys-2` candidates 0 → 8 in the same worktree |
 
 ## 1. Stale task packs change scores
 
@@ -735,3 +736,12 @@ still override.
 Before → after, for the same 17 active worktrees: the default sweep fan-out falls
 from 16 jobs per checkout (272 in all) to 2 per checkout (34). A lone checkout
 still gets all 16. Tests: `tests/test_jobs.py`.
+
+## 31. Finished claims blocked the next item in local sweeps
+
+After this worktree finished `gameai` and claimed `socksys-2`, the same
+`python3 tools/next_target.py --json --no-remote --unit auto/camera/socksys/socksys`
+command returned zero candidates before the fix and eight afterward. The finished
+claim sorted ahead of the unfinished one and supplied the local item filter.
+Processing unfinished claims first restored the next item's targets while
+preserving both ownership records for sibling worktrees.
