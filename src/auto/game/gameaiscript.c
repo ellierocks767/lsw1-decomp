@@ -6187,3 +6187,53 @@ s32 Action_EngageObject(void *sys, void *process, struct gameaiscript_packet_s *
     }
     return 0;
 }
+
+extern char str_ScriptParam_RotY[];
+
+s32 Action_SnapToPosition(void *sys, void *process, struct gameaiscript_packet_s *packet,
+    char **params, s32 count, s32 firstTime, f32 time)
+{
+    struct gameaiscript_vec_s position = {0};
+    s32 checkTerrain = 1;
+    s32 rotation = 0;
+    u8 *object = 0;
+    s32 i;
+    char *value;
+
+    if (firstTime != 0) {
+        if (packet != 0 && packet->owner != 0 && packet->owner->object != 0)
+            object = packet->owner->object;
+        for (i = 0; i < count; i++) {
+            if (NuStrIStr(params[i], str_PlayerID_Player1) != 0 ||
+                NuStrIStr(params[i], str_Entity_Player) != 0)
+                object = lbl_80409004;
+            else if (NuStrIStr(params[i], str_PlayerID_Player2) != 0)
+                object = lbl_80409008;
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_RotY)) != 0) {
+                rotation = (s32)AIParamToFloat(packet, value + 5);
+                rotation = (s32)((f32)rotation * 182.04444885253906f);
+            } else if ((value = NuStrIStr(params[i], str_ScriptParam_X)) != 0)
+                position.x = AIParamToFloat(packet, value + 2);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_Y)) != 0)
+                position.y = AIParamToFloat(packet, value + 2);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_Z)) != 0)
+                position.z = AIParamToFloat(packet, value + 2);
+            else if (NuStrIStr(params[i], str_ScriptFlag_DontCheckTerrain) != 0)
+                checkTerrain = 0;
+        }
+        if (object != 0) {
+            *(struct gameaiscript_vec_s *)(object + 0x6c) = position;
+            *(u16 *)(object + 0x1068) = *(u16 *)(object + 0x1066) = *(u16 *)(object + 0x27e) = rotation;
+            *(struct gameaiscript_vec_s *)(object + 0x9c) = lbl_803E04C4
+                = *(struct gameaiscript_vec_s *)(object + 0x90) = *(struct gameaiscript_vec_s *)(object + 0xa8)
+                = *(struct gameaiscript_vec_s *)(object + 0x6c);
+            *(struct gameaiscript_vec_s *)(object + 0x1c4) = *(struct gameaiscript_vec_s *)(object + 0x1dc)
+                = *(struct gameaiscript_vec_s *)(object + 0x6c);
+            *(struct gameaiscript_vec_s *)(object + 0x78) = lbl_801D5964;
+            InitPlayerShadow(object);
+            if (checkTerrain != 0)
+                SetPlayerOnSurface(object, 0);
+        }
+    }
+    return 1;
+}
