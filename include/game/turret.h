@@ -3,13 +3,10 @@
 
 #include "types.h"
 
-struct NUTURRET_s {
-    char unk0[0xF04];
-    u32 valueF04;
-};
-
 struct NUTURRETENTRY_s {
-    char unk0[0x6E];
+    u8 unk0[8];
+    char name[0x10];
+    u8 unk18[0x6E - 0x18];
     u16 flags;
     u16 initialFlags;
     char unk72;
@@ -18,9 +15,10 @@ struct NUTURRETENTRY_s {
     char unk75[3];
 };
 
-struct NUTURRETLIST_s {
+struct NUTURRET_s {
     s32 count;
-    struct NUTURRETENTRY_s entries[1];
+    struct NUTURRETENTRY_s entries[32];
+    u32 valueF04;
 };
 
 struct NUTURRETMASK_s {

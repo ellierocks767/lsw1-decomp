@@ -37,7 +37,7 @@ struct NULEVELINFO_s {
 };
 
 struct nugscn_s;
-struct NUTURRETLIST_s;
+struct NUTURRET_s;
 struct NUTURRETMASK_s;
 
 /* Object behind the lbl_80409410 pointer (also read by pickups, obstacle and turret). */
@@ -70,7 +70,7 @@ struct lbl_80409410_s {
     u8 pad248[0x2DC - 0x248];
     struct CHRISLEVELENTRY_s **unk2DC; /* fn_80145F18 updates entry 0 at +0x6C */
     u8 pad2E0[0x578 - 0x2E0];
-    struct NUTURRETLIST_s *turrets;
+    struct NUTURRET_s *turrets;
     u8 pad57C[0x1974 - 0x57C];
     struct nugspline_s *unk1974;  /* fn_800CCDE4 family */
     u8 pad1978[0xC];

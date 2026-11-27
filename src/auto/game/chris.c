@@ -424,7 +424,7 @@ void DebugMenu_HandleEntry4(void)
 
 void fn_8014093C(struct lbl_80409410_s *level)
 {
-    struct NUTURRETLIST_s *turrets;
+    struct NUTURRET_s *turrets;
     struct NUTURRETENTRY_s *entry;
     struct NUTURRETMASK_s *mask;
     s32 i;
@@ -444,4 +444,21 @@ void fn_8014093C(struct lbl_80409410_s *level)
         if (entry->flags & 0x80)
             level->unk1B4->turretMask |= 1u << i;
     }
+}
+
+s32 NuStrICmp(char *, char *);
+
+struct NUTURRETENTRY_s *FindTurret(struct NUTURRET_s *turrets, char *name)
+{
+    struct NUTURRETENTRY_s *entry;
+    s32 i;
+
+    if (turrets != NULL) {
+        entry = turrets->entries;
+        for (i = 0; i < turrets->count; i++, entry++) {
+            if (NuStrICmp(name, entry->name) == 0)
+                return entry;
+        }
+    }
+    return NULL;
 }
