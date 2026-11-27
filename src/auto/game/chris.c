@@ -354,3 +354,26 @@ void fn_80141CD8(struct lbl_80409410_s *level)
         level->unk210 = 0;
     }
 }
+
+struct CHRISSAVEPROGRESS_s {
+    u8 pad0[0x110];
+    struct {
+        u8 pad0[2];
+        u8 superkit;
+        u8 pad3[5];
+    } levels[22];
+};
+
+extern struct CHRISSAVEPROGRESS_s lbl_803E0298;
+extern u8 gSuperkitTotal[];
+extern u8 lbl_8040B0FF;
+
+void Progress_SetSuperkitFlags(void)
+{
+    s32 i;
+
+    for (i = 21; i >= 0; i--) {
+        lbl_803E0298.levels[i].superkit = 1;
+    }
+    gSuperkitTotal[0] = lbl_8040B0FF;
+}
