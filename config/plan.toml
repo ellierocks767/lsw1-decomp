@@ -2472,3 +2472,7 @@ reason = "best 200/202: frame, mode dispatch and both square-root paths agree; d
 [[parked]]
 function = "fn_80059300"
 reason = "best 369/593: typed motion and tracked records match the 0xa0 frame and counted lookup, but early-hit branch placement, initial store scheduling, and later loop control diverge; next: isolate the tracked lookup and per-iteration aggregate copy state before tracing the comparison after fn_80039D28"
+
+[[parked]]
+function = "fn_800581A8"
+reason = "best 370/654: scratch frame and halfword stream largely align, but return routing, loop setup and the saved vector length across NuFdiv differ; next: recover the address-taken vector and length lifetimes and separate the early return that leaves r3 unchanged"
