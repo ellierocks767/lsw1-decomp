@@ -892,3 +892,26 @@ s32 fn_80146194(void *arg0) {
     }
     return 0;
 }
+
+typedef struct { s32 w[3]; } ShopIcon;
+extern ShopIcon atoz0to9icon[];
+extern char str_Format_ShopChar[];
+
+void Shop_InitCodeChars(void) {
+    char buf[16];
+    s8 c;
+    s32 i;
+
+    c = 'a';
+    i = 0;
+    for (; c <= 'z'; c++, i++) {
+        memset(buf, 0, 16);
+        sprintf(buf, str_Format_ShopChar, c);
+        NuSpecialFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), &atoz0to9icon[i], buf, 1);
+    }
+    for (c = '0'; c <= '9'; c++, i++) {
+        memset(buf, 0, 16);
+        sprintf(buf, str_Format_ShopChar, c);
+        NuSpecialFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), &atoz0to9icon[i], buf, 1);
+    }
+}
