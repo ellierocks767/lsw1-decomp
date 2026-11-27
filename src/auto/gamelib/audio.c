@@ -673,3 +673,45 @@ s32 fn_8006DEB8(s32 id)
         return lbl_803B6E04[id].flag16;
     return -1;
 }
+
+extern void fn_80044B7C(s32);
+extern void fn_80044D20(void);
+extern void fn_80044D8C(void);
+extern f32 lbl_801986EC[];
+
+struct AudioStreamInit {
+    s16 values[9];
+    s8 pending[2];
+    u8 pad14[4];
+    f32 fade;
+};
+
+void fn_8006E1EC(void)
+{
+    s32 state;
+
+    if (lbl_804086E8 == 0) {
+        state = lbl_804086EC;
+        if (state == 0) {
+            fn_80044B7C(0);
+            fn_80044B7C(1);
+            {
+                struct AudioStreamInit *stream = (struct AudioStreamInit *)lbl_801BB44C;
+                stream->values[7] = state;
+                stream->values[1] = -1;
+                stream->values[3] = -1;
+                stream->values[2] = state;
+                stream->values[5] = -1;
+                stream->fade = lbl_801986EC[0];
+                stream->values[4] = state;
+                stream->values[6] = state;
+                stream->pending[0] = 0;
+                stream->pending[1] = 0;
+                stream->values[0] = state;
+            }
+        }
+    }
+    fn_80044D8C();
+    fn_80044D20();
+    fn_80044D4C();
+}
