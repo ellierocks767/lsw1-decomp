@@ -239,3 +239,21 @@ void fn_8010B660(void) {
     if (lbl_804098E0 != -1) fn_8006AE9C(lbl_804098E3);
     fn_80063D9C();
 }
+
+s32 fn_80075760(s32 *, s32, s32);
+s32 fn_80109550(void *, void *, s32, s32, s32 *, s32);
+extern s32 lbl_801A9D04[];
+extern s32 lbl_801DEB0C[];
+
+void LoadPARTFile(void *arg0) {
+    char sp8[0x100];
+
+    (*(s32 *)((s8 *)(arg0) + (0x5E4))) = -1;
+    if ((*(s32 *)((s8 *)((*(void **)((s8 *)(arg0) + (0x1A8)))) + (4)) & 0x5000) == 0) {
+        sprintf(sp8, lbl_801A9D04, arg0 + 0x80);
+        if (NuFileExists(sp8) > 0) {
+            (*(s32 *)((s8 *)(arg0) + (0x5E4))) = fn_80075760((s32 *)sp8, 1, (*(s32 *)((s8 *)(arg0) + (0x1C0))));
+        }
+        (*(s32 *)((s8 *)(arg0) + (0x1BC))) = fn_80109550(arg0 + 0x184, arg0 + 0x188, 0x40, 6, lbl_801DEB0C, (*(s32 *)((s8 *)(arg0) + (0x5E4))));
+    }
+}
