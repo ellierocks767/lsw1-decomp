@@ -2135,3 +2135,44 @@ s32 fn_800633A4(char *name, s8 group) {
     }
     return -1;
 }
+
+extern const f32 lbl_8019571C[];
+
+void fn_80064088(s32 effect, s32 arg1, s32 arg2, f32 value, s32 angleZ, s32 angleY)
+{
+    typedef s32 (*DebDispatch)(s32, s32, s32, s32, f32, s32, s32, s32, s32);
+    struct numtx_s transform;
+    struct nuvec_s offset;
+    struct numtx_s *transformPtr;
+    struct nuvec_s *offsetPtr;
+    struct deb_effect_kind *definition;
+    s32 amount;
+
+    DebInitDispatchTransform(&transform);
+    fn_8000E540(&transform, angleZ);
+    fn_8000E3C0(&transform, angleY);
+    transformPtr = &transform;
+    offsetPtr = &offset;
+    offset.z = lbl_8019571C[0];
+    offset.y = lbl_8019571C[0];
+    offset.x = lbl_8019571C[0];
+    if (effect >= 0 && (definition = ((struct deb_effect_kind **)lbl_804083FC)[effect]) != NULL) {
+        switch (definition->kind) {
+        case 2:
+            amount = 50000;
+            break;
+        case 3:
+            amount = 40000;
+            break;
+        case 7:
+            amount = 20000;
+            break;
+        case 0:
+        default:
+            amount = 30000;
+            break;
+        }
+        ((DebDispatch)fn_8005F254)(effect, arg1, (s32)offsetPtr, arg2, value,
+                                  (s32)transformPtr, 0, amount, 0);
+    }
+}
