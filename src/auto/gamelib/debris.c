@@ -284,15 +284,15 @@ void fn_80063E40(s32 arg0, void *arg1, s32 arg2, s16 arg3, s16 arg4) {
     fn_8005FF74(arg0, arg1, arg2, arg3, arg4, 0);
 }
 
-s32 fn_800631DC(void *, s8, s32);
+s32 fn_800631DC(char *, s8, s32);
 
-void fn_80064A04(void *arg0, s8 arg1) {
+void fn_80064A04(char *arg0, s8 arg1) {
     fn_800631DC(arg0, arg1, 0);
 }
 
-s32 fn_800631DC(void *, s8, s32);
+s32 fn_800631DC(char *, s8, s32);
 
-s32 fn_80064A28(void *arg0) {
+s32 fn_80064A28(char *arg0) {
     return fn_800631DC(arg0, 0, 0);
 }
 
@@ -2307,4 +2307,37 @@ void fn_80063BCC(void)
         fn_80024CD4(lbl_80408424);
     }
     lbl_80408428 = 1;
+}
+
+s32 fn_800631DC(char *name, s8 group, s32 skip) {
+    s32 i;
+    struct deb_named_def *def;
+
+    if (group >= 0 && group < 8 && lbl_8038E820[group] != 0) {
+        for (i = 1; i < lbl_804083F4; i++) {
+            if (i != skip) {
+                def = ((struct deb_named_def **)lbl_804083FC)[i];
+                if (def != NULL && def->group == group && strcmp(def->name, name) == 0) {
+                    return i;
+                }
+            }
+        }
+    }
+    for (i = 1; i < lbl_804083F4; i++) {
+        if (i != skip && ((struct deb_named_def **)lbl_804083FC)[i] != NULL
+            && ((((struct deb_named_def **)lbl_804083FC)[i]->group == 0 && lbl_8038E820[0] != 0)
+                || (((struct deb_named_def **)lbl_804083FC)[i]->group == 1 && lbl_8038E820[1] != 0))
+            && strcmp(((struct deb_named_def **)lbl_804083FC)[i]->name, name) == 0) {
+            return i;
+        }
+    }
+    for (i = 1; i < lbl_804083F4; i++) {
+        if (i != skip) {
+            def = ((struct deb_named_def **)lbl_804083FC)[i];
+            if (def != NULL && lbl_8038E820[def->group] != 0 && strcmp(def->name, name) == 0) {
+                return i;
+            }
+        }
+    }
+    return -1;
 }
