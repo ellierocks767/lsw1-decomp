@@ -1919,3 +1919,105 @@ void instNuGCutDebrisLocatorUpdate(gcut_locator_system* system, gcut_locator_run
         item->accum = 0.0f;
     }
 }
+
+#define GCUT_SAMPLE(dst, n) ((dst) = types[n] == 0 ? curves[n] : NuAnimCurve2CalcVal(&curves[n], time, types[n]))
+void fn_8003E9B8(u8* object, gcut_matrix* matrix, s32* visible, s32* id, f32* x, f32* y, f32* z, s32* extra, f32 frame)
+{
+    gcut_anim* anim = *(gcut_anim**)(object + 0x44);
+    if (anim) {
+        if (anim->magic == 0x414e4934) {
+            fn_8003E6EC(object, matrix, visible, id, x, y, z, extra);
+        } else {
+            u8 time[24];
+            f32 translate[3];
+            f32 angles[3];
+            f32 scale[3];
+            s32 rotation[3];
+            f32* curves;
+            s8* types;
+            s8 flags;
+            gcut_anim* a;
+            NuAnimData2CalcTime(anim, time, frame);
+            a = *(gcut_anim**)(object + 0x44);
+            flags = **(s8**)((u8*)a + 0x14);
+            curves = a->curves;
+            types = a->types;
+            if (*(s16*)((u8*)a + 6) > 6)
+                *visible = (s32)(types[6] == 0 ? curves[6] : NuAnimCurve2CalcVal(&curves[6], time, types[6]));
+            else
+                *visible = object[0x5c] & 1;
+            if (id) {
+                if (*(s16*)((u8*)*(gcut_anim**)(object + 0x44) + 6) > 7) {
+                    f32 value = types[7] == 0 ? curves[7] : NuAnimCurve2CalcVal(&curves[7], time, types[7]);
+                    if (value < 0.0f)
+                        *id = 0xff;
+                    else
+                        *id = (s32)value;
+                } else {
+                    *id = object[0x5d];
+                }
+                if (z && *id && *id != 0xff) {
+                    if (*(s16*)((u8*)*(gcut_anim**)(object + 0x44) + 6) > 10)
+                        GCUT_SAMPLE(*z, 10);
+                    else
+                        *z = (s8)object[0x63];
+                }
+            }
+            if (*visible) {
+                if (extra) {
+                    if (*(s16*)((u8*)*(gcut_anim**)(object + 0x44) + 6) > 11)
+                        *extra = (s32)(types[11] == 0 ? curves[11] : NuAnimCurve2CalcVal(&curves[11], time, types[11]));
+                    else
+                        *extra = -1;
+                }
+                if (flags & 1) {
+                    GCUT_SAMPLE(angles[0], 3);
+                    GCUT_SAMPLE(angles[1], 4);
+                    GCUT_SAMPLE(angles[2], 5);
+                    rotation[0] = (s32)(angles[0] * 10430.3779296875f);
+                    rotation[1] = (s32)(angles[1] * 10430.3779296875f);
+                    rotation[2] = (s32)(angles[2] * 10430.3779296875f);
+                    fn_8000D010(matrix, rotation);
+                } else {
+                    NuMtxSetIdentity(matrix);
+                }
+                GCUT_SAMPLE(translate[0], 0);
+                GCUT_SAMPLE(translate[1], 1);
+                GCUT_SAMPLE(translate[2], 2);
+                NuMtxTranslate(matrix, translate);
+                matrix->m[2] = -matrix->m[2];
+                matrix->m[6] = -matrix->m[6];
+                matrix->m[8] = -matrix->m[8];
+                matrix->m[9] = -matrix->m[9];
+                matrix->m[11] = -matrix->m[11];
+                matrix->m[14] = -matrix->m[14];
+                NuMtxGetScale(scale, (gcut_matrix*)object);
+                NuMtxPreScale(matrix, scale);
+                if (x) {
+                    if (*(s16*)((u8*)*(gcut_anim**)(object + 0x44) + 6) > 9)
+                        GCUT_SAMPLE(*x, 9);
+                    else
+                        *x = *(f32*)(object + 0x58);
+                }
+                if (y) {
+                    if (*(s16*)((u8*)*(gcut_anim**)(object + 0x44) + 6) > 8)
+                        GCUT_SAMPLE(*y, 8);
+                    else
+                        *y = object[0x61];
+                }
+            }
+        }
+    } else {
+        *visible = object[0x5c] & 1;
+        if (id)
+            *id = object[0x5d];
+        if (visible) {
+            *matrix = *(gcut_matrix*)object;
+            if (x)
+                *x = *(f32*)(object + 0x58);
+            if (y)
+                *y = object[0x61];
+        }
+    }
+}
+#undef GCUT_SAMPLE
