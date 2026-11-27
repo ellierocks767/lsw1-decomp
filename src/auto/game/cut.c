@@ -1316,3 +1316,28 @@ void fn_8011D6A4(u8 *scene)
         lbl_8040B274 = 0;
     }
 }
+
+extern s32 gDebugLevelStreamingEnabled;
+extern f32 lbl_801ACAFC[];
+extern f32 lbl_80408F00;
+extern s32 lbl_80408FE0;
+extern s32 lbl_8040A770;
+extern s32 lbl_8040AFB4;
+
+/* Keep the separate zero returns for the retail guard branches. */
+s32 fn_8011EAA8(void *scene)
+{
+    if (lbl_80408F00 != lbl_801ACAFC[0]) {
+        return 0;
+    }
+    if (scene == NULL || (lbl_8040AFB0 == scene && lbl_8040AFB4 != 0 && lbl_8040A770 != 0)) {
+        return 0;
+    }
+    if (lbl_80408FE0 != 0) {
+        return 0;
+    }
+    if (gDebugLevelStreamingEnabled != 0) {
+        return 0;
+    }
+    return 0;
+}
