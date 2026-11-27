@@ -1079,3 +1079,40 @@ void fn_80076B94(s32 arg0) {
         }
     }
 }
+
+extern void (*fn_80009970(char *, int))(char *, ...);
+extern s32 gRegisteredMenuDefinitionCount;
+extern char lbl_8019B09C[];
+extern char lbl_8019B0AC[];
+extern s32 lbl_80408A28;
+extern s32 lbl_80408A58;
+extern s32 lbl_80408A5C;
+extern f32 lbl_80409458;
+
+void Menu_RegisterDescriptors(MenuDef *defs, s32 count, s32 arg2, s32 arg3, s32 arg4) {
+    char buf[0x40];
+    s32 i;
+    s32 total;
+
+    if (count + 24 > 100) {
+        count = 76;
+    }
+    for (i = 0; i < count; i++) {
+        gRegisteredMenuDefinitions[i + 24] = defs[i];
+    }
+    total = count + 24;
+    gRegisteredMenuDefinitionCount = total;
+    sprintf(buf, lbl_8019B09C, total);
+    fn_80009970(lbl_8019B0AC, 0x1ED)(buf);
+    lbl_803D992C[0] = 0;
+    lbl_80408A28 = arg2;
+    lbl_8040A618 = 0;
+    lbl_8040A61C = 127;
+    lbl_8040A620 = 255;
+    if (arg3 != 0) {
+        lbl_80408A5C = arg3;
+    }
+    lbl_80408A58 = arg4;
+    lbl_8040AF1C = lbl_80409458;
+    lbl_8040AF18 = lbl_8040945C;
+}
