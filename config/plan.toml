@@ -2576,3 +2576,11 @@ reason = "best 54/76: struct-block copy and s16 list loop shape ok; mismatch fir
 [[parked]]
 function = "fn_80049DC0"
 reason = "best 50/89: structs+switch layout right; mismatch is ProDG cr0 save (mfcr/slwi/mtcrf) vs cr4 for the shared type!=0x30 test; next: permuter or restructure test"
+
+[[parked]]
+function = "fn_8004B2B0"
+reason = "best 53/79: loop reg alloc (data r12 vs r10, walker r10 vs r11, zero in r0 vs r28); next: permuter, different node/walker split"
+
+[[parked]]
+function = "fn_8004B8F0"
+reason = "best 99/113: reg alloc in copy loop (end/ring/limit r10/r8/r11) and li r30 placement; next: permuter from work/hc/best_fn_8004B8F0.c"
