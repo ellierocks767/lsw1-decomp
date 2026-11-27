@@ -1472,3 +1472,13 @@ s32 fn_8011E9C4(s32 index)
     }
     return 0;
 }
+
+void __fini_cpp_exceptions(void)
+{
+    s32 index = lbl_80409940;
+
+    if (index != -1) {
+        fn_8011E308(index);
+        lbl_80409940 = -1;
+    }
+}
