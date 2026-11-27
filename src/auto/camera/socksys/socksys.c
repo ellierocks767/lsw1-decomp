@@ -911,6 +911,116 @@ s32 fn_8009CAEC(const struct socksys_rail_s *rail, s32 index)
     return 0;
 }
 
+extern struct nuvec_s lbl_803D9A4C;
+extern struct socksys_position_s lbl_803D996C[];
+extern struct socksys_position_s *const lbl_8019E17C[];
+extern f32 lbl_8019E178[];
+extern s32 lbl_80408E3C;
+extern struct socksys_position_s *lbl_8040AF4C;
+extern s32 lbl_8040AF50;
+struct socksys_pair_s {
+    s32 a;
+    s32 b;
+};
+extern struct socksys_pair_s lbl_8040AF44;
+f32 fn_80097948(struct socksys_rails_s *system, struct nuvec_s *pos,
+                struct socksys_position_s *entry, s32 rail, s32 segment);
+
+void fn_80098190(struct socksys_rails_s *system, struct nuvec_s *pos, s32 rail, s32 segment,
+                 struct socksys_position_s *out)
+{
+    s32 retried = 0;
+    s32 forced;
+    s32 current;
+    s32 count;
+    s32 tries;
+    s32 i;
+    s32 blocked;
+    u32 mask;
+    struct socksys_position_s *best;
+    struct socksys_position_s *entry;
+    f32 best_dist;
+    f32 dist;
+
+    if (system == NULL) {
+        out->rail = -1;
+        out->segment = -1;
+        out->flag2b = retried;
+        return;
+    }
+    forced = lbl_80408E3C;
+    lbl_80408E3C = -1;
+    ((void *(*)())memset)(lbl_8019E17C[0], 0, 0xE0);
+    lbl_803D9A4C = *pos;
+    current = rail;
+    count = 0;
+    best = NULL;
+    best_dist = lbl_8019E178[0];
+    tries = 0x20;
+    if (forced != -1) {
+        rail = forced;
+        segment = -1;
+        tries = 1;
+    }
+    if (rail == -1) {
+        rail = 0;
+        segment = -1;
+    }
+retry:
+    blocked = 0;
+    mask = 0;
+    for (i = 0; i < tries; i++) {
+        if (!(*(u16 *)((u8 *)&system->rails[rail] + 0x64) & 0x200)) {
+            if (forced == -1 && !retried && current != -1 && rail != current &&
+                fn_8009CAEC(&system->rails[current], rail)) {
+                blocked = 1;
+            } else {
+                entry = &lbl_803D996C[count];
+                dist = fn_80097948(system, pos, entry, rail, segment);
+                if (entry->rail != -1) {
+                    entry->rail_point = lbl_802C4EDC;
+                    entry->camera_point = lbl_802C4EE8;
+                    if (best == NULL || dist < best_dist) {
+                        best_dist = dist;
+                        best = entry;
+                    }
+                    mask |= 1 << rail;
+                    count++;
+                    if (count == 4) {
+                        break;
+                    }
+                }
+            }
+        }
+        rail = (rail + 1) % 32;
+        segment = -1;
+    }
+    if (best != NULL) {
+        *out = *best;
+        out->rail_mask = mask;
+        out->flag2b = 0;
+        if (retried) {
+            out->flag2b = 1;
+        }
+    } else if (blocked) {
+        retried = 1;
+        rail = 0;
+        segment = -1;
+        forced = -1;
+        count = 0;
+        tries = 0x20;
+        goto retry;
+    } else {
+        out->rail = -1;
+        out->segment = -1;
+        out->flag2b = 0;
+    }
+    out->flag2a = count;
+    lbl_8040AF4C = best;
+    lbl_8040AF50 = count;
+    lbl_8040AF44 = *(struct socksys_pair_s *)out;
+}
+
 static inline void socksys_segment_endpoints(struct socksys_rail_s *rail,
                                             struct socksys_position_s *position,
                                             struct nuvec_s **from, struct nuvec_s **to)
@@ -1070,4 +1180,75 @@ void MoveSockPosition(struct socksys_rails_s *system, const struct socksys_posit
         fn_8009758C(system, position);
         position->camera_point = lbl_802C4EE8;
     }
+}
+
+s32 fn_800055EC(s32);
+s32 fn_80038628(s32, s32 *, s32 *, s32);
+void Menu_InitDefinitions(void);
+void fn_8011A83C(s32 *, char ***);
+s32 NuInitHardware();
+s32 NuCameraCreate(void);
+void fn_800D9784(void);
+void fn_8009E174(void);
+void fn_8011E864(void);
+void fn_8011EB70(void *);
+s32 fn_80027348(void);
+extern s32 lbl_80408E58;
+extern s32 lbl_8040AF54;
+extern s32 lbl_8040AF58;
+extern s32 lbl_80408F68;
+extern s32 lbl_80408F8C;
+extern s32 lbl_80407E08;
+extern s32 lbl_804093AC;
+extern s32 lbl_80408E68;
+extern u8 lbl_803D9A58[];
+extern s32 lbl_8040AF5C;
+extern f32 lbl_8019E5A8[];
+extern f32 lbl_8019E5AC[];
+extern f32 lbl_8019E5B0[];
+extern f32 lbl_8019E5B4[];
+extern f32 lbl_8019E5B8[];
+extern f32 lbl_80408E98;
+extern f32 lbl_80408E9C;
+extern f32 lbl_80408EA0;
+extern f32 lbl_8040835C;
+
+void fn_8009CC00(s32 argc, char **argv) {
+    volatile s32 end;
+    s32 count;
+    char **args;
+    f32 a;
+    f32 b;
+
+    fn_800055EC(lbl_80408E58);
+    fn_80038628(0x4000, &lbl_8040AF54, &lbl_8040AF58, 0);
+    lbl_80408F68 = lbl_8040AF54;
+    lbl_80408F8C = lbl_8040AF54 + lbl_8040AF58;
+    Menu_InitDefinitions();
+    lbl_80407E08 = 1;
+    lbl_804093AC = -1;
+    count = argc - 1;
+    args = argv + 1;
+    for (; count > 0; args++, count--) {
+        fn_8011A83C(&count, &args);
+    }
+    lbl_80408E68 = 0;
+    end = lbl_80408F8C;
+    NuInitHardware(&lbl_80408F68, (s32 *)&end, 10, lbl_803D9A58, 11, lbl_803D9A58 + 0x5C, 0);
+    lbl_8040AF5C = NuCameraCreate();
+    fn_800D9784();
+    fn_8009E174();
+    fn_8011E864();
+    fn_8011EB70(lbl_80409410);
+    if (fn_80027348() == 0) {
+        a = lbl_8019E5A8[0];
+        b = lbl_8019E5AC[0];
+    } else {
+        a = lbl_8019E5B0[0];
+        b = lbl_8019E5B4[0];
+    }
+    lbl_80408E9C = a;
+    lbl_80408EA0 = b;
+    lbl_80408E98 = a;
+    lbl_8040835C = lbl_8019E5B8[0];
 }

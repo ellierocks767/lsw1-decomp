@@ -2388,3 +2388,11 @@ reason = "best 298/308: outer state register and hatch state stores differ; next
 [[parked]]
 function = "fn_80098858"
 reason = "best 190/198: ProDG anchors the candidate induction pointer at rail_point (+8); next: inspect loop strength reduction and compare candidate pointer selection"
+
+[[parked]]
+function = "fn_8009CC00"
+reason = "best 77/83: tail lfs lbl_8019E5B8 scheduled above stfs E98/EA0 (target keeps source order); next: permuter or a different tail shape (5B8 is a 0x50 table)"
+
+[[parked]]
+function = "fn_80098190"
+reason = "best 191/211: memset arg lbl_8019E17C (4-byte rodata ptr) target emits lis/addi/lwz 0 but ProDG folds to lwz @l, which shifts the prologue schedule and entry-pointer setup; next: find the declaration shape that keeps addi (only such access in the binary), then permuter"
