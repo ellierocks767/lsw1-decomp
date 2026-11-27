@@ -747,6 +747,53 @@ extern f32 lbl_80195640[];
 extern f32 lbl_80195644[];
 extern f32 lbl_80195648[];
 
+extern const f32 lbl_80195720[];
+
+static inline void DebInitDispatchTransform(struct numtx_s *transform)
+{
+    *transform = lbl_801B0F08[0];
+}
+
+void fn_800641F8(s32 effect, s32 arg1, s32 arg2, f32 value, s32 angleZ, s32 angleY, s32 arg5)
+{
+    typedef s32 (*DebDispatch)(s32, s32, s32, s32, f32, s32, s32, s32, s32);
+    struct numtx_s transform;
+    struct nuvec_s offset;
+    struct numtx_s *transformPtr;
+    struct nuvec_s *offsetPtr;
+    struct deb_effect_kind *definition;
+    s32 amount;
+
+    DebInitDispatchTransform(&transform);
+    fn_8000E540(&transform, angleZ);
+    fn_8000E3C0(&transform, angleY);
+    transformPtr = &transform;
+    offsetPtr = &offset;
+    offset.z = lbl_80195720[0];
+    offset.y = lbl_80195720[0];
+    offset.x = lbl_80195720[0];
+    if (effect >= 0 && (definition = ((struct deb_effect_kind **)lbl_804083FC)[effect]) != NULL) {
+        switch (definition->kind) {
+        case 2:
+            amount = 50000;
+            break;
+        case 3:
+            amount = 40000;
+            break;
+        case 7:
+            amount = 20000;
+            break;
+        case 0:
+        default:
+            amount = 30000;
+            break;
+        }
+        /* The float occupies f1 independently of the integer arguments. */
+        ((DebDispatch)fn_8005F254)(effect, arg1, (s32)offsetPtr, arg2, value,
+                                  (s32)transformPtr, arg5, amount, 0);
+    }
+}
+
 extern const f32 lbl_8019572C[];
 
 struct deb_transform_slot {
