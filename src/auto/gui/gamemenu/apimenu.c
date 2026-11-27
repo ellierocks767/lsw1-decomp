@@ -799,3 +799,42 @@ void Menu_OpenSpecial(MenuFrame *arg0) {
         Menu_Open(0x3FB, 1, -1);
     }
 }
+
+extern struct nuvec_s lbl_803D9060;
+extern Entry6C *lbl_804088C0;
+extern PartType *lbl_804088C4;
+extern s32 lbl_8040AF0C;
+
+void fn_80074DDC(f32 best)
+{
+    struct nuvec_s d;
+    s32 i;
+    f32 dist;
+
+    if (lbl_8040AF0C != -1 && lbl_803D8280[lbl_8040AF0C].id != -1) {
+        NuVecSub(&d, &lbl_803D9060, &lbl_803D8280[lbl_8040AF0C].position);
+        dist = d.x * d.x + d.y * d.y + d.z * d.z;
+        if (dist == 0.0f) {
+            return;
+        }
+    }
+    lbl_8040AF0C = -1;
+    for (i = 0; i < 32; i++) {
+        if (lbl_803D8280[i].id != -1) {
+            NuVecSub(&d, &lbl_803D9060, &lbl_803D8280[i].position);
+            dist = d.x * d.x + d.y * d.y + d.z * d.z;
+            if (best < 0.0f || dist < best) {
+                lbl_8040AF0C = i;
+                best = dist;
+            }
+        }
+    }
+    lbl_804088C0 = NULL;
+    lbl_804088C4 = NULL;
+    if (lbl_8040AF0C != -1) {
+        lbl_804088C0 = &lbl_803D8280[lbl_8040AF0C];
+        if (lbl_804088C0->id != -1) {
+            lbl_804088C4 = &((PartType *)lbl_803D5680)[lbl_804088C0->id];
+        }
+    }
+}
