@@ -284,15 +284,15 @@ void fn_80063E40(s32 arg0, void *arg1, s32 arg2, s16 arg3, s16 arg4) {
     fn_8005FF74(arg0, arg1, arg2, arg3, arg4, 0);
 }
 
-s32 fn_800631DC(void *, s8, s32);
+s32 fn_800631DC(char *, s8, s32);
 
-void fn_80064A04(void *arg0, s8 arg1) {
+void fn_80064A04(char *arg0, s8 arg1) {
     fn_800631DC(arg0, arg1, 0);
 }
 
-s32 fn_800631DC(void *, s8, s32);
+s32 fn_800631DC(char *, s8, s32);
 
-s32 fn_80064A28(void *arg0) {
+s32 fn_80064A28(char *arg0) {
     return fn_800631DC(arg0, 0, 0);
 }
 
@@ -802,9 +802,21 @@ struct deb_transform_slot {
     struct numtx_s transformC0;
     u8 unk100[2];
     s16 definition;
-    u8 unk104[0x17C];
+    u8 unk104[0xC];
+    struct nuvec_s pos;
+    u8 unk11C[0x154];
+    s16 unk270;
+    s16 portalRoom;
+    u8 unk274[3];
+    u8 visible;
+    u8 unk278[4];
+    s32 portal;
     f32 unk280;
-    u8 unk284[0x68];
+    struct nuvec_s boundsMin;
+    struct nuvec_s boundsMax;
+    struct numtx_s boundsMtx;
+    f32 unk2DC;
+    u8 unk2E0[0xC];
 };
 
 static inline void DebInitTransform80(s32 slot)
@@ -972,9 +984,11 @@ void fn_8005FF74(s32 effect, void *arg1, s32 arg2, s16 angleZ, s16 angleY, void 
 }
 
 typedef struct debrisnode_s {
-    u8 pad00[8];
+    s32 unk00;
+    void *obj;
     s8 *deb;
-    u8 pad0c[0x4c];
+    struct numtx_s mtx;
+    struct nuvec_s pos;
     struct debrisnode_s *prev;
     struct debrisnode_s *next;
     u16 unk60;
@@ -2052,4 +2066,831 @@ debparticle_s *fn_8005C6C8(debinst_s *inst, debdef_s *def, f32 time) {
         fn_8006E3E0(def);
     }
     return p;
+}
+
+char *strcpy(char *, const char *);
+
+struct DebSetVec_8038E840 { s32 a, b, c; };
+
+struct DebSet_8038E840 {
+    s32 unk0;
+    s32 count2;
+    s32 count1;
+    u8 pad0C[0x1C - 0x0C];
+    char names2[8][16];
+    s32 a2[8];
+    s32 b2[8];
+    s32 c2[8];
+    struct DebSetVec_8038E840 v2[8];
+    u8 pad15C[0x180 - 0x15C];
+    char names1[8][16];
+    s32 x1[8];
+    u8 pad220[0x240 - 0x220];
+    f32 f1[8];
+    struct DebSetVec_8038E840 v1[8];
+    u8 pad2C0[0x2D4 - 0x2C0];
+};
+
+extern struct DebSet_8038E840 lbl_8038E840[];
+
+void fn_800659B8(s32 set, s32 index) {
+    s32 i;
+
+    for (i = index; i < lbl_8038E840[set].count1 - 1; i++) {
+        lbl_8038E840[set].x1[i] = lbl_8038E840[set].x1[i + 1];
+        lbl_8038E840[set].f1[i] = lbl_8038E840[set].f1[i + 1];
+        lbl_8038E840[set].v1[i] = lbl_8038E840[set].v1[i + 1];
+        strcpy(lbl_8038E840[set].names1[i], lbl_8038E840[set].names1[i + 1]);
+    }
+    lbl_8038E840[set].count1--;
+}
+
+void fn_80065AE0(s32 set, s32 index) {
+    s32 i;
+
+    for (i = index; i < lbl_8038E840[set].count2 - 1; i++) {
+        lbl_8038E840[set].a2[i] = lbl_8038E840[set].a2[i + 1];
+        lbl_8038E840[set].b2[i] = lbl_8038E840[set].b2[i + 1];
+        lbl_8038E840[set].c2[i] = lbl_8038E840[set].c2[i + 1];
+        lbl_8038E840[set].v2[i] = lbl_8038E840[set].v2[i + 1];
+        strcpy(lbl_8038E840[set].names2[i], lbl_8038E840[set].names2[i + 1]);
+    }
+    lbl_8038E840[set].count2--;
+}
+
+int strcmp(const char *, const char *);
+extern s32 lbl_804083F4;
+extern s32 lbl_8038E820[8];
+
+struct deb_named_def {
+    char name[0x11];
+    s8 group;
+};
+
+s32 fn_800633A4(char *name, s8 group) {
+    s32 i;
+    struct deb_named_def *def;
+
+    if (group >= 0 && group < 8 && lbl_8038E820[group] != 0) {
+        for (i = 1; i < lbl_804083F4; i++) {
+            def = ((struct deb_named_def **)lbl_804083FC)[i];
+            if (def != NULL && def->group == group && strcmp(def->name, name) == 0) {
+                return i;
+            }
+        }
+    }
+    for (i = 1; i < lbl_804083F4; i++) {
+        if (((struct deb_named_def **)lbl_804083FC)[i] != NULL
+            && ((((struct deb_named_def **)lbl_804083FC)[i]->group == 0 && lbl_8038E820[0] != 0)
+                || (((struct deb_named_def **)lbl_804083FC)[i]->group == 1 && lbl_8038E820[1] != 0))
+            && strcmp(((struct deb_named_def **)lbl_804083FC)[i]->name, name) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+extern const f32 lbl_8019571C[];
+
+void fn_80064088(s32 effect, s32 arg1, s32 arg2, f32 value, s32 angleZ, s32 angleY)
+{
+    typedef s32 (*DebDispatch)(s32, s32, s32, s32, f32, s32, s32, s32, s32);
+    struct numtx_s transform;
+    struct nuvec_s offset;
+    struct numtx_s *transformPtr;
+    struct nuvec_s *offsetPtr;
+    struct deb_effect_kind *definition;
+    s32 amount;
+
+    DebInitDispatchTransform(&transform);
+    fn_8000E540(&transform, angleZ);
+    fn_8000E3C0(&transform, angleY);
+    transformPtr = &transform;
+    offsetPtr = &offset;
+    offset.z = lbl_8019571C[0];
+    offset.y = lbl_8019571C[0];
+    offset.x = lbl_8019571C[0];
+    if (effect >= 0 && (definition = ((struct deb_effect_kind **)lbl_804083FC)[effect]) != NULL) {
+        switch (definition->kind) {
+        case 2:
+            amount = 50000;
+            break;
+        case 3:
+            amount = 40000;
+            break;
+        case 7:
+            amount = 20000;
+            break;
+        case 0:
+        default:
+            amount = 30000;
+            break;
+        }
+        ((DebDispatch)fn_8005F254)(effect, arg1, (s32)offsetPtr, arg2, value,
+                                  (s32)transformPtr, 0, amount, 0);
+    }
+}
+
+struct DebSpecial { void *scene; void *special; void *display; };
+struct DebScene { u8 pad0[0x20]; s32 numspecial; };
+extern struct DebScene *lbl_80408488;
+extern s32 lbl_8040AEBC;
+extern s32 lbl_8040AEC8;
+extern struct nuvec_s lbl_80399D80;
+extern const f32 lbl_80195808[];
+void fn_80021738(struct DebSpecial *, struct DebScene *, s32);
+void *fn_800133E4(struct DebSpecial *);
+
+static inline f32 DebSetDistSq(s32 set)
+{
+    struct nuvec_s d;
+    struct DebSpecial special;
+    struct nuvec_s *pos;
+
+    fn_80021738(&special, lbl_80408488, lbl_8038E840[set].unk0);
+    fn_800133E4(&special);
+    NuVecSub(&d, &lbl_80399D80, pos);
+    return d.x * d.x + d.y * d.y + d.z * d.z;
+}
+
+void fn_80065820(f32 minDist)
+{
+    s32 i;
+    f32 dist;
+
+    if (lbl_80408488 == NULL) {
+        return;
+    }
+    if (lbl_8040AEC8 != -1) {
+        dist = DebSetDistSq(lbl_8040AEC8);
+        if (dist == lbl_80195808[0]) {
+            return;
+        }
+    }
+    lbl_8040AEC8 = -1;
+    lbl_8040AEBC = -1;
+    for (i = 0; i < lbl_80408488->numspecial; i++) {
+        dist = DebSetDistSq(i);
+        if (minDist < lbl_80195808[0] || dist < minDist) {
+            lbl_8040AEC8 = i;
+            minDist = dist;
+        }
+    }
+    if (lbl_8040AEC8 != -1) {
+        for (i = 0; i < 64; i++) {
+            if (lbl_8038E840[i].unk0 == lbl_8040AEC8) {
+                lbl_8040AEBC = i;
+                break;
+            }
+        }
+    }
+}
+
+struct DebTexDesc {
+    s32 type;
+    s32 width;
+    s32 height;
+    s32 pad0C[3];
+};
+
+struct DebMtl {
+    u8 pad0[0xB8];
+    u8 alphaMode;
+    u8 unkB9;
+    u8 unkBA;
+    u8 unkBB;
+    u8 unkBC;
+    u8 unkBD;
+    u8 unkBE;
+    u8 unkBF;
+    u8 unkC0;
+    u8 padC1[0xD0 - 0xC1];
+    f32 diffuse[3];
+    u8 padDC[0xF0 - 0xDC];
+    f32 unkF0;
+    s32 unkF4;
+};
+
+s32 NuPower2(s32);
+struct DebMtl *fn_80024BF0(s32);
+void fn_80024CD4(struct DebMtl *);
+s32 fn_80024F10(struct DebTexDesc *);
+extern const f32 lbl_801956F8[];
+extern const f32 lbl_801956FC[];
+extern s32 lbl_80408408;
+extern struct DebMtl *lbl_80408424;
+extern f32 lbl_8040A60C;
+extern f32 lbl_8040A610;
+extern s32 lbl_8040AD4C;
+extern s32 lbl_8040AD50;
+
+void fn_80063BCC(void)
+{
+    struct DebTexDesc tex;
+    struct DebMtl *mtl;
+    f32 width;
+    f32 height;
+
+    if (lbl_80408428 != 0) {
+        return;
+    }
+    if (lbl_80408408 == 0) {
+        tex.type = 0xF;
+        tex.width = lbl_8040AD4C;
+        tex.height = lbl_8040AD50;
+        lbl_80408408 = fn_80024F10(&tex);
+    }
+    width = NuPower2(lbl_8040AD4C);
+    lbl_8040A60C = ((f32)lbl_8040AD4C - lbl_801956F8[0]) / width;
+    height = NuPower2(lbl_8040AD50);
+    lbl_8040A610 = ((f32)lbl_8040AD50 - lbl_801956F8[0]) / height;
+    if (lbl_80408424 == NULL) {
+        mtl = fn_80024BF0(1);
+        lbl_80408424 = mtl;
+        mtl->unkBB = 1;
+        mtl->diffuse[2] = mtl->diffuse[1] = mtl->diffuse[0] = lbl_801956F8[0];
+        lbl_80408424->unkBC = 1;
+        lbl_80408424->unkBD = 2;
+        lbl_80408424->unkBE = 3;
+        lbl_80408424->unkB9 = 0;
+        lbl_80408424->unkBF = 2;
+        lbl_80408424->unkC0 = 1;
+        lbl_80408424->unkF0 = lbl_801956FC[0];
+        lbl_80408424->alphaMode = 0;
+        lbl_80408424->unkF4 = -1;
+        fn_80024CD4(lbl_80408424);
+    }
+    lbl_80408428 = 1;
+}
+
+s32 fn_800631DC(char *name, s8 group, s32 skip) {
+    s32 i;
+    struct deb_named_def *def;
+
+    if (group >= 0 && group < 8 && lbl_8038E820[group] != 0) {
+        for (i = 1; i < lbl_804083F4; i++) {
+            if (i != skip) {
+                def = ((struct deb_named_def **)lbl_804083FC)[i];
+                if (def != NULL && def->group == group && strcmp(def->name, name) == 0) {
+                    return i;
+                }
+            }
+        }
+    }
+    for (i = 1; i < lbl_804083F4; i++) {
+        if (i != skip && ((struct deb_named_def **)lbl_804083FC)[i] != NULL
+            && ((((struct deb_named_def **)lbl_804083FC)[i]->group == 0 && lbl_8038E820[0] != 0)
+                || (((struct deb_named_def **)lbl_804083FC)[i]->group == 1 && lbl_8038E820[1] != 0))
+            && strcmp(((struct deb_named_def **)lbl_804083FC)[i]->name, name) == 0) {
+            return i;
+        }
+    }
+    for (i = 1; i < lbl_804083F4; i++) {
+        if (i != skip) {
+            def = ((struct deb_named_def **)lbl_804083FC)[i];
+            if (def != NULL && lbl_8038E820[def->group] != 0 && strcmp(def->name, name) == 0) {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+extern const f32 lbl_801956E0[];
+extern const f32 lbl_801956E4[];
+extern struct nuvec_s lbl_8038E794;
+
+struct deb_emitter_point {
+    struct nuvec_s pos;
+    struct nuvec_s vel;
+    f32 time;
+};
+
+struct deb_emitter_slot {
+    u8 unk00[0x102];
+    s16 definition;
+    u8 unk104[0x168 - 0x104];
+    struct deb_emitter_point points[8];
+    u8 unk248[0x2EC - 0x248];
+};
+
+struct deb_size_key {
+    f32 t;
+    f32 size;
+};
+
+struct deb_emitter_def {
+    u8 unk00[0xA0];
+    f32 gravity;
+    f32 lifetime;
+    u8 unkA8[0x2AC - 0xA8];
+    struct deb_size_key sizes[8];
+    s8 count;
+    u8 unk2ED;
+    u8 flags;
+};
+
+static inline f32 DebSubF(f32 a, f32 b)
+{
+    return a - b;
+}
+
+s32 fn_80063834(s32 slot, void *arg1, f32 radius, f32 yscale, u8 mask)
+{
+    struct nuvec_s *target = arg1;
+    struct deb_emitter_slot *s;
+    struct deb_emitter_def *def;
+    s32 i;
+    s32 j;
+    u16 id;
+    f32 t;
+    f32 size;
+    f32 frac;
+    f32 r;
+    f32 dx;
+    f32 dy;
+    f32 dz;
+
+    s = (struct deb_emitter_slot *)(slot * 0x2EC + lbl_80408404);
+    id = s->definition;
+    if ((u16)(id + 1) > 1U) {
+        def = ((struct deb_emitter_def **)lbl_804083FC)[(s16)id];
+        if (def != NULL && (def->flags & mask) && def->count != 0) {
+            for (i = 0; i < def->count; i++) {
+                size = lbl_801956E0[0];
+                t = lbl_804083BC - ((struct deb_emitter_slot *)lbl_80408404)[slot].points[i].time;
+                if (t >= size && t <= def->lifetime) {
+                    lbl_8038E794.x = ((struct deb_emitter_slot *)lbl_80408404)[slot].points[i].vel.x * t;
+                    lbl_8038E794.y = ((struct deb_emitter_slot *)lbl_80408404)[slot].points[i].vel.y * t;
+                    lbl_8038E794.z = ((struct deb_emitter_slot *)lbl_80408404)[slot].points[i].vel.z * t;
+                    lbl_8038E794.y += def->gravity * (t * t);
+                    lbl_8038E794.x += ((struct deb_emitter_slot *)lbl_80408404)[slot].points[i].pos.x;
+                    lbl_8038E794.y += ((struct deb_emitter_slot *)lbl_80408404)[slot].points[i].pos.y;
+                    lbl_8038E794.z += ((struct deb_emitter_slot *)lbl_80408404)[slot].points[i].pos.z;
+                    frac = t / def->lifetime;
+                    for (j = 0; j < 7; j++) {
+                        if (def->sizes[j].t <= frac && def->sizes[j + 1].t >= frac) {
+                            size = (frac - def->sizes[j].t) / DebSubF(def->sizes[j + 1].t, def->sizes[j].t)
+                                 * (def->sizes[j + 1].size - def->sizes[j].size) + def->sizes[j].size;
+                            break;
+                        }
+                    }
+                }
+                if (size <= lbl_801956E0[0]) {
+                    continue;
+                }
+                r = size + radius;
+                dx = DebSubF(target->x, lbl_8038E794.x);
+                dy = DebSubF(target->y, lbl_8038E794.y);
+                dz = DebSubF(target->z, lbl_8038E794.z);
+                if (yscale != lbl_801956E4[0]) {
+                    dy *= r / (radius * yscale + size);
+                }
+                if (dx * dx + dy * dy + dz * dz < r * r) {
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+typedef struct deb_ring_s {
+    u8 pad0[0x102];
+    s16 type;
+    u8 pad104[0x148 - 0x104];
+    struct deb_ring_s *next;
+    struct deb_ring_s *prev;
+    u8 pad150[0x158 - 0x150];
+    s16 delay;
+    u8 pad15a[0x268 - 0x15A];
+    s16 timers[4];
+    u8 pad270[0x275 - 0x270];
+    u8 has_timers;
+} deb_ring_s;
+
+extern s32 lbl_8040AEB0;
+
+static inline void DebRingUnlink(deb_ring_s **head, deb_ring_s *node) {
+    deb_ring_s *prev = node->prev;
+    if (prev == NULL) {
+        deb_ring_s *next = node->next;
+        *head = next;
+        if (next != NULL) {
+            next->prev = prev;
+        }
+    } else {
+        prev->next = node->next;
+        if (node->next != NULL) {
+            node->next->prev = node->prev;
+        }
+    }
+    node->prev = NULL;
+    node->next = NULL;
+}
+
+static inline void DebRingPush(deb_ring_s **head, deb_ring_s *node) {
+    if (*head != NULL) {
+        (*head)->prev = node;
+    }
+    node->next = *head;
+    *head = node;
+}
+
+void fn_80062B38(void) {
+
+
+    deb_ring_s *node = ((deb_ring_s **)lbl_8038E714)[lbl_8040AEB0];
+    if (node != NULL) {
+        do {
+            deb_ring_s *next = node->next;
+            if (((u8 *)((s32 *)lbl_804083FC)[node->type])[0x2EC] != 0) {
+                DebRingUnlink(&((deb_ring_s **)lbl_8038E714)[lbl_8040AEB0], node);
+                DebRingPush(&((deb_ring_s **)lbl_8038E714)[(lbl_8040AEB0 + 1) & 0x1F], node);
+                node->delay--;
+                if (node->has_timers) {
+                    s32 i;
+                    for (i = 0; i < 4; i++) {
+                        if (node->timers[i] > 0 && node->timers[i] != 9999) {
+                            node->timers[i]--;
+                        }
+                    }
+                }
+            } else if (node->delay > 0x1F) {
+                node->delay -= 0x20;
+                if (node->has_timers) {
+                    s32 i;
+                    for (i = 0; i < 4; i++) {
+                        if (node->timers[i] > 0 && node->timers[i] != 9999) {
+                            node->timers[i] -= 0x20;
+                        }
+                    }
+                }
+            } else {
+                DebRingUnlink(&((deb_ring_s **)lbl_8038E714)[lbl_8040AEB0], node);
+                DebRingPush(&((deb_ring_s **)lbl_8038E714)[(lbl_8040AEB0 + node->delay) & 0x1F], node);
+                if (node->has_timers) {
+                    s32 i;
+                    for (i = 0; i < 4; i++) {
+                        if (node->timers[i] > 0 && node->timers[i] != 9999) {
+                            node->timers[i] -= node->delay;
+                        }
+                    }
+                }
+                node->delay = 0;
+            }
+            node = next;
+        } while (node != NULL);
+    }
+    lbl_8040AEB0 = (lbl_8040AEB0 + 1) & 0x1F;
+}
+
+typedef struct deb_trail_pt_s {
+    struct nuvec_s pos;
+    struct nuvec_s v;
+    f32 time;
+} deb_trail_pt_s;
+
+typedef struct deb_trail_src_s {
+    struct nuvec_s pos;
+    u8 pad0c[4];
+    struct nuvec_s v;
+} deb_trail_src_s;
+
+typedef struct deb_trail_def_s {
+    u8 pad00[0x12];
+    s16 unk12;
+    s16 unk14;
+    u8 pad16[0x2E - 0x16];
+    u8 unk2e;
+    u8 pad2f[0xA4 - 0x2F];
+    f32 unka4;
+    u8 pada8[0x2EC - 0xA8];
+    s8 unk2ec;
+    u8 unk2ed;
+} deb_trail_def_s;
+
+typedef struct deb_trail_s {
+    u8 pad00[0x100];
+    s16 unk100;
+    s16 unk102;
+    s16 unk104;
+    u16 unk106;
+    u8 pad108[4];
+    s16 unk10c;
+    u16 unk10e;
+    struct nuvec_s pos;
+    u8 pad11c[0x140 - 0x11C];
+    deb_trail_src_s *(*callback)(struct deb_trail_s *, deb_trail_def_s *, f32);
+    u8 pad144[0x168 - 0x144];
+    deb_trail_pt_s pts[8];
+    s16 idx;
+    s16 skip;
+    f32 next_time;
+    u8 pad250[0x2E4 - 0x250];
+    f32 unk2e4;
+} deb_trail_s;
+
+extern f32 lbl_8019565C[];
+extern f32 lbl_80195668[];
+
+static inline void DebTrailSetCount(s8 *arg0, s32 arg1) {
+    s8 *t;
+
+    t = *(s8 **)(*(s16 *)(arg0 + 0x102) * 4 + lbl_804083FC);
+    *(u16 *)(arg0 + 0x10E) = arg1;
+    if (*(u8 *)(t + 0x2E) == 7) {
+        *(s16 *)(arg0 + 0x10C) = (arg1 + 0xB) / 12;
+    } else {
+        *(s16 *)(arg0 + 0x10C) = (arg1 + 0x1F) / 32;
+    }
+    if (*(s16 *)(arg0 + 0x10C) > 0x20) {
+        *(s16 *)(arg0 + 0x10C) = 0x20;
+        if (*(u8 *)(t + 0x2E) == 7) {
+            *(u16 *)(arg0 + 0x10E) = 0x180;
+        } else {
+            *(u16 *)(arg0 + 0x10E) = 0x400;
+        }
+    }
+    if (*(s16 *)(arg0 + 0x10C) == *(s16 *)(arg0 + 0x100)) {
+        *(u16 *)(arg0 + 0x106) = *(u16 *)(arg0 + 0x10E);
+    } else {
+        fn_8005DA6C(arg0);
+    }
+}
+
+void fn_800608E0(s32 arg0, f32 farg0) {
+    deb_trail_s *deb;
+    deb_trail_def_s *def;
+    f32 start;
+    f32 end;
+    f32 step;
+    f32 t;
+    s32 i;
+
+    if (farg0 < 0.0f || arg0 == -1) {
+        return;
+    }
+    deb = (deb_trail_s *)(lbl_80408404 + arg0 * 0x2EC);
+    def = ((deb_trail_def_s **)lbl_804083FC)[deb->unk102];
+    if (farg0 == 0.0f) {
+        farg0 = def->unka4;
+    }
+    if (def->unk2ed == 4) {
+        start = lbl_804083C0 - farg0;
+        end = lbl_804083C0 + lbl_804083C8;
+    } else {
+        start = lbl_804083BC - farg0;
+        end = lbl_804083BC + lbl_804083C8;
+    }
+
+    if (deb->unk10c == 0) {
+        DebTrailSetCount((s8 *)deb, def->unk12);
+    }
+    deb->unk104 = 1;
+    if (deb->unk100 > 0) {
+        step = 1.0f / (f32)def->unk14;
+        deb->unk2e4 = start;
+        t = start + step;
+        if (t < end) {
+            i = 1;
+            while (1) {
+            deb_trail_src_s *p = deb->callback(deb, def, t);
+            if (def->unk2ec != 0 && p != NULL) {
+                s32 zero = 0;
+                if (t >= deb->next_time) {
+                if (deb->skip > 0) {
+                    deb->skip--;
+                } else {
+                    deb->pts[deb->idx].time = t;
+                    deb->pts[deb->idx].pos.x = p->pos.x + deb->pos.x;
+                    deb->pts[deb->idx].pos.y = p->pos.y + deb->pos.y;
+                    deb->pts[deb->idx].pos.z = p->pos.z + deb->pos.z;
+                    deb->pts[deb->idx].v = p->v;
+                    deb->idx++;
+                    if (deb->idx >= def->unk2ec) {
+                        deb->idx = zero;
+                    }
+                    deb->next_time = t + def->unka4 / (f32)def->unk2ec;
+                }
+                }
+            }
+            t = deb->unk2e4 + step;
+            if (!(t < end)) {
+                break;
+            }
+            if (++i > 999) {
+                break;
+            }
+            }
+        }
+    }
+}
+
+f32 fn_8000ED40(f32);
+extern f32 lbl_80195670[];
+extern f32 lbl_80195674[];
+extern f32 lbl_80195678[];
+
+struct deb_bounds_def {
+    u8 unk00[0x1C];
+    f32 unk1C;
+    f32 unk20;
+    u8 unk24[0x24];
+    f32 unk48;
+    f32 unk4C;
+    f32 unk50;
+    f32 unk54;
+    struct nuvec_s offset;
+    struct nuvec_s angle;
+    u8 unk70[0x30];
+    f32 unkA0;
+    f32 unkA4;
+    u8 unkA8[0xA4];
+    f32 unk14C;
+};
+
+#define DEB_MAX(a, b) ((a) > (b) ? (a) : (b))
+
+void fn_80060BF8(struct deb_bounds_def *def, struct deb_transform_slot *slot) {
+    struct numtx_s mtx;
+    struct nuvec_s min;
+    struct nuvec_s max;
+    f32 pad;
+    f32 a;
+    f32 zero;
+
+    mtx = slot->transform80;
+    NuMtxTranslate(&mtx, &slot->pos);
+    max.x = fn_8000ED40(def->angle.x) * (def->unk1C + def->unk20) + def->unk4C * def->unkA4 + def->offset.x;
+    max.y = fn_8000ED40(def->angle.y) * (def->unk1C + def->unk20) + (fn_8000ED40(def->unk48) + def->unk50) * def->unkA4 + def->offset.y;
+    max.z = fn_8000ED40(def->angle.z) * (def->unk1C + def->unk20) + def->unk54 * def->unkA4 + def->offset.z;
+    NuVecMtxRotate(&max, &max, &slot->transformC0);
+    zero = lbl_80195670[0];
+    if (max.x < zero) {
+        max.x = -max.x;
+    }
+    if (max.y < zero) {
+        max.y = -max.y;
+    }
+    if (max.z < zero) {
+        max.z = -max.z;
+    }
+    pad = def->unk14C / lbl_80195674[0];
+    max.x = max.x + pad + lbl_80195678[0];
+    max.y = max.y + pad + lbl_80195678[0];
+    max.z = max.z + pad + lbl_80195678[0];
+    min.x = -max.x;
+    min.y = -max.y;
+    min.z = -max.z;
+    a = def->unkA0;
+    if (a > zero) {
+        max.y += a * def->unkA4 * def->unkA4;
+    } else if (a < zero) {
+        min.y += a * def->unkA4 * def->unkA4;
+    }
+    slot->unk280 = DEB_MAX(DEB_MAX(max.x, max.z), DEB_MAX(max.y, -min.y));
+    slot->boundsMin = min;
+    slot->boundsMax = max;
+    slot->boundsMtx = mtx;
+}
+
+void fn_80016660(s32, s32, s32 *);
+s32 fn_800166C4(s32, s32);
+s32 NuPortalClipTest(s32, struct nuvec_s *, s32, f32);
+void *NuCameraGetViewMtx(void);
+void fn_8000D134(struct numtx_s *, struct numtx_s *, struct numtx_s *);
+void NuAnimCurveSetEval(void *);
+s32 fn_80023628(struct nuvec_s *, struct nuvec_s *, struct numtx_s *, s32, f32);
+void fn_80026F0C(s32, s32, s32, struct numtx_s *, s32, f32, f32, f32, f32, f32);
+extern s32 lbl_8019567C[];
+extern const f32 lbl_80195680[];
+extern s32 lbl_8038E6EC[];
+extern s32 lbl_804084A4;
+
+struct deb_draw_obj {
+    u8 unk00[0x2C];
+    u8 unk2C;
+    u8 unk2D;
+    s8 unk2E;
+    u8 unk2F[9];
+    f32 unk38;
+    f32 unk3C;
+    u8 unk40[4];
+    f32 unk44;
+    u8 unk48[0xF8];
+    f32 unk140;
+    f32 unk144;
+    u8 unk148[0x160];
+    s32 unk2A8;
+    u8 unk2AC[0x43];
+    u8 unk2EF;
+    u8 unk2F0[0xD8];
+    s16 slots[8];
+};
+
+s32 fn_80060F58(s32 arg0, s32 list) {
+    struct numtx_s mtx;
+    struct nuvec_s pos;
+    struct nuvec_s min;
+    struct nuvec_s max;
+    debrisnode_s *node;
+    struct deb_draw_obj *obj;
+    struct deb_transform_slot *slot;
+    s32 draw;
+    s32 found;
+    s32 i;
+    f32 scale;
+    f32 radius;
+
+    fn_80016660(0, 0xC, lbl_8019567C);
+    node = lbl_8038E6D8[list];
+    if (node != NULL) {
+        do {
+            if (node->unk00 != 0) {
+                obj = node->obj;
+                slot = (struct deb_transform_slot *)node->deb;
+                if (obj->unk2A8 == 0) {
+                    fn_8006E3E0(obj);
+                    if (obj->unk2A8 == 0) {
+                        goto next;
+                    }
+                }
+                draw = 1;
+                if (node->deb != NULL) {
+                    found = 0;
+                    for (i = 0; i <= 7; i++) {
+                        if (obj->slots[i] != -1 && (struct deb_transform_slot *)(lbl_80408404 + obj->slots[i] * 0x2EC) == slot) {
+                            found = 1;
+                            break;
+                        }
+                    }
+                    if (!found && obj->unk3C > lbl_80195680[0] && obj->unk2EF == 0 && slot->unk2DC > obj->unk3C) {
+                        draw = 0;
+                    }
+                    if (slot->visible == 0) {
+                        draw = 0;
+                    }
+                    if (draw && obj->unk2C == 0 && obj->unk2EF == 0 && !found) {
+                        if (slot->unk280 == lbl_80195680[0] || lbl_804084A4 != 0) {
+                            fn_80060BF8(obj, slot);
+                        }
+                        radius = slot->unk280;
+                        min = slot->boundsMin;
+                        max = slot->boundsMax;
+                        mtx = slot->boundsMtx;
+                        if (lbl_804084A4 == 0 && slot->portal != 0 && slot->portalRoom != -1 &&
+                            NuPortalClipTest(slot->portal, &slot->pos, slot->portalRoom, radius) == 0) {
+                            draw = 0;
+                        }
+                        if (fn_80023628(&min, &max, &mtx, 0, *lbl_80195680) == 0) {
+                            draw = 0;
+                        }
+                    }
+                    if (draw) {
+                        mtx = ((struct deb_transform_slot *)node->deb)->transform80;
+                        pos.x = ((struct deb_transform_slot *)node->deb)->pos.x;
+                        pos.y = ((struct deb_transform_slot *)node->deb)->pos.y;
+                        pos.z = ((struct deb_transform_slot *)node->deb)->pos.z;
+                    }
+                } else {
+                    if (obj->unk3C > lbl_80195680[0] && obj->unk2EF == 0 && fn_80064A58(&node->pos) > obj->unk3C) {
+                        draw = 0;
+                    }
+                    if (draw) {
+                        mtx = node->mtx;
+                        pos.x = node->pos.x;
+                        pos.y = node->pos.y;
+                        pos.z = node->pos.z;
+                    }
+                }
+                if (draw) {
+                    NuMtxTranslate(&mtx, &pos);
+                    if (list == 4) {
+                        fn_8000D134(&mtx, &mtx, NuCameraGetViewMtx());
+                        scale = lbl_804083C0;
+                    } else {
+                        scale = lbl_804083BC;
+                    }
+                    if (obj->unk2E == 7) {
+                        fn_80026F0C(node->unk00, ((struct deb_draw_obj *)node->obj)->unk2A8,
+                                    lbl_8038E6EC[((struct deb_draw_obj *)node->obj)->unk2E], &mtx, 4, scale,
+                                    obj->unk140, obj->unk144, obj->unk38, obj->unk44);
+                    } else if (obj->unk2EF != 0) {
+                        NuAnimCurveSetEval(obj->unk2F0);
+                        fn_80026F0C(node->unk00, ((struct deb_draw_obj *)node->obj)->unk2A8,
+                                    lbl_8038E6EC[((struct deb_draw_obj *)node->obj)->unk2E], &mtx, 6, scale,
+                                    obj->unk140, obj->unk144, obj->unk38, obj->unk44);
+                    } else {
+                        fn_80026F0C(node->unk00, ((struct deb_draw_obj *)node->obj)->unk2A8,
+                                    lbl_8038E6EC[((struct deb_draw_obj *)node->obj)->unk2E], &mtx, 0, scale,
+                                    obj->unk140, obj->unk144, obj->unk38, obj->unk44);
+                    }
+                }
+            }
+next:
+            node = node->next;
+        } while (node != NULL);
+    }
+    return fn_800166C4(0, 0xC);
 }

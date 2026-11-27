@@ -2620,3 +2620,11 @@ reason = "best 158/306: arg float reg order (f27/f26 swap) and li r0,1 placement
 [[parked]]
 function = "fn_8004D600"
 reason = "best 184/359 (sweep; raw draft 116/359): large m2c draft needs struct-typed rewrite of three float-bounds blocks and the remap loop, frame size 0x50 vs 0x40 mismatch; next: rewrite with terrainhdr_s/TerrainIndexedEntry fields, then permuter"
+
+[[parked]]
+function = "fn_80062DA0"
+reason = "best 69/150: reg alloc of hoisted global-base copies (r26-r29) and slot-field load/store interleave; next: inline slot-rebase helper taking dt, permuter from work/fn_80062DA0/try.c"
+
+[[parked]]
+function = "NuAnimCurveSetApplyToJointBasic"
+reason = "best 186/211 (work/NuAnimCurveSetApplyToJointBasic/v32.c): FP regalloc only (radius/rb f29/f28 swapped; hit-block frac-t0 and quotient f11/f12 swapped); next: longer permuter run from v32 or vary hit-block temp reuse (dx for numerator helped +10)"
