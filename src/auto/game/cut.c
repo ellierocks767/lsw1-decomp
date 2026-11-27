@@ -1778,3 +1778,37 @@ void fn_8011EDD8(s32 unused0, s32 unused1, s32 unused2, CutSceneLocator *locator
         fn_800BA014(11, &matrix);
     }
 }
+
+typedef struct CutSceneRenderState {
+    u8 unk0[0x198];
+    s32 sceneIndex;
+} CutSceneRenderState;
+
+f32 NuSinApprox(s32);
+s32 fn_800274BC(s32);
+void fn_80025C38(s32, s32, s32, s32, u32, void *);
+void fn_80027564(void);
+extern f32 lbl_80409968;
+extern f32 lbl_8040996C;
+extern void *lbl_8040AF70;
+
+void fn_8011EC88(CutSceneRenderState *scene)
+{
+    if (lbl_8040993C > 0.0f && fn_800274BC(-1) != 0) {
+        f32 scale;
+        f32 sine;
+        s32 height;
+        s32 fullHeight = 0xE00;
+
+        if (scene != NULL && (scene->sceneIndex == 0x77 || lbl_8040B25C == 0x5F)) {
+            scale = lbl_8040996C;
+        } else {
+            scale = lbl_80409968;
+        }
+        sine = NuSinApprox((s32)(lbl_8040993C * 16384.0f));
+        height = (s32)((f32)(s32)(fullHeight * scale) * sine);
+        fn_80025C38(0, 0, 0x2800, height, 0x80000000u, lbl_8040AF70);
+        fn_80025C38(0, fullHeight - height, 0x2800, height, 0x80000000u, lbl_8040AF70);
+        fn_80027564();
+    }
+}
