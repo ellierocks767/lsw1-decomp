@@ -112,17 +112,24 @@ struct CHRISLEVELDATA_s {
 };
 
 
+struct CHRISACTION_s {
+    s32 kind;
+    f32 value;
+};
+
 struct CHRIS43468_s {
     f32 field00[4];
-    void *field10;
-    s32 field14;
-    s32 field18;
-    s32 field1C;
-    u8 pad20[0xC];
+    struct CHRISACTION_s *actions;
+    struct CHRISACTION_s *action;
+    s32 nextAction;
+    s32 actionKind;
+    u8 pad20[4];
+    f32 remaining;
+    u8 pad28[4];
     struct CHRISLEVELDATA_s *data;
 };
 
-extern u8 lbl_801E17C0[];
+extern struct CHRISACTION_s lbl_801E17C0[];
 extern f32 lbl_802E9B40[4];
 
 void *memset(void *dest, int ch, unsigned int count);
@@ -141,7 +148,7 @@ void fn_80143468(struct CHRIS43468_s *state, struct CHRISLEVELDATA_s *data)
         state->field00[1] = -121.0f;
         state->field00[2] = -1034.0f;
         state->field00[3] = 1.0f;
-        state->field10 = NULL;
+        state->actions = NULL;
     } else {
         lbl_802E9B40[0] = 4.0f;
         lbl_802E9B40[1] = 4.0f;
@@ -151,7 +158,7 @@ void fn_80143468(struct CHRIS43468_s *state, struct CHRISLEVELDATA_s *data)
         state->field00[1] = -121.0f;
         state->field00[2] = -1034.0f;
         state->field00[3] = 1.0f;
-        state->field10 = lbl_801E17C0;
+        state->actions = lbl_801E17C0;
     }
     buffer = &data->buffer;
     if (buffer != NULL) {
@@ -161,9 +168,9 @@ void fn_80143468(struct CHRIS43468_s *state, struct CHRISLEVELDATA_s *data)
             buffer->count = 0;
         }
     }
-    state->field14 = 0;
-    state->field1C = 4;
-    state->field18 = 0;
+    state->action = 0;
+    state->actionKind = 4;
+    state->nextAction = 0;
     state->data = data;
     data->target = 1.0f;
     data->current = 1.0f;
@@ -512,4 +519,86 @@ struct NUTURRETENTRY_s *CreateTurret(struct NUTURRET_s *turrets, char *name, u8 
         }
     }
     return entry;
+}
+
+struct CHRISACTIONVECTOR_s {
+    struct nuvec_s xyz;
+    f32 w;
+};
+
+u16 fn_800B9ED4(void);
+void fn_80144D64(struct nuvec_s *start, struct nuvec_s *end, s32 mode, f32 value);
+
+void ProcessSpaceLevelActionList(struct CHRIS43468_s *state)
+{
+    struct CHRISACTIONVECTOR_s from, to, rotated, transformed;
+    struct CHRISACTIONVECTOR_s *fromPtr, *toPtr;
+    struct CHRISACTIONVECTOR_s *rotatedPtr, *transformedPtr;
+    struct CHRISACTION_s *actions;
+    s32 advanced = 0;
+    f32 one, time, first, second;
+
+    actions = state->actions;
+    if (actions == NULL) {
+        return;
+    }
+    if (state->actionKind == 4) {
+        advanced = 1;
+        state->action = &actions[state->nextAction++];
+        state->actionKind = state->action->kind;
+        if (state->actionKind == 3) {
+            state->action = actions;
+            state->nextAction = 1;
+            state->actionKind = actions[0].kind;
+        }
+    }
+    if (advanced) {
+        switch (state->actionKind) {
+        case 0:
+            state->remaining = state->action->value;
+            break;
+        case 1:
+            toPtr = &to;
+            toPtr->xyz = lbl_803E0188;
+            fromPtr = &from;
+            fromPtr->xyz.x = 0.0f;
+            fromPtr->xyz.y = 0.0f;
+            fromPtr->xyz.z = 300.0f;
+            fromPtr->w = 1.0f;
+            /* The matrix immediately precedes lbl_803E0188 in the retail layout. */
+            NuVecMtxTransform(&fromPtr->xyz, &fromPtr->xyz,
+                              (struct numtx_s *)((u32)&lbl_803E0188 - 0x30));
+            fn_80144D64(&fromPtr->xyz, &toPtr->xyz, 1, state->action->value);
+            state->actionKind = 4;
+            break;
+        case 2:
+            first = -10.0f;
+            second = -5.0f;
+            one = 1.0f;
+            rotatedPtr = &rotated;
+            rotatedPtr->xyz.x = first;
+            rotatedPtr->xyz.y = second;
+            rotatedPtr->xyz.z = first;
+            rotatedPtr->w = one;
+            NuVecRotateZ(&rotatedPtr->xyz, &rotatedPtr->xyz, fn_800B9ED4());
+            NuVecMtxTransform(&rotatedPtr->xyz, &rotatedPtr->xyz, &lbl_803E0158);
+            transformedPtr = &transformed;
+            transformedPtr->xyz.x = 0.0f;
+            transformedPtr->xyz.y = 0.0f;
+            transformedPtr->xyz.z = 400.0f;
+            transformedPtr->w = one;
+            NuVecMtxTransform(&transformedPtr->xyz, &transformedPtr->xyz, &lbl_803E0158);
+            fn_80144D64(&rotatedPtr->xyz, &transformedPtr->xyz, 0, state->action->value);
+            state->actionKind = 4;
+            break;
+        }
+    }
+
+    if (state->actionKind == 0) {
+        time = state->remaining - lbl_80408E9C;
+        state->remaining = time;
+        if (time <= 0.0f) {
+            state->actionKind = 4;
+        }
+    }
 }
