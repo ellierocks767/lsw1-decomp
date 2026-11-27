@@ -18,4 +18,14 @@ struct NUTURRETENTRY_s {
     char unk75[3];
 };
 
+struct NUTURRETLIST_s {
+    s32 count;
+    struct NUTURRETENTRY_s entries[1];
+};
+
+struct NUTURRETMASK_s {
+    u8 unk0[0xD8];
+    u32 turretMask;
+};
+
 #endif

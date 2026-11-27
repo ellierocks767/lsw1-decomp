@@ -419,3 +419,29 @@ void DebugMenu_HandleEntry4(void)
         lbl_803E0298.unk10[i] = -1;
     }
 }
+
+#include "game/turret.h"
+
+void fn_8014093C(struct lbl_80409410_s *level)
+{
+    struct NUTURRETLIST_s *turrets;
+    struct NUTURRETENTRY_s *entry;
+    struct NUTURRETMASK_s *mask;
+    s32 i;
+
+    if (level == NULL)
+        return;
+    mask = level->unk1B4;
+    if (mask == NULL)
+        return;
+    turrets = level->turrets;
+    if (turrets == NULL)
+        return;
+
+    mask->turretMask = 0;
+    entry = turrets->entries;
+    for (i = 0; i < turrets->count; i++, entry++) {
+        if (entry->flags & 0x80)
+            level->unk1B4->turretMask |= 1u << i;
+    }
+}

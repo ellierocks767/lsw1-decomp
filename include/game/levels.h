@@ -37,6 +37,8 @@ struct NULEVELINFO_s {
 };
 
 struct nugscn_s;
+struct NUTURRETLIST_s;
+struct NUTURRETMASK_s;
 
 /* Object behind the lbl_80409410 pointer (also read by pickups, obstacle and turret). */
 struct lbl_80409410_s {
@@ -50,7 +52,8 @@ struct lbl_80409410_s {
     u8 pad1A0[0x1A8 - 0x1A0];
     struct NULEVELINFO_s *unk1A8;
     void *unk1AC;                 /* episode_s; also s32 at +0x18/+0x1C, pointer at +0x40 */
-    u8 pad1B0[0x1B8 - 0x1B0];
+    u8 pad1B0[4];
+    struct NUTURRETMASK_s *unk1B4; /* fn_8014093C records turret flags here */
     s32 unk1B8;                   /* first argument of fn_800958F8 (Maul_A) */
     s32 unk1BC;                   /* first argument of fn_8010B780 (Maul_A) */
     s32 unk1C0;                   /* scene handle: first argument of NuSpecialFind */
@@ -66,7 +69,9 @@ struct lbl_80409410_s {
     s32 unk244;
     u8 pad248[0x2DC - 0x248];
     struct CHRISLEVELENTRY_s **unk2DC; /* fn_80145F18 updates entry 0 at +0x6C */
-    u8 pad2E0[0x1974 - 0x2E0];
+    u8 pad2E0[0x578 - 0x2E0];
+    struct NUTURRETLIST_s *turrets;
+    u8 pad57C[0x1974 - 0x57C];
     struct nugspline_s *unk1974;  /* fn_800CCDE4 family */
     u8 pad1978[0xC];
     struct CHRISLEVELDATA_s *unk1984; /* fn_80145F18 and ProcessSpaceLevel */
