@@ -209,6 +209,38 @@ void fn_8013D9FC(struct NUPICKUPPOOL_s *pool, s32 update)
     }
 }
 
+struct PickupMaskBits { char unk0[0x50]; u64 bits[4]; u16 mask70; };
+struct PickupMaskPool {
+    char unk0[0x1b4];
+    struct PickupMaskBits *bits;
+    char unk1b8[0x558];
+    s32 state710;
+    struct NUPICKUP_s *listA;
+    char unk718[0x18];
+    struct NUPICKUP_s *listB;
+    char unk734[0x14];
+    s32 countB;
+    s32 countA;
+};
+void fn_8013DE58(struct PickupMaskPool *pool)
+{
+    s32 i;
+    if (pool->state710 == 0) {
+        if (pool->bits != NULL) {
+            memset(pool->bits->bits, 0, 0x20);
+            pool->bits->mask70 = 0;
+            for (i = 0; i < pool->countA; i++) {
+                if (pool->listA[i].active39 == 0)
+                    pool->bits->bits[i / 64] |= 1ULL << (i % 64);
+            }
+            for (i = 0; i < pool->countB; i++) {
+                if (pool->listB[i].active39 == 0)
+                    pool->bits->mask70 |= 1 << i;
+            }
+        }
+    }
+}
+
 extern void (*fn_80009948(char *, s32))(char *, ...);
 extern char str_SourceFile_Pickups[], str_Assert_Pickups_BufferOverflow[];
 extern s32 fn_8013D550(struct NUPICKUPPOOL_s *);
