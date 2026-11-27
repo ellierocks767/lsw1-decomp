@@ -92,6 +92,24 @@ void fn_801433C0(void *records, s32 count)
     }
 }
 
+struct CHRISBUFFER_s {
+    void *entries;
+    s32 capacity;
+    s32 count;
+};
+
+struct CHRISLEVELDATA_s {
+    u8 pad00000[0x636D0];
+    struct CHRISBUFFER_s buffer;
+    u8 pad636DC[0x44];
+    f32 upperBound;
+    f32 lowerBound;
+    f32 field63728;
+    f32 target;
+    f32 current;
+};
+
+
 struct CHRIS43468_s {
     f32 field00[4];
     void *field10;
@@ -99,13 +117,7 @@ struct CHRIS43468_s {
     s32 field18;
     s32 field1C;
     u8 pad20[0xC];
-    u8 *field2C;
-};
-
-struct CHRISBUFFER_s {
-    void *entries;
-    s32 capacity;
-    s32 count;
+    struct CHRISLEVELDATA_s *data;
 };
 
 extern u8 lbl_801E17C0[];
@@ -113,7 +125,7 @@ extern f32 lbl_802E9B40[4];
 
 void *memset(void *dest, int ch, unsigned int count);
 
-void fn_80143468(struct CHRIS43468_s *state, u8 *data)
+void fn_80143468(struct CHRIS43468_s *state, struct CHRISLEVELDATA_s *data)
 {
     struct CHRISBUFFER_s *buffer;
     s32 capacity;
@@ -139,7 +151,7 @@ void fn_80143468(struct CHRIS43468_s *state, u8 *data)
         state->field00[3] = 1.0f;
         state->field10 = lbl_801E17C0;
     }
-    buffer = (struct CHRISBUFFER_s *)(data + 0x636D0);
+    buffer = &data->buffer;
     if (buffer != NULL) {
         capacity = buffer->capacity;
         if (capacity != 0) {
@@ -150,9 +162,9 @@ void fn_80143468(struct CHRIS43468_s *state, u8 *data)
     state->field14 = 0;
     state->field1C = 4;
     state->field18 = 0;
-    state->field2C = data;
-    *(f32 *)(data + 0x6372C) = 1.0f;
-    *(f32 *)(data + 0x63730) = 1.0f;
+    state->data = data;
+    data->target = 1.0f;
+    data->current = 1.0f;
 }
 
 struct MINIKITMESSAGE_s {
@@ -171,4 +183,54 @@ void GameMsgUpdate_MiniKit(struct MINIKITMESSAGE_s *message)
     phase = (s32)(NuFmod(lbl_803E8394[0], 4.0f) * 0.25f * 65536.0f);
     message->field80 = phase;
     message->field7E = (s16)(NuSinApprox((phase & 0xFFFF) * 2) * 1820.0f);
+}
+
+struct CHRISLEVELENTRY_s {
+    u8 pad00[0x6C];
+    f32 field6C;
+};
+
+struct CHRISVALUE_s {
+    f32 threshold;
+    f32 value;
+};
+
+extern f32 lbl_80409B70;
+
+void fn_80145F18(struct lbl_80409410_s *level, const struct CHRISVALUE_s *entry)
+{
+    f32 threshold = entry->threshold;
+    struct CHRISLEVELDATA_s *data = level->unk1984;
+    f32 target, current, value;
+
+    if (threshold != 0.0f) {
+        do {
+            if (data->lowerBound < threshold && data->upperBound >= threshold) {
+                data->target = entry->value;
+            }
+            threshold = (++entry)->threshold;
+        } while (threshold != 0.0f);
+    }
+    target = data->target;
+    current = data->current;
+    if (target > current) {
+        f32 next = (lbl_80408E9C * lbl_80409B70) + current;
+        data->current = next;
+        if (next > target) {
+            data->current = target;
+        }
+    } else if (target < current) {
+        f32 next = current - lbl_80408E9C * lbl_80409B70;
+        data->current = next;
+        if (next < target) {
+            data->current = target;
+        }
+    }
+    level->unk2DC[0]->field6C = data->current * 20.0f;
+    if (level->unk198 == 0x56) {
+        value = level->unk2DC[0]->field6C;
+        if (value != 0.0f) {
+            data->field63728 = value / 11.0f;
+        }
+    }
 }

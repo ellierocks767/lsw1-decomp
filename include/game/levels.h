@@ -55,8 +55,12 @@ struct lbl_80409410_s {
     u8 pad1C4[0x240 - 0x1C4];
     struct lbl_80409410_240_s *unk240;
     s32 unk244;
-    u8 pad248[0x1974 - 0x248];
+    u8 pad248[0x2DC - 0x248];
+    struct CHRISLEVELENTRY_s **unk2DC; /* fn_80145F18 updates entry 0 at +0x6C */
+    u8 pad2E0[0x1974 - 0x2E0];
     struct nugspline_s *unk1974;  /* fn_800CCDE4 family */
+    u8 pad1978[0xC];
+    struct CHRISLEVELDATA_s *unk1984; /* fn_80145F18 and ProcessSpaceLevel */
 };
 
 extern struct lbl_80409410_s *lbl_80409410;
