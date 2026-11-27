@@ -349,12 +349,12 @@ void fn_8002A3A8(struct nugscn_s *scene);
 
 void fn_80141D20(struct lbl_80409410_s *level)
 {
-    struct nugscn_s *scene = level->unk214;
+    struct nugscn_s *scene = level->miniRunner.scene;
 
     if (scene != NULL) {
         fn_8002A3A8(scene);
-        level->unk214 = NULL;
-        level->unk218 = 0;
+        level->miniRunner.scene = NULL;
+        level->miniRunner.objects = NULL;
     }
 }
 
@@ -754,5 +754,70 @@ void LoadMiniKit(struct CHRISMINIKIT_s *kit, s32 level, u32 *cursor, u32 *limit)
         if (kit->scene != NULL) {
             kit->level = level;
         }
+    }
+}
+
+struct CHRISMINIKITOBJECT_s {
+    struct nuhspecial_s special;
+    struct numtx_s transform;
+    u8 pad4C[0x64 - 0x4C];
+    u8 variant;
+    u8 pad65[3];
+};
+
+struct CHRISMINIRUNNERNAMES_s {
+    char *names[6];
+};
+
+extern const struct CHRISMINIRUNNERNAMES_s lbl_801AF19C;
+extern s32 lbl_8040B0FC;
+extern char str_Path_MiniRunnerScript[];
+extern char str_Format_MiniRunner[];
+struct numtx_s *fn_800133FC(struct nuhspecial_s *);
+s32 sprintf(char *, const char *, ...);
+
+void fn_80141958(struct CHRISMINIRUNNER_s *runner, u32 *cursor, u32 *end)
+{
+    char name[0x40];
+    struct CHRISMINIRUNNERNAMES_s directions;
+    u32 limit;
+    s32 i;
+
+    runner->scene = NULL;
+    runner->objects = NULL;
+    directions = lbl_801AF19C;
+    *cursor = (*cursor + 0x3F) & ~0x3F;
+    limit = *end;
+    runner->scene = (struct nugscn_s *)fn_8002A4B0(cursor, &limit, str_Path_MiniRunnerScript);
+    if (runner->scene != NULL) {
+        s32 total = lbl_8040B0FC;
+        i = 0;
+        *cursor = (*cursor + 3) & ~3;
+        runner->objects = (struct CHRISMINIKITOBJECT_s *)*cursor;
+        if (i < total) {
+            do {
+                s32 variant;
+                s32 number;
+                char **direction;
+
+                variant = 0;
+                number = i + 1;
+                direction = directions.names;
+
+                do {
+                    sprintf(name, str_Format_MiniRunner, *direction, number);
+                    direction++;
+                    if (NuSpecialFind(runner->scene, &runner->objects[i].special, name, 1)) {
+                        struct numtx_s *transform = fn_800133FC(&runner->objects[i].special);
+                        runner->objects[i].transform = *transform;
+                        runner->objects[i].variant = variant;
+                        break;
+                    }
+                    variant++;
+                } while (variant < 6);
+                i = number;
+            } while (i < lbl_8040B0FC);
+        }
+        *cursor += lbl_8040B0FC * sizeof(*runner->objects);
     }
 }

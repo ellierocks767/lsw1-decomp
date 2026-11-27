@@ -47,6 +47,11 @@ struct CHRISMINIKIT_s {
     u8 level;
 };
 
+struct CHRISMINIRUNNER_s {
+    struct nugscn_s *scene;
+    struct CHRISMINIKITOBJECT_s *objects;
+};
+
 /* Object behind the lbl_80409410 pointer (also read by pickups, obstacle and turret). */
 struct lbl_80409410_s {
     u8 pad0[0x184];
@@ -66,8 +71,7 @@ struct lbl_80409410_s {
     s32 unk1C0;                   /* scene handle: first argument of NuSpecialFind */
     u8 pad1C4[0x208 - 0x1C4];
     struct CHRISMINIKIT_s miniKit; /* LoadMiniKit and fn_80141CD8 */
-    struct nugscn_s *unk214;      /* fn_80141D20 passes this to fn_8002A3A8 */
-    u32 unk218;                   /* fn_80141D20 clears this alongside unk214 */
+    struct CHRISMINIRUNNER_s miniRunner; /* fn_80141958 and fn_80141D20 */
     u8 pad21C[0x240 - 0x21C];
     struct lbl_80409410_240_s *unk240;
     s32 unk244;
