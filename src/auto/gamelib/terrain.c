@@ -331,7 +331,15 @@ typedef struct NUTERRAINMOTION_s {
     u8 pad00[0x1C];
     f32 position[3];
     f32 step[3];
-    u8 pad34[0x38];
+    u8 pad34[0x10];
+    f32 rotationX;
+    f32 rotationY;
+    u8 pad4C[0xC];
+    f32 field58;
+    f32 field5C;
+    u8 pad60[4];
+    f32 field64;
+    f32 field68;
     s16 field6C;
     u8 pad6E[0x1A];
     u8 mode;
@@ -341,10 +349,9 @@ typedef struct NUTERRAINMOTION_s {
     f32 field98;
     u8 pad9C[4];
     f32 fieldA0;
-    u8 padA4[8];
-    f32 fieldAC;
-    u8 padB0[8];
-    f32 fieldB8;
+    u8 padA4[4];
+    f32 direction[3];
+    f32 scaledDirection[3];
 } TerrainMotion;
 
 extern TerrainMotion *lbl_8040AE5C;
@@ -613,12 +620,12 @@ s32 fn_80056A38(u8 *flags)
             lbl_8040AE5C->position[0] += lbl_8040AE5C->step[0] * scale;
             lbl_8040AE5C->position[1] += lbl_8040AE5C->step[1] * scale;
             lbl_8040AE5C->position[2] += lbl_8040AE5C->step[2] * scale;
-            if (lbl_8040AE5C->fieldB8 < threshold) {
+            if (lbl_8040AE5C->scaledDirection[1] < threshold) {
                 flags[0] = 0;
             } else {
                 flags[0] = 1;
                 flags[1] = 1;
-                lbl_8040AE5C->position[1] += lbl_8040AE5C->fieldAC * lbl_80195114[0];
+                lbl_8040AE5C->position[1] += lbl_8040AE5C->direction[1] * lbl_80195114[0];
             }
             return 0;
 
@@ -735,4 +742,77 @@ void fn_8005592C(void)
     index = lbl_8040AE5C->field6C;
     lbl_8040A594 = lbl_802B1504;
     lbl_8040A5A0 = index;
+}
+
+extern f32 NuFsqrt(f32);
+extern const f32 lbl_801950CC[];
+extern u32 lbl_8040AE6C;
+
+void fn_800559FC(void)
+{
+    TerrainMotion *motion;
+    f32 *direction;
+    f32 sinX;
+    f32 cosX;
+    f32 cosY;
+    f32 sinY;
+    f32 rotatedZ;
+    f32 inverseLength;
+    f32 x;
+    f32 y;
+    f32 z;
+    f32 unit;
+
+    fn_8005592C();
+    switch ((s32)lbl_8040AE5C->mode) {
+        case 4:
+        case 20:
+            lbl_8040AE6C |= 4;
+            /* fall through */
+        case 2:
+        case 3:
+        case 18:
+        case 19:
+            motion = lbl_8040AE5C;
+            direction = motion->direction;
+            sinX = NuSinApprox((s32)motion->rotationX);
+            rotatedZ = direction[1] * sinX
+                     + direction[2] * NuCosApprox((s32)lbl_8040AE5C->rotationX);
+            cosX = NuCosApprox((s32)lbl_8040AE5C->rotationX);
+            direction[1] = direction[1] * cosX
+                         - direction[2] * NuSinApprox((s32)lbl_8040AE5C->rotationX);
+            cosY = NuCosApprox((s32)lbl_8040AE5C->rotationY);
+            direction[2] = rotatedZ * cosY
+                         - motion->direction[0] * NuSinApprox((s32)lbl_8040AE5C->rotationY);
+            sinY = NuSinApprox((s32)lbl_8040AE5C->rotationY);
+            motion->direction[0] = rotatedZ * sinY
+                                 + motion->direction[0] * NuCosApprox((s32)lbl_8040AE5C->rotationY);
+
+            if ((lbl_8040AE5C->mode & 0x10) == 0) {
+                f32 directionScale = lbl_8040AE5C->field58;
+                lbl_8040AE5C->direction[0] *= directionScale;
+                lbl_8040AE5C->direction[1] *= directionScale;
+                lbl_8040AE5C->direction[2] *= directionScale;
+            }
+            /* fall through */
+        case 1:
+        case 17:
+            unit = lbl_801950CC[0];
+            if (lbl_8040AE5C->field5C == unit) {
+                lbl_8040AE5C->scaledDirection[0] = lbl_8040AE5C->direction[0];
+                lbl_8040AE5C->scaledDirection[1] =
+                lbl_8040AE5C->direction[1];
+                lbl_8040AE5C->scaledDirection[2] = lbl_8040AE5C->direction[2];
+                return;
+            }
+            y = lbl_8040AE5C->direction[1];
+            x = lbl_8040AE5C->direction[0];
+            z = lbl_8040AE5C->direction[2];
+            inverseLength = unit / NuFsqrt(z * z + (x * x + y * y * lbl_8040AE5C->field68));
+            lbl_8040AE5C->scaledDirection[0] = lbl_8040AE5C->direction[0] * inverseLength;
+            lbl_8040AE5C->scaledDirection[1] =
+                lbl_8040AE5C->direction[1] * lbl_8040AE5C->field64 * inverseLength;
+            lbl_8040AE5C->scaledDirection[2] = lbl_8040AE5C->direction[2] * inverseLength;
+            return;
+    }
 }
