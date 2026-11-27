@@ -492,3 +492,17 @@ void fn_80068DE0(s32 index, s32 i)
     }
     --lbl_8039B1AC[index].unk1C;
 }
+
+extern s32 lbl_8040AEDC;
+
+void fn_800698B8(void)
+{
+    s32 i;
+    s16 none = -1;
+
+    for (i = 0; i < 64; i++) {
+        lbl_80399DAC[i].id = none;
+        lbl_8039B1AC[i].id = -1;
+    }
+    lbl_8040AEDC = 0;
+}
