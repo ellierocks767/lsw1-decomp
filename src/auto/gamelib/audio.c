@@ -715,3 +715,25 @@ void fn_8006E1EC(void)
     fn_80044D20();
     fn_80044D4C();
 }
+
+void fn_8006DAC8(u16 *table, s32 id)
+{
+    s32 bank;
+    s32 bankBit;
+    s32 bit;
+    s32 index;
+    u16 *entry;
+
+    if (id < 0)
+        return;
+    bank = lbl_803B6E04[id].bankBit;
+    bankBit = bank;
+    if ((u32)bank > 799)
+        return;
+    index = bank / 16;
+    if (index > 49)
+        return;
+    bit = bankBit & 15;
+    entry = &table[index];
+    *entry &= 0xffffu - (1u << bit);
+}
