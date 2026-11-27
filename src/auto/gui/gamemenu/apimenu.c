@@ -857,3 +857,40 @@ block_11:
         Menu_CloseCurrent();
     }
 }
+
+extern s32 lbl_803D9000[];
+extern void (*lbl_80407B1C)(void);
+extern void (*lbl_80407B20)(void);
+extern s32 lbl_804088A8;
+
+void fn_80075B44(s32 page) {
+    s32 i;
+
+    lbl_80407B1C();
+    fn_8007483C();
+    if (lbl_803D9020[page] != 0) {
+        lbl_803D9020[page] = 0;
+        if (lbl_804088B0 == page) {
+            lbl_804088B0 = 0;
+        }
+    }
+    for (i = 0; i < 0x40; i++) {
+        PartType *type = &((PartType *)lbl_803D5680)[i];
+        if (type->page == page && type->effectIds[0] != -1) {
+            type->effectIds[0] = -1;
+            type->name[0] = 0;
+            lbl_804088A8--;
+        }
+    }
+    for (i = 0; i < 0x20; i++) {
+        if ((s8)lbl_803D8280[i].unk32 == page) {
+            if (lbl_803D8280[i].id != -1) {
+                lbl_803D8280[i].id = -1;
+                lbl_804088AC--;
+            }
+        }
+    }
+    fn_8007483C();
+    lbl_80407B20();
+    lbl_803D9000[page] = 0;
+}
