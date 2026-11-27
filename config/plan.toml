@@ -2345,3 +2345,7 @@ reason = "best 45/81 (apimenu, byte-offset form): target does add then lha 0x10(
 [[parked]]
 function = "fn_80074D14"
 reason = "best 17/50 (apimenu): same lbl_803D5680+0x10 fold and lbl_803D8280+0x34 fold as fn_800746F8; target keeps type in r10 (mr r10,r3). Next: solve fn_800746F8 first, then reuse its base shape"
+
+[[parked]]
+function = "fn_8008ACD8"
+reason = "hand draft 155/331 exact insns (WithinConnection, 0x52C): frame 0x88 and u64 route-mask shift match; remaining diff is callee-saved allocation (target visited=r31,cnx=r30,other=r29,hit=r27,f31=clearance; mine visited=r30/cnx=r29). next: permuter run on near/visited liveness"
