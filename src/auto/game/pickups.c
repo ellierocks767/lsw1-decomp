@@ -182,6 +182,8 @@ void fn_8013D438(struct NUPICKUPPOOL_s* pool)
     }
 }
 
+struct PickupCollectDef { char unk0[0x14]; f32 height14; char unk18[4]; s32 award; char unk20[2]; u8 flags; char unk23[0xd]; f32 radius; };
+extern struct PickupCollectDef lbl_801E15E8[];
 struct PickupHeight { f32 height; char unk4[0x30]; };
 extern struct PickupHeight lbl_801E1614[];
 extern f32 lbl_801AECD4[];
@@ -218,7 +220,6 @@ void fn_8013D7E0(struct NUPICKUP_s *base, s32 count)
     if (base != NULL && i < count) {
         f32 dflt = *pd;
         do {
-            struct PickupHeight *tbl = lbl_801E15FC;
             s32 *pb = &below;
             s32 *pa = &above;
             off = i << 6;
@@ -226,7 +227,7 @@ void fn_8013D7E0(struct NUPICKUP_s *base, s32 count)
             j = 0;
             bestBelow = -1;
             bestAbove = -1;
-            r = tbl[p->kind3E].height;
+            r = lbl_801E15E8[p->kind3E].height14;
             r2 = r * r;
             minBelow = minAbove = *pmin;
             if (j < count) {
@@ -472,10 +473,8 @@ void fn_8013D2F4(struct NUPICKUP_s *base, s32 count, s32 offsets)
     }
 }
 
-struct PickupCollectDef { char unk0[0x14]; f32 height14; char unk18[4]; s32 award; char unk20[2]; u8 flags; char unk23[0xd]; f32 radius; };
 struct PickupCollectOwner { char unk0[0x61c]; s32 *handle; };
 struct PickupCollectActor { char unk0[0xeec]; struct PickupCollectOwner *owner; };
-extern struct PickupCollectDef lbl_801E15E8[];
 extern f32 lbl_801AED54[];
 extern void fn_8013DF98(struct NUPICKUP_s *, void *, s32);
 extern void PickupHitPoint(void *, struct NUPICKUP_s *);
