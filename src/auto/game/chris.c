@@ -491,3 +491,25 @@ void fn_801407F8(struct NUTURRET_s *turrets)
             entry->unk6C = fn_8005A5F8(fn_800135B0(&entry->special));
     }
 }
+
+s32 NuSpecialFind(struct nugscn_s *, struct nuhspecial_s *, char *, s32);
+
+struct NUTURRETENTRY_s *CreateTurret(struct NUTURRET_s *turrets, char *name, u8 value)
+{
+    struct nuhspecial_s special;
+    struct NUTURRETENTRY_s *entry = NULL;
+
+    if (turrets != NULL && turrets->count < 32 &&
+        NuSpecialFind(turrets->scene, &special, name, 1)) {
+        entry = &turrets->entries[turrets->count++];
+        if (entry != NULL) {
+            entry->special = special;
+            entry->unk72 = value;
+            entry->unk60 = 1.0f;
+            entry->unk64 = 70.0f;
+            entry->unk68 = 50.0f;
+            entry->counter = 1;
+        }
+    }
+    return entry;
+}

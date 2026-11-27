@@ -150,7 +150,7 @@ void fn_80140504(s32 a, char *self, s32 b, s32 idx) {
     }
 }
 
-struct NUTURRET_s* CreateTurretSys(char** cursor, char** end, u32 value)
+struct NUTURRET_s* CreateTurretSys(char** cursor, char** end, struct nugscn_s* scene)
 {
     struct NUTURRET_s* turret;
     *cursor = (char*)(((u32)*cursor + 3) & ~3);
@@ -162,7 +162,7 @@ struct NUTURRET_s* CreateTurretSys(char** cursor, char** end, u32 value)
     *cursor += sizeof(*turret);
     if (turret != NULL) {
         memset(turret, 0, sizeof(*turret));
-        turret->valueF04 = value;
+        turret->scene = scene;
     }
     return turret;
 }
