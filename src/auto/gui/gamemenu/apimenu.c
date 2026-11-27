@@ -637,9 +637,20 @@ typedef struct Part {
     u8 unk11C[0x126 - 0x11C];
     u8 rotationAxes[2];
     u32 state;
-    u8 unk12C[0x1A8 - 0x12C];
+    u8 special[0xC];
+    s32 specialName;
+    u8 unk13C[0x140 - 0x13C];
+    u8 unk140[0xC];
+    u8 unk14C[0xC];
+    u8 unk158[0xC];
+    u8 unk164[0xC];
+    u8 unk170[0xC];
+    u8 unk17C[0xC];
+    u8 unk188[0x1A8 - 0x188];
     void (*kill)(struct Part *, s32);
-    u8 unk1AC[0x1C0 - 0x1AC];
+    u8 unk1AC[0x1B8 - 0x1AC];
+    s32 (*canReset)(struct Part *);
+    u8 unk1BC[0x1C0 - 0x1BC];
     s32 *unk1C0;
     s32 *unk1C4;
     u8 unk1C8[0x1DC - 0x1C8];
@@ -835,6 +846,44 @@ void fn_80074DDC(f32 best)
         lbl_804088C0 = &lbl_803D8280[lbl_8040AF0C];
         if (lbl_804088C0->id != -1) {
             lbl_804088C4 = &((PartType *)lbl_803D5680)[lbl_804088C0->id];
+        }
+    }
+}
+
+s32 NuSpecialFindMultiWC(void *, struct numtx_s *);
+void fn_8002D9E8(void *, void *, void *, void *, void *, void *);
+void fn_8002DAD0(void *);
+
+void fn_80074374(s32 keep)
+{
+    struct numtx_s tmp;
+    struct numtx_s *mtx;
+    Part *part;
+    s32 i;
+    s32 found;
+
+    for (i = 0, part = lbl_8040AEFC; i < lbl_80408888; i++, part++) {
+        if ((s32)part->state < 0 && !(part->flags & 0x1000)
+            && (part->canReset == NULL || part->canReset(part) != 0)) {
+            if (part->state & 0x10000000) {
+                fn_8002D9E8(part->unk164, part->unk140, part->unk170, part->unk14C, part->unk17C, part->unk158);
+                fn_8002DAD0(part->unk188);
+            }
+            part->state &= ~0x400000;
+            mtx = (struct numtx_s *)part;
+            if ((u32)part & 0xF) {
+                tmp = *(struct numtx_s *)part;
+                mtx = &tmp;
+            }
+            if (part->specialName != 0 && NuSpecialFindMultiWC(part->special, mtx) != 0) {
+                found = 1;
+                part->state |= 0x600000;
+            } else {
+                found = 0;
+            }
+            if (found == 0 && keep == 0 && (!(part->flags & 0x10) || (part->state & 0x800000))) {
+                fn_80074880(part, 0);
+            }
         }
     }
 }
