@@ -54,7 +54,11 @@ struct lbl_80409410_s {
     s32 unk1B8;                   /* first argument of fn_800958F8 (Maul_A) */
     s32 unk1BC;                   /* first argument of fn_8010B780 (Maul_A) */
     s32 unk1C0;                   /* scene handle: first argument of NuSpecialFind */
-    u8 pad1C4[0x214 - 0x1C4];
+    u8 pad1C4[0x208 - 0x1C4];
+    struct nugscn_s *unk208;      /* fn_80141CD8 passes this to fn_8002A3A8 */
+    u32 unk20C;                   /* fn_80141CD8 clears this alongside unk208 */
+    u8 unk210;                    /* fn_80141CD8 clears this alongside unk208 */
+    u8 pad211[3];
     struct nugscn_s *unk214;      /* fn_80141D20 passes this to fn_8002A3A8 */
     u32 unk218;                   /* fn_80141D20 clears this alongside unk214 */
     u8 pad21C[0x240 - 0x21C];

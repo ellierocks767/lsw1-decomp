@@ -342,3 +342,15 @@ void fn_80141D20(struct lbl_80409410_s *level)
         level->unk218 = 0;
     }
 }
+
+void fn_80141CD8(struct lbl_80409410_s *level)
+{
+    struct nugscn_s *scene = level->unk208;
+
+    if (scene != NULL) {
+        fn_8002A3A8(scene);
+        level->unk208 = NULL;
+        level->unk20C = 0;
+        level->unk210 = 0;
+    }
+}
