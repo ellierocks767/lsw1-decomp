@@ -657,3 +657,92 @@ void fn_80129F6C(struct gaibox_s *box)
         } while (i < lbl_8040B058);
     }
 }
+
+struct gameai_special_s {
+    void *scene;
+    s32 index;
+    s32 unk8;
+};
+
+struct gameai_controller_flags_s {
+    u32 reverse : 1;
+    u32 unk : 31;
+};
+
+struct gameai_controller_s {
+    u8 links[8];
+    void *connection;
+    struct gameai_special_s special;
+    s32 cutscene;
+    u8 unk1C[0x88];
+    struct gameai_controller_flags_s flags;
+};
+
+struct gameai_controller_system_s {
+    s32 capacity;
+    s32 unk4;
+    u8 available[8];
+    u8 active[8];
+};
+
+s32 FindCutScene(char *);
+s32 NuSpecialFind(void *, struct gameai_special_s *, char *, s32);
+void fn_80007680(void *, void *);
+void *fn_800076C4(void *);
+void (*fn_80009948(const char *, s32))(const char *, ...);
+u8 *fn_8008A6D4(void *, void *, char *, char *, s32 *);
+s32 fn_8011EBF4(void *, s32);
+extern char str_Assert_AIPathCnxController_TooMany[];
+extern char str_SourceFile_GameAI[];
+
+struct gameai_controller_s *AIPathCnxControllerCreate(
+    struct gameai_controller_system_s *system, void *ai, void *path, char *from,
+    char *to, char *object, char *cutscene)
+{
+    struct gameai_controller_s *controller = NULL;
+    s32 cutsceneInstance = 0;
+    void *connection;
+    struct gameai_special_s special;
+    s32 direction;
+
+    if (system != NULL && from != NULL && to != NULL && (object != NULL || cutscene != NULL)) {
+        if (cutscene != NULL) {
+            s32 index;
+            connection = fn_8008A6D4(ai, path, from, to, &direction);
+            index = FindCutScene(cutscene);
+            if (index != -1) {
+                cutsceneInstance = fn_8011EBF4(lbl_80409410, index);
+            }
+            if (connection != NULL && cutsceneInstance != 0) {
+                u8 *available = system->available;
+                controller = fn_800076C4(available);
+                if (controller != NULL) {
+                    fn_80007680(available, controller);
+                    fn_80007610(system->active, controller);
+                    controller->connection = connection;
+                    controller->flags.reverse = direction;
+                    controller->cutscene = cutsceneInstance;
+                } else {
+                    fn_80009948(str_SourceFile_GameAI, 0xF6F)(str_Assert_AIPathCnxController_TooMany, system->capacity);
+                }
+            }
+        } else {
+            NuSpecialFind(*(void **)((u8 *)ai + 0x1388), &special, object, 1);
+            connection = fn_8008A6D4(ai, path, from, to, &direction);
+            if (connection != NULL && fn_800130F4(&special) != 0) {
+                u8 *available = system->available;
+                controller = fn_800076C4(available);
+                if (controller != NULL) {
+                    fn_80007680(available, controller);
+                    fn_80007610(system->active, controller);
+                    controller->connection = connection;
+                    controller->flags.reverse = direction;
+                    controller->special = special;
+                } else {
+                    fn_80009948(str_SourceFile_GameAI, 0xF83)(str_Assert_AIPathCnxController_TooMany, system->capacity);
+                }
+            }
+        }
+    }
+    return controller;
+}
