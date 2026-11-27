@@ -82,16 +82,39 @@ s32 PARTLookupType(char *name) {
 typedef struct {
     char name[16];
     s16 effectIds[8];
-    u8 unk20[0x2A - 0x20];
+    s8 kinds[8];
+    u8 numEffects;
+    u8 unk29;
     s8 page;
-    u8 unk2B[0x38 - 0x2B];
+    u8 unk2B;
+    f32 unk2C;
+    f32 unk30;
+    f32 unk34;
     f32 emissionRate;
-    u8 unk3C[0x58 - 0x3C];
+    f32 unk3C;
+    f32 unk40;
+    f32 unk44;
+    f32 unk48;
+    f32 unk4C;
+    f32 unk50;
+    f32 unk54;
     f32 emissionPeriod;
     f32 emissionPeriodRandom;
     f32 emissionPause;
     f32 emissionPauseRandom;
-    u8 unk64[0xB0 - 0x68];
+    s16 unk68[6];
+    s32 flags;
+    s32 unk78;
+    s32 unk7C;
+    f32 unk80;
+    f32 unk84;
+    s32 unk88;
+    s32 unk8C;
+    s32 unk90;
+    s32 unk94;
+    s32 unk98[4];
+    u8 unkA8[4];
+    f32 unkAC;
 } PartType;
 
 extern s32 lbl_804088AC;
@@ -926,3 +949,200 @@ extern struct nuvec_s lbl_80348074;
 extern f32 lbl_80408898;
 extern PartWorld *lbl_8040AE5C;
 
+
+typedef struct {
+    u8 unk00[0xB4];
+    char *name;
+    u8 unkB8[0xD0 - 0xB8];
+} PartSceneItem;
+
+typedef struct {
+    u8 unk00[0x6C];
+    s32 count;
+    PartSceneItem *items;
+} PartSceneTable;
+
+typedef struct {
+    u8 unk00[0x1A0];
+    PartSceneTable *table;
+} PartScene;
+
+void fn_8006F7E8(char *buf, s32 len);
+s32 fn_8006F71C(void);
+f32 fn_8006F28C(void);
+s32 fn_8006F55C(void);
+s32 fn_8006F46C(void);
+s32 fn_80064A28(char *name);
+s32 fn_8006DDC4(char *name, s32 len);
+extern PartScene *lbl_8040848C;
+extern char lbl_801BB51C[];
+extern f32 lbl_8019A958[];
+extern const f32 lbl_8019A95C[];
+extern f32 lbl_8019A960[];
+
+static inline s32 Part_FindSceneEffect(char *name, PartScene *scene) {
+    s32 i;
+
+    if (*name == 0) {
+        return -1;
+    }
+    if (NuStrNCmp(name, lbl_801BB51C, 0x10) == 0) {
+        return 9999;
+    }
+    if (scene == NULL) {
+        return -1;
+    }
+    for (i = 0; i < scene->table->count; i++) {
+        if (NuStrNCmp(name, scene->table->items[i].name, 0x10) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+#define PART_LOOKUP(dst, n, k, s) \
+    if ((k) == 0) { (dst) = Part_FindSceneEffect(n, s); } \
+    else if ((k) == 1) { (dst) = Part_FindSceneEffect(n, lbl_8040848C); } \
+    else { (dst) = -1; }
+
+void fn_80074F48(PartType *t, s32 ver, PartScene *scene) {
+    char name[16];
+    s32 i;
+
+    fn_8006F7E8(t->name, 0x10);
+    if (ver > 5) {
+        for (i = 0; i < 8; i++) {
+            t->kinds[i] = fn_8006F71C();
+        }
+    } else if (ver > 1) {
+        t->kinds[0] = fn_8006F71C();
+        for (i = 1; i < 8; i++) {
+            t->kinds[i] = -1;
+        }
+    } else {
+        t->kinds[0] = 0;
+        for (i = 1; i < 8; i++) {
+            t->kinds[i] = -1;
+        }
+    }
+    if (ver > 5) {
+        for (i = 0; i < 8; i++) {
+            fn_8006F7E8(name, 0x10);
+            PART_LOOKUP(t->effectIds[i], name, t->kinds[i], scene);
+        }
+    } else {
+        fn_8006F7E8(name, 0x10);
+        PART_LOOKUP(t->effectIds[0], name, t->kinds[0], scene);
+    }
+    t->numEffects = 0;
+    for (i = 0; i < 8; i++) {
+        if (t->effectIds[i] != -1 && t->effectIds[i] != 9999) {
+            t->numEffects++;
+        }
+    }
+    if (ver > 5) {
+        t->unk29 = fn_8006F71C();
+    } else {
+        t->unk29 = 0;
+    }
+    t->unk2C = fn_8006F28C();
+    t->unk30 = fn_8006F28C();
+    t->unk34 = fn_8006F28C();
+    t->emissionRate = fn_8006F28C();
+    if (ver > 7) {
+        t->unk3C = fn_8006F28C();
+    } else {
+        t->unk3C = lbl_8019A958[0];
+    }
+    t->unk40 = fn_8006F28C();
+    t->unk44 = fn_8006F28C();
+    t->unk48 = fn_8006F28C();
+    t->unk4C = fn_8006F28C();
+    t->unk50 = fn_8006F28C();
+    t->unk54 = fn_8006F28C();
+    t->emissionPeriod = fn_8006F28C();
+    t->emissionPeriodRandom = fn_8006F28C();
+    t->emissionPause = fn_8006F28C();
+    t->emissionPauseRandom = fn_8006F28C();
+    t->unk68[0] = fn_8006F55C();
+    t->unk68[1] = fn_8006F55C();
+    t->unk68[2] = fn_8006F55C();
+    t->unk68[3] = fn_8006F55C();
+    t->unk68[4] = fn_8006F55C();
+    t->unk68[5] = fn_8006F55C();
+    t->flags = fn_8006F46C();
+    if (t->effectIds[0] == 9999) {
+        t->flags |= 0x10;
+    }
+    if (ver > 8) {
+        fn_8006F7E8(name, 0x10);
+        t->unk78 = fn_80064A28(name);
+        fn_8006F7E8(name, 0x10);
+        t->unk7C = fn_80064A28(name);
+        fn_8006F7E8(name, 0x10);
+        t->unk88 = fn_80064A28(name);
+        t->unk80 = fn_8006F28C();
+        t->unk84 = fn_8006F28C();
+    } else if (ver > 4) {
+        fn_8006F7E8(name, 0x10);
+        t->unk78 = fn_80064A28(name);
+        t->unk7C = -1;
+        fn_8006F7E8(name, 0x10);
+        t->unk88 = fn_80064A28(name);
+        t->unk80 = fn_8006F28C();
+        t->unk84 = lbl_8019A95C[0];
+    } else if (ver > 2) {
+        s32 k;
+        t->unk88 = t->unk7C = t->unk78 = -1;
+        k = fn_8006F71C();
+        fn_8006F7E8(name, 0x10);
+        if (k == 0) {
+            t->unk78 = fn_80064A28(name);
+        } else if (k == 1) {
+            t->unk88 = fn_80064A28(name);
+        }
+        t->unk80 = fn_8006F28C();
+        t->unk84 = lbl_8019A95C[0];
+    } else {
+        f32 z = lbl_8019A95C[0];
+        t->unk78 = -1;
+        t->unk7C = -1;
+        t->unk88 = -1;
+        t->unk80 = z;
+        t->unk84 = z;
+    }
+    if (ver > 3) {
+        fn_8006F7E8(name, 0x10);
+        t->unk94 = fn_80064A28(name);
+        fn_8006F7E8(name, 0x10);
+        t->unk8C = fn_80064A28(name);
+    } else {
+        t->unk8C = -1;
+        t->unk94 = -1;
+    }
+    if (ver > 11) {
+        fn_8006F7E8(name, 0x10);
+        t->unk90 = PARTLookupType(name);
+    } else {
+        t->unk90 = -1;
+    }
+    if (ver > 6) {
+        for (i = 0; i < 4; i++) {
+            fn_8006F7E8(name, 0x10);
+            t->unk98[i] = fn_8006DDC4(name, 0x10);
+        }
+        for (i = 0; i < 4; i++) {
+            t->unkA8[i] = fn_8006F71C();
+        }
+    } else {
+        for (i = 0; i < 4; i++) {
+            t->unk98[i] = -1;
+            t->unkA8[i] = 0;
+        }
+    }
+    if (ver > 9) {
+        t->unkAC = fn_8006F28C();
+    } else {
+        t->unkAC = lbl_8019A960[0];
+    }
+}
