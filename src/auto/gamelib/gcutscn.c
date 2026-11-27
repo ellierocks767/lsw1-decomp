@@ -2149,3 +2149,45 @@ void instNuGCutCamSysUpdate(gcut_instance_view* instance, f32 frame)
         }
     }
 }
+
+extern s8 lbl_80407CC8;
+void NuAnimDataFixPtrs(gcut_instance_view* instance)
+{
+    s32* words = (s32*)instance;
+    s32* scene = (s32*)instance->scene;
+    u32 flags = words[0x88/4] & ~0x40000000;
+    *(f32*)((u8*)instance + 0x90) = *(f32*)((u8*)scene + 8);
+    flags |= 0x80000;
+    *(f32*)((u8*)instance + 0x94) = *(f32*)((u8*)scene + 8);
+    words[0x88/4] = flags;
+    words[0x8c/4] &= ~0x2000000;
+    *(f32*)((u8*)instance + 0x90) = *(f32*)((u8*)scene + 8);
+    words[0x88/4] = flags | 0x80000;
+    lbl_80407CC8 = 1;
+    if (instance->flags & 0x2000) {
+        if (scene[5])
+            instNuGCutRigidSysStart(instance, *(f32*)((u8*)instance->scene + 8) - *(f32*)((u8*)instance + 0x90));
+        if (words[0xa4/4])
+            NuGCutCharAnimProcess(instance, *(f32*)((u8*)instance->scene + 8) - *(f32*)((u8*)instance + 0x90));
+        if (words[0xa8/4])
+            ((void (*)(gcut_float_array*, gcut_count8*, f32))NuGCutLocatorCalcMtx)((gcut_float_array*)words[0xa8/4], (gcut_count8*)scene[7], *(f32*)((u8*)instance->scene + 8) - *(f32*)((u8*)instance + 0x90));
+    } else {
+        if (scene[5])
+            instNuGCutRigidSysStart(instance, *(f32*)((u8*)instance + 0x90));
+        if (words[0xa4/4])
+            NuGCutCharAnimProcess(instance, *(f32*)((u8*)instance + 0x90));
+        if (words[0xa8/4])
+            ((void (*)(gcut_float_array*, gcut_count8*, f32))NuGCutLocatorCalcMtx)((gcut_float_array*)words[0xa8/4], (gcut_count8*)scene[7], *(f32*)((u8*)instance + 0x90));
+    }
+    lbl_80407CC8 = 0;
+    if (*(s16*)((u8*)instance + 0xd8)) {
+        if (lbl_80346FFC[*(s8*)((u8*)instance + 0xde)] == *(s16*)((u8*)instance + 0xd8) && fn_80044AE8(*(s8*)((u8*)instance + 0xde)) == *(s16*)((u8*)instance + 0xd8))
+            fn_80044AF0(*(s8*)((u8*)instance + 0xde));
+        if (*(s16*)((u8*)instance + 0xda) && lbl_80346FFC[*(s8*)((u8*)instance + 0xde) + 1] == *(s16*)((u8*)instance + 0xda) && fn_80044AE8(*(s8*)((u8*)instance + 0xde) + 1) == *(s16*)((u8*)instance + 0xda))
+            fn_80044AF0(*(s8*)((u8*)instance + 0xde) + 1);
+        if (!*(u8*)((u8*)instance + 0xde) && (*(s32*)((u8*)instance + 0x8c) & 0x100000)) {
+            fn_80044D0C();
+            *(s32*)((u8*)instance + 0x8c) &= ~0x100000;
+        }
+    }
+}
