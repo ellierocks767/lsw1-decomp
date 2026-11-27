@@ -951,3 +951,41 @@ s32 fn_80146F20(void *arg0, void *arg1) {
     }
     return 0;
 }
+
+typedef struct { s16 count; s16 stride; s32 pad4; char *data; } ShopSpline;
+extern ShopSpline *NuSplineFind(void *, void *);
+extern s32 lbl_801AF754[];
+extern s32 lbl_801AF760[];
+extern s32 lbl_801AF770[];
+extern PodV12 lbl_80401810[];
+extern PodV12 lbl_80401864[];
+extern PodV12 lbl_80401894[];
+extern ShopSpline *lbl_8040A7EC;
+extern ShopSpline *lbl_8040A7F0;
+
+void Shop_InitShelfItemPositions(void) {
+    s16 n0;
+    s16 n1;
+    s16 n2;
+    s32 i;
+    lbl_8040A7E8 = NuSplineFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), lbl_801AF754);
+    lbl_8040A7EC = NuSplineFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), lbl_801AF760);
+    lbl_8040A7F0 = NuSplineFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), lbl_801AF770);
+    if (lbl_8040A7E8 != NULL && lbl_8040A7EC != NULL && lbl_8040A7F0 != NULL) {
+        n0 = ((ShopSpline *)lbl_8040A7E8)->count;
+        n1 = lbl_8040A7EC->count;
+        n2 = lbl_8040A7F0->count;
+        memset(lbl_80401810, 0, 0x54);
+        memset(lbl_80401864, 0, 0x30);
+        memset(lbl_80401894, 0, 0x48);
+        for (i = 0; i < n0; i++) {
+            lbl_80401864[i] = *(PodV12 *)(((ShopSpline *)lbl_8040A7E8)->data + i * ((ShopSpline *)lbl_8040A7E8)->stride);
+        }
+        for (i = 0; i < n1; i++) {
+            lbl_80401810[i] = *(PodV12 *)(lbl_8040A7EC->data + i * lbl_8040A7EC->stride);
+        }
+        for (i = 0; i < n2; i++) {
+            lbl_80401894[i] = *(PodV12 *)(lbl_8040A7F0->data + i * lbl_8040A7F0->stride);
+        }
+    }
+}
