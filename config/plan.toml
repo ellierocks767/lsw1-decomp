@@ -2468,3 +2468,7 @@ reason = "best 346/583: typed vertex and vector accesses recover the divide and 
 [[parked]]
 function = "fn_800645CC"
 reason = "best 40/41: aggregate assignment and transform resets match, final slot-base add has r9 and r10 reversed; next: test an inline that returns the second slot address from an unsigned byte offset without folding it into the first address."
+
+[[parked]]
+function = "fn_80064670"
+reason = "best 47/48: aggregate transform copy and position stores match, final slot-base add has r8 and r9 reversed; next: test a shared typed slot-table declaration and offset-first accessor for the reload."
