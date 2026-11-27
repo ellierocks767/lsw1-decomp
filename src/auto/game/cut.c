@@ -1203,8 +1203,8 @@ void fn_8011E968(void) {
     }
 }
 
-void *fn_8011C3A8(s32, const char *, s32);
-extern s32 lbl_80409414;
+void *fn_8011C3A8(void *, const char *, s32);
+extern void *lbl_80409414;
 extern s32 str_Assert_CUT_FindCharacters[];
 
 typedef struct CutCharacter {
@@ -1340,4 +1340,107 @@ s32 fn_8011EAA8(void *scene)
         return 0;
     }
     return 0;
+}
+
+s32 fn_8011E308(s32);
+extern u8 lbl_803EACC4[];
+extern s32 lbl_80408EEC;
+extern s32 lbl_80408EF0;
+extern s32 lbl_80409158;
+extern s32 lbl_80409940;
+extern s32 lbl_80409944;
+extern s32 lbl_8040B260;
+
+typedef struct CutSceneFixupEntry {
+    union {
+        u32 marker;
+        void *instance;
+    } value;
+    u8 unk4[0x10];
+    u8 flags;
+    u8 unk15[3];
+} CutSceneFixupEntry;
+
+typedef struct CutSceneFixups {
+    CutSceneFixupEntry *entries;
+} CutSceneFixups;
+
+typedef struct CutSceneFixupOwner {
+    u8 unk0[0xA4];
+    CutSceneFixups *fixups;
+} CutSceneFixupOwner;
+
+typedef struct CutSceneSlot {
+    CutSceneCharacters *scene;
+    CutSceneFixupOwner *owner;
+    u8 unk8[0x10];
+} CutSceneSlot;
+
+typedef struct CutSceneState {
+    u8 unk0[0x1A8];
+    u8 *entry;
+    u8 unk1AC[0x440];
+    s8 indices[5];
+    u8 unk5F1[0x5B];
+    CutSceneSlot slots[8];
+} CutSceneState;
+
+void fn_8011D4F8(void)
+{
+    s32 slotIndex = 0;
+    CutSceneSlot *slot = ((CutSceneState *)lbl_80409410)->slots;
+
+    do {
+        CutSceneFixupOwner *owner = slot->owner;
+        if (owner != NULL) {
+            CutSceneFixups *fixups = owner->fixups;
+            CutCharacters *characters = slot->scene->characters;
+            if (characters != NULL && fixups != NULL) {
+                s32 i = 0;
+                if (i < characters->count) {
+                    void *empty = NULL;
+                    s32 fixupOffset = 0;
+                    s32 characterOffset = 0;
+                    do {
+                        CutSceneFixupEntry *entries = fixups->entries;
+                        CutSceneFixupEntry *fixup = (CutSceneFixupEntry *)((u8 *)entries + fixupOffset);
+                        CutCharacter *character = (CutCharacter *)((u8 *)characters->entries + characterOffset);
+                        if (fixup->value.marker == 1) {
+                            if (fixup->flags & 2) {
+                                fixup->value.instance = empty;
+                            } else {
+                                fixup->value.instance = fn_8011C3A8(lbl_80409410, character->name, 0);
+                            }
+                            character->instance = fixup->value.instance;
+                        }
+                        i++;
+                        fixupOffset += sizeof(CutSceneFixupEntry);
+                        characterOffset += sizeof(CutCharacter);
+                    } while (i < characters->count);
+                }
+            }
+        }
+        slotIndex++;
+        slot++;
+    } while (slotIndex <= 7);
+
+    lbl_8040AFB4 = 0;
+    lbl_8040A770 = 0;
+    lbl_8040B25C = -1;
+    lbl_8040993C = 0.0f;
+    if (lbl_80409158 != 0) {
+        CutSceneState *state = lbl_80409410;
+        s8 sceneIndex = *(s8 *)(state->entry + 0x40);
+
+        if (sceneIndex != -1 && state->indices[sceneIndex] != -1 &&
+            lbl_80408EF0 == 0 && lbl_80408EEC == 0 && lbl_803EACC4[sceneIndex] == 0) {
+            fn_8011E308(sceneIndex);
+            if (!(*(s32 *)(((CutSceneState *)lbl_80409410)->entry + 4) & 0x4000)) {
+                lbl_8040993C = 1.0f;
+            }
+        }
+    }
+    lbl_80409940 = -1;
+    lbl_8040B260 = -1;
+    lbl_80409944 = 0;
 }
