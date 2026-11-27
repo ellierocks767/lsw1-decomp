@@ -2480,3 +2480,7 @@ reason = "best 370/654: scratch frame and halfword stream largely align, but ret
 [[parked]]
 function = "fn_80055C64"
 reason = "best 436/885: mode dispatch and tracked-entry paths still emit 42 extra instructions with the output counter and vector copies recovered; next: isolate cases 2\u20134 and 17\u201320 and use typed 0x18 tracked entries to recover scan and writeback scheduling"
+
+[[parked]]
+function = "fn_80056E88"
+reason = "best 523/1224: scratch copies and triangle normal aggregate writebacks improve the seed but leave a 0xa8-byte frame versus retail 0xa0; next: recover the duplicated transform and triangle paths using three address-taken vectors at stack offsets 0x08, 0x18, and 0x28"
