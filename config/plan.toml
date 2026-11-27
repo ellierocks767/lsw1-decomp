@@ -2512,7 +2512,7 @@ reason = "best 523/1224: scratch copies and triangle normal aggregate writebacks
 
 [[parked]]
 function = "fn_8013C8E8"
-reason = "best 54/85: target copies the 12-byte pos through r3=&sp8 and re-reads kind3E from stack; mine forwards it; next: pointer-to-local struct form or permuter run"
+reason = "retried: best 74/85: kind/pos copy now match; target keeps mr copies of both ready flags and an unthreaded second beq cr7 on a (b==0 path), mine folds it (thread_jumps before cse sees same pseudo); next: find a source where the else-if (a) test uses a different pseudo than the a&&b test (u8 flags give copies but clrlwi)"
 
 [[parked]]
 function = "PartStop_Coin"

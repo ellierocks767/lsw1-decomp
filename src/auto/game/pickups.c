@@ -1062,49 +1062,33 @@ static inline s32 pickup_player_ready(struct PickupFlagPlayer *pl)
     return r;
 }
 
+struct PickupVec3 { f32 x, y, z; };
+
 void fn_8013C8E8(struct PickupDropActor *actor)
 {
     if (actor->flags128 & 0x400000) {
         struct PickupFlagPlayer *target;
         s32 a = pickup_player_ready(gFlagPlayers[0]);
         s32 b = pickup_player_ready((struct PickupFlagPlayer *)gPlayerPointers[0]);
-        if (a != 0) {
-            if (b != 0) {
-                struct PickupFlagPlayer **arr = gFlagPlayers;
-                s32 r = fn_800B9ED4();
-                if (r < 0)
-                    r += 0x7FFF;
-                target = arr[r >> 15];
-            } else if (a != 0) {
-                target = gFlagPlayers[0];
-            } else {
-                goto other;
-            }
+        if (a && b) {
+            struct PickupFlagPlayer **arr = gFlagPlayers;
+            s32 r = fn_800B9ED4();
+            if (r < 0)
+                r += 0x7FFF;
+            target = arr[r >> 15];
+        } else if (a) {
+            target = gFlagPlayers[0];
+        } else if (b) {
+            target = (struct PickupFlagPlayer *)gPlayerPointers[0];
         } else {
-other:
-            if (b != 0)
-                target = (struct PickupFlagPlayer *)gPlayerPointers[0];
-            else
-                target = NULL;
+            target = NULL;
         }
         if (target != NULL) {
             struct NUPICKUP_s p;
-            u8 kind;
-            s32 *src;
             s16 k = actor->kind122;
-            if (k == 0xDC) {
-                kind = 0;
-            } else {
-                kind = 2;
-                if (k == 0xE0)
-                    kind = 1;
-            }
-            p.kind3E = kind;
-            src = (s32 *)&actor->pos[0];
-            ((s32 *)&p)[0] = src[0];
-            ((s32 *)&p)[1] = src[1];
-            ((s32 *)&p)[2] = src[2];
-            fn_8013DF98(&p, target, lbl_801E15E8[(s8)kind].award);
+            if (k == 0xDC) p.kind3E = 0; else if (k == 0xE0) p.kind3E = 1; else p.kind3E = 2;
+            *(struct PickupVec3 *)&p = *(struct PickupVec3 *)actor->pos;
+            fn_8013DF98(&p, target, lbl_801E15E8[p.kind3E].award);
         }
     }
 }
