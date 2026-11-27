@@ -746,3 +746,94 @@ struct gameai_controller_s *AIPathCnxControllerCreate(
     }
     return controller;
 }
+
+struct gameai_path_bits_s {
+    u32 words[8];
+};
+
+struct gameai_update_node_s {
+    u8 unk0[0x3C];
+    struct gameai_special_s special;
+    u8 unk48[0x10];
+};
+
+struct gameai_update_connection_s {
+    u8 first;
+    u8 second;
+    u8 unk2[0x26];
+};
+
+struct gameai_update_path_s {
+    u8 unk0[0x12];
+    u16 connectionCount;
+    u8 unk14[4];
+    struct gameai_path_bits_s updatedNodes;
+    struct gameai_path_bits_s previousInsideNodes;
+    struct gameai_path_bits_s insideNodes;
+    struct gameai_update_node_s *nodes;
+    struct gameai_update_connection_s *connections;
+};
+
+struct gameai_update_paths_s {
+    u8 count;
+    struct gameai_update_path_s **paths;
+};
+
+struct gameai_update_system_s {
+    u8 unk0[0xC];
+    struct gameai_update_paths_s *pathSystem;
+    u8 unk10[0x18];
+    s32 boxCount;
+    struct gaibox_s *boxes;
+    u8 unk30[0x1348];
+    u8 nextBox;
+};
+
+void AIPathNodeUpdatePos(struct gameai_update_system_s *, struct gameai_update_path_s *, struct gameai_update_node_s *);
+s32 AIScriptProcess(void *, void *, void *, void *, f32);
+extern f32 lbl_80408E9C;
+
+void fn_80129CCC(struct gameai_update_system_s *system)
+{
+    if (system != NULL) {
+        s32 i;
+
+        if (system->pathSystem != NULL) {
+            for (i = 0; i < system->pathSystem->count; ++i) {
+                struct gameai_update_path_s *path;
+                memset(&system->pathSystem->paths[i]->updatedNodes, 0, 0x20);
+                path = system->pathSystem->paths[i];
+                path->previousInsideNodes = path->insideNodes;
+                memset(&system->pathSystem->paths[i]->insideNodes, 0, 0x20);
+            }
+            for (i = 0; i < system->pathSystem->count; ++i) {
+                s32 j;
+                for (j = 0; j < system->pathSystem->paths[i]->connectionCount; ++j) {
+                    struct gameai_update_path_s *path = system->pathSystem->paths[i];
+                    struct gameai_update_connection_s *connection = &path->connections[j];
+                    struct gameai_update_node_s *node = &path->nodes[connection->first];
+                    if (fn_800130F4(&node->special)) {
+                        AIPathNodeUpdatePos(system, system->pathSystem->paths[i], node);
+                    }
+
+                    node = &system->pathSystem->paths[i]->nodes[connection->second];
+                    if (fn_800130F4(&node->special)) {
+                        AIPathNodeUpdatePos(system, system->pathSystem->paths[i], node);
+                    }
+                }
+            }
+        }
+
+        if (system->nextBox < system->boxCount) {
+            fn_80129F6C(&system->boxes[system->nextBox]);
+            if (++system->nextBox >= system->boxCount) {
+                system->nextBox = 0;
+            }
+        }
+
+        for (i = 0; i < ((struct gaisys_s *)lbl_80409410)->nprocs; ++i) {
+            struct gaisys_s *scripts = lbl_80409410;
+            AIScriptProcess(system, NULL, NULL, &scripts->procs[i], lbl_80408E9C);
+        }
+    }
+}
