@@ -1706,3 +1706,34 @@ void fn_8011B294(f32 value)
         *(f32 *)lbl_8040A75C = fn_8000ED40(value);
     }
 }
+
+typedef struct CutSceneCommandList {
+    u8 unknown[0x30];
+    s8 *commands;
+} CutSceneCommandList;
+
+void fn_8011C168(CutSceneState *, s32);
+
+void fn_8011E8D4(CutSceneState *scene)
+{
+    s32 remaining = 96;
+    s8 *slot = (s8 *)scene + 0x64B;
+    CutSceneCommandList *list;
+
+    do {
+        *slot-- = -1;
+    } while (--remaining != 0);
+
+    list = (CutSceneCommandList *)scene->entry;
+    scene->instanceCount = 0;
+    if (list->commands != NULL) {
+        s32 index = 0;
+        while (list->commands[index] != -1) {
+            /* The retail loop reloads the command pointer for the dispatch. */
+            s8 *commands = *(s8 *volatile *)&list->commands;
+            s32 command = commands[index++];
+            fn_8011C168(scene, command);
+            list = (CutSceneCommandList *)scene->entry;
+        }
+    }
+}
