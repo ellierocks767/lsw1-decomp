@@ -2468,3 +2468,7 @@ reason = "best 210/324: typed endpoint assignments reproduce the 12-byte copies 
 [[parked]]
 function = "fn_80050C5C"
 reason = "best 321/811: typed batch traversal and four local vector copies recover the frame, but branch duplication and constant lifetimes differ; next: recover the inlined signed edge tests and preserve their shared floor and ceiling record paths"
+
+[[parked]]
+function = "fn_80051908"
+reason = "best 346/583: typed vertex and vector accesses recover the divide and cross-product calls, but the extra saved FPR and branch targets differ; next: reconstruct the two inlined rotation blocks with matching temporary lifetimes"
