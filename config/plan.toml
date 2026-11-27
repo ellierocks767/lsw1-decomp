@@ -2736,3 +2736,7 @@ reason = "not attempted separately: exact mirror of Right (+0x18 start, -4 shift
 [[parked]]
 function = "CollideBoltStarFighter"
 reason = "best 178/199: &step re-addi'd (not CSE'd) before NuVecAddPS, f12/f13 swap in dist^2 sum, f29/f30 swap (z vs b); next: permuter on work/CollideBoltStarFighter/try.c, step via different local type"
+
+[[parked]]
+function = "DrawTopShelf"
+reason = "best 259/340 (work/DrawTopShelf/try.c, macro-built 6 blocks, results discarded, per-block temps): lbl_80401864 addr hoisted before fadds in target (r31=&lbl, r30=obj swap), sc store order 48/50/li/4c, f29/f30 swap for k; next: pointer temps per block, permuter on try.c"
