@@ -2460,3 +2460,7 @@ reason = "best 226/282: batch-loop frame and paired plane evaluation schedules d
 [[parked]]
 function = "fn_80052CAC"
 reason = "best 281/467: three vector locals recover the frame, but constant hoisting and condition layout differ; next: type the 16-byte endpoints and keep separately computed XZ distances around the normalizer"
+
+[[parked]]
+function = "fn_80053860"
+reason = "best 210/324: typed endpoint assignments reproduce the 12-byte copies and the frame now matches, but bounds temporaries and inner-loop register copies differ; next: stage each axis extent before the radius term and split list flags from segment metadata"
