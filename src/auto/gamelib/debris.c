@@ -514,6 +514,44 @@ check:
 
 extern f32 lbl_80195744[];
 
+extern s32 rand(void);
+extern const f32 lbl_8019576C[];
+extern const f32 lbl_80195770[];
+extern const f32 lbl_80195780[];
+extern const f32 lbl_80195784[];
+
+struct deb_lifetime_params {
+    u8 unk00[0xA4];
+    f32 lifetime;
+};
+
+struct deb_particle_motion {
+    struct nuvec_s position;
+    f32 unk0C;
+    struct nuvec_s momentum;
+    f32 inverseLifetime;
+};
+
+void GenDebMomAdjFromPosRevTree(void *key, struct deb_lifetime_params *effect,
+                               struct deb_particle_motion *particle)
+{
+    f32 x;
+    f32 z;
+    f32 distance;
+    f32 random;
+    f32 lifetime;
+
+    x = particle->position.x;
+    particle->momentum.x += x * lbl_8019576C[0];
+    z = particle->position.z;
+    particle->momentum.z += z * lbl_8019576C[0];
+    distance = NuFsqrt(x * x + z * z);
+    particle->position.y -= distance * lbl_80195770[0];
+    random = (f32)rand();
+    lifetime = effect->lifetime;
+    particle->inverseLifetime = lbl_80195784[0] / (lifetime + lifetime * random / lbl_80195780[0]);
+}
+
 f32 fn_80064A58(struct nuvec_s *arg0) {
     f32 d;
 
@@ -587,6 +625,43 @@ void fn_80063E64(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
             return;
         }
         fn_8005F254(arg0, arg1, (s32)pv, arg2 * 0x3C, arg3, arg4, var_r31, 0, lbl_80195708[0]);
+    }
+}
+
+extern const f32 lbl_80195724[];
+
+struct deb_effect_kind {
+    u8 unk00[0x2E];
+    s8 kind;
+};
+
+void fn_8006436C(s32 effect, s32 arg1, s32 arg2, s32 arg3, s32 arg4, f32 value)
+{
+    struct nuvec_s offset;
+    struct nuvec_s *offsetPtr = &offset;
+    struct deb_effect_kind *definition;
+    s32 amount;
+
+    offset.z = lbl_80195724[0];
+    offset.y = lbl_80195724[0];
+    offset.x = lbl_80195724[0];
+    if (effect >= 0 && (definition = ((struct deb_effect_kind **)lbl_804083FC)[effect]) != NULL) {
+        switch (definition->kind) {
+        case 2:
+            amount = 50000;
+            break;
+        case 3:
+            amount = 40000;
+            break;
+        case 7:
+            amount = 20000;
+            break;
+        case 0:
+        default:
+            amount = 30000;
+            break;
+        }
+        fn_8005F254(effect, arg1, (s32)offsetPtr, arg2, arg3, arg4, amount, 0, value);
     }
 }
 
@@ -671,6 +746,187 @@ extern struct numtx_s lbl_801B0F08[];
 extern f32 lbl_80195640[];
 extern f32 lbl_80195644[];
 extern f32 lbl_80195648[];
+
+extern const f32 lbl_80195720[];
+
+static inline void DebInitDispatchTransform(struct numtx_s *transform)
+{
+    *transform = lbl_801B0F08[0];
+}
+
+void fn_800641F8(s32 effect, s32 arg1, s32 arg2, f32 value, s32 angleZ, s32 angleY, s32 arg5)
+{
+    typedef s32 (*DebDispatch)(s32, s32, s32, s32, f32, s32, s32, s32, s32);
+    struct numtx_s transform;
+    struct nuvec_s offset;
+    struct numtx_s *transformPtr;
+    struct nuvec_s *offsetPtr;
+    struct deb_effect_kind *definition;
+    s32 amount;
+
+    DebInitDispatchTransform(&transform);
+    fn_8000E540(&transform, angleZ);
+    fn_8000E3C0(&transform, angleY);
+    transformPtr = &transform;
+    offsetPtr = &offset;
+    offset.z = lbl_80195720[0];
+    offset.y = lbl_80195720[0];
+    offset.x = lbl_80195720[0];
+    if (effect >= 0 && (definition = ((struct deb_effect_kind **)lbl_804083FC)[effect]) != NULL) {
+        switch (definition->kind) {
+        case 2:
+            amount = 50000;
+            break;
+        case 3:
+            amount = 40000;
+            break;
+        case 7:
+            amount = 20000;
+            break;
+        case 0:
+        default:
+            amount = 30000;
+            break;
+        }
+        /* The float occupies f1 independently of the integer arguments. */
+        ((DebDispatch)fn_8005F254)(effect, arg1, (s32)offsetPtr, arg2, value,
+                                  (s32)transformPtr, arg5, amount, 0);
+    }
+}
+
+extern const f32 lbl_8019572C[];
+
+struct deb_transform_slot {
+    u8 unk00[0x80];
+    struct numtx_s transform80;
+    struct numtx_s transformC0;
+    u8 unk100[2];
+    s16 definition;
+    u8 unk104[0x17C];
+    f32 unk280;
+    u8 unk284[0x68];
+};
+
+static inline void DebInitTransform80(s32 slot)
+{
+    ((struct deb_transform_slot *)lbl_80408404)[slot].transform80 = lbl_801B0F08[0];
+}
+
+void fn_800644E4(s32 slot, s16 angleZ, s16 angleY)
+{
+    struct deb_transform_slot *effects;
+    struct deb_transform_slot *effect;
+    s32 base;
+
+    if (slot != -1) {
+        DebInitTransform80(slot);
+        base = lbl_80408404;
+        effects = (struct deb_transform_slot *)base;
+        effect = &effects[slot];
+        fn_8000E540(&effect->transform80, angleZ);
+        base = lbl_80408404;
+        effects = (struct deb_transform_slot *)base;
+        effect = &effects[slot];
+        fn_8000E3C0(&effect->transform80, angleY);
+        effects = (struct deb_transform_slot *)lbl_80408404;
+        effects[slot].unk280 = lbl_8019572C[0];
+    }
+}
+
+void fn_8000E250(struct numtx_s *, s32);
+extern const f32 lbl_80195738[];
+
+static inline void DebInitTransformC0(s32 slot)
+{
+    ((struct deb_transform_slot *)lbl_80408404)[slot].transformC0 = lbl_801B0F08[0];
+}
+
+void fn_80064730(s32 slot, s16 angleZ, s16 angleY, s16 angleX)
+{
+    struct deb_transform_slot *effects;
+    struct deb_transform_slot *effect;
+    s32 base;
+
+    if (slot != -1) {
+        DebInitTransformC0(slot);
+        base = lbl_80408404;
+        effects = (struct deb_transform_slot *)base;
+        effect = &effects[slot];
+        fn_8000E540(&effect->transformC0, angleZ);
+        base = lbl_80408404;
+        effects = (struct deb_transform_slot *)base;
+        effect = &effects[slot];
+        fn_8000E3C0(&effect->transformC0, angleY);
+        base = lbl_80408404;
+        effects = (struct deb_transform_slot *)base;
+        effect = &effects[slot];
+        fn_8000E250(&effect->transformC0, angleX);
+        effects = (struct deb_transform_slot *)lbl_80408404;
+        effects[slot].unk280 = lbl_80195738[0];
+    }
+}
+
+extern f32 lbl_801956E8[];
+
+struct deb_definition_flags {
+    u8 unk00[0x2EE];
+    u8 flags;
+};
+
+struct deb_scan_hit {
+    s32 slot;
+    s32 flags;
+};
+
+static inline s32 DebSlotIsMissing(s16 id)
+{
+    return ((struct deb_definition_flags **)lbl_804083FC)[id] == NULL;
+}
+
+static inline u8 DebFlagForSlot(s32 i)
+{
+    return ((struct deb_definition_flags **)lbl_804083FC)
+           [((struct deb_transform_slot *)lbl_80408404)[i].definition]->flags;
+}
+
+static inline void DebAppendScan(s32 table, s32 *count, s32 i)
+{
+    s32 index = *count;
+    s32 offset = index * 8;
+    struct deb_scan_hit *hit = (struct deb_scan_hit *)(offset + (s32)table);
+    hit->slot = i;
+    hit->flags = DebFlagForSlot(i);
+    *count = index + 1;
+}
+
+s32 fn_80063A58(void *query, f32 value)
+{
+    s32 i;
+    s32 slot;
+    u16 id;
+    struct deb_transform_slot *slots;
+
+    lbl_8040AEA8 = 0;
+    lbl_8040AEA4 = 0;
+    for (i = 0; i < lbl_804083F0; i++) {
+        slots = (struct deb_transform_slot *)lbl_80408404;
+        id = (u16)slots[i].definition;
+        if ((u16)(id + 1) > 1U) {
+            if (DebSlotIsMissing((s16)id)) {
+                slot = i;
+                fn_8005EB80(&slot);
+            } else {
+                if (fn_80063834(i, query, value, lbl_801956E8[0], 3) != 0) {
+                    DebAppendScan(lbl_8040AE9C, &lbl_8040AEA8, i);
+                }
+                if (NuAnimCurveSetApplyToJointBasic(i, (s32)query, value, lbl_801956E8[0], 3) != 0) {
+                    DebAppendScan(lbl_8040AEA0, &lbl_8040AEA4, i);
+                }
+            }
+        }
+    }
+    return lbl_8040AEA8 + lbl_8040AEA4;
+}
 
 void fn_8005FF74(s32 effect, void *arg1, s32 arg2, s16 angleZ, s16 angleY, void *arg5)
 {
