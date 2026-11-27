@@ -16,6 +16,50 @@ struct PoolNode { struct Pool* pool; struct PoolNode *next, *prev; u32 flags; };
 extern s32 lbl_8040810C;
 extern void (*lbl_80407B1C)(void), (*lbl_80407B20)(void);
 
+struct PoolSlot { struct Pool* pool; struct PoolSlot* next; struct PoolSlot* prev; u16 index; u16 flags; };
+
+struct Pool* fn_80040B4C(s32 count, s32 size, u32* mem, u32* end, s32 align)
+{
+    struct Pool* pool;
+    struct Pool* ret;
+    struct PoolSlot* node;
+    struct PoolSlot* next;
+    u32 total;
+    s32 i;
+    s32 stride = (size + align + 0xf) & ~(align - 1);
+
+    total = count * stride + 0x20;
+    pool = (struct Pool*)((*mem + (align - 1)) & ~(align - 1));
+    ret = 0;
+    *mem = (u32)pool;
+    if (total < *end - (u32)pool) {
+        ret = pool;
+        *mem = (u32)ret + total;
+        node = (struct PoolSlot*)((u8*)ret + 0x20);
+        ret->free_head = (struct PoolNode*)node;
+        ret->used_head = 0;
+        ret->used_tail = 0;
+        ret->count = count;
+        ret->size = size;
+        ret->stride = stride;
+        ret->used = 0;
+        next = (struct PoolSlot*)((u8*)node + stride);
+        for (i = 1; i < count; i++) {
+            node->next = next;
+            node->pool = pool;
+            node->index = i - 1;
+            node = next;
+            next = (struct PoolSlot*)((u8*)node + stride);
+        }
+        node->next = 0;
+        pool->free_tail = (struct PoolNode*)node;
+        node->index = i - 1;
+        node->pool = pool;
+        pool->owner = lbl_8040810C;
+    }
+    return ret;
+}
+
 void* fn_80040C24(struct Pool* pool)
 {
     struct PoolNode* node;
@@ -59,7 +103,7 @@ void fn_80040D00(void* data)
     if (pool->owner != owner) lbl_80407B20();
 }
 
-s32 fn_800424F4();
+void fn_800424F4();
 extern s32 lbl_8040A434;
 
 void fn_80042E28(void) {
@@ -192,7 +236,7 @@ void fn_80040E48(void) {
 }
 
 s32 (*fn_80009948(s32 *, s32))();
-s32 fn_800424F4();
+void fn_800424F4();
 extern s32 lbl_80193B1C[];
 extern s32 lbl_80193B78[];
 extern s32 lbl_8040A434;
@@ -215,7 +259,7 @@ void fn_80042E6C(s32 arg0, s32 arg1, s32 arg2) {
 }
 
 s32 (*fn_80009948(s32 *, s32))();
-s32 fn_800424F4();
+void fn_800424F4();
 extern s32 lbl_80193B1C[];
 extern s32 lbl_80193B78[];
 extern s32 lbl_8040A434;
@@ -520,4 +564,93 @@ s32 NuTexAnimProgReadScript(void)
         lbl_8034705C[i] = 0;
     }
     return 1;
+}
+
+extern s32 lbl_80408210;
+extern s32 lbl_80408214;
+extern s32 lbl_80408218;
+extern s32 lbl_8040821C;
+extern s32 lbl_80408220;
+extern s32 lbl_80408224;
+extern s32 lbl_8040822C;
+extern s32 lbl_80408230;
+extern s32 lbl_80408238;
+extern s32 lbl_8040AE0C;
+extern s32 lbl_8040ADF8;
+extern s32 lbl_8040A45C;
+
+void fn_800424F4(void)
+{
+
+    switch (lbl_8040A434) {
+    case 2: case 3: case 4: case 5: case 6:
+        lbl_80408210 = 3;
+        lbl_80408214 = 0;
+        break;
+    case 1:
+    case 9: case 10:
+    case 0xc: case 0xd: case 0xe: case 0xf: case 0x10: case 0x11: case 0x12: case 0x13:
+        lbl_80408214 = lbl_80408210 = 0;
+        break;
+    case 0x16: case 0x17: case 0x18: case 0x19: case 0x1a:
+        lbl_80408210 = 1;
+        lbl_80408214 = 3;
+        break;
+    case 0xb:
+    case 0x15:
+        lbl_80408210 = 1;
+        lbl_80408214 = 0;
+        break;
+    }
+    lbl_80408218 = 0;
+    lbl_8040821C = -1;
+    lbl_80408220 = 0;
+    lbl_80408230 = 0;
+    lbl_8040822C = 0;
+    lbl_8040AE0C = 0;
+    lbl_80408238 = 0;
+    lbl_8040ADF8 = 0;
+    lbl_80408224 = 0;
+    if (lbl_8040A490 == 1) {
+        lbl_80408224 = lbl_8040A490;
+        if (lbl_8040A474 != 0 && lbl_8040A480 != 0 && lbl_8040A478 == lbl_8040A488 && lbl_8040A47C == lbl_8040A48C) {
+            lbl_80408224 = 0;
+        }
+    }
+    lbl_8040A490 = 0;
+    if (lbl_8040A434 == 0x19) {
+        lbl_8040821C = 1;
+        return;
+    }
+    if (lbl_8040A434 == 0x18) {
+        lbl_8040821C = 3;
+        return;
+    }
+    if (lbl_8040A450 != 0) {
+        lbl_8040821C = 2;
+        if (lbl_8040A470 <= 0 || lbl_8040A468 == 0) {
+            lbl_80408218 = 0;
+        } else {
+            lbl_80408218 = lbl_8040A46C / lbl_8040A468;
+        }
+        if (lbl_8040A454 != 0) {
+            lbl_80408220 = 1;
+        }
+        if (lbl_8040A458 != 0) {
+            lbl_8040822C = 1;
+            if (lbl_8040A460 != 0) {
+                lbl_8040AE0C = 1;
+            }
+        }
+        if (lbl_8040A458 != 0 && lbl_8040A460 == 0 && lbl_8040A45C != 0) {
+            lbl_80408230 = 1;
+        }
+        if ((lbl_8040A434 >= 0xd && lbl_8040A434 <= 0x10) || lbl_8040A434 == 9 || lbl_8040A434 == 0xa
+            || lbl_8040A434 == 0x11 || lbl_8040A434 == 0x12 || lbl_8040A434 == 0x13 || lbl_8040A434 == 0x14) {
+            lbl_80408238 = 1;
+        }
+        if ((lbl_8040A434 >= 2 && lbl_8040A434 <= 5) || lbl_8040A434 == 7 || lbl_8040A434 == 8) {
+            lbl_8040ADF8 = 1;
+        }
+    }
 }
