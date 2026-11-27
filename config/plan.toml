@@ -2456,3 +2456,7 @@ reason = "best 446/455: hitKind default immediates schedule early and the altern
 [[parked]]
 function = "fn_800533F8"
 reason = "best 226/282: batch-loop frame and paired plane evaluation schedules differ; next: separate signed count tests from unsigned skip headers and split dot products into staged component loads."
+
+[[parked]]
+function = "fn_80052CAC"
+reason = "best 281/467: three vector locals recover the frame, but constant hoisting and condition layout differ; next: type the 16-byte endpoints and keep separately computed XZ distances around the normalizer"
