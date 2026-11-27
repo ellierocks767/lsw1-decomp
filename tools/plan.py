@@ -138,7 +138,7 @@ def evaluate(plan: dict, report: dict, strict: set[str] | frozenset = frozenset(
                    "whole_units": bool(item.get("units"))}
             if rec["data"]:
                 matched, total = idx["data"]
-                rec.update(functions=[], fn_left=0, bytes_left=total - matched, parked=[], strict_only=[],
+                rec.update(functions=[], fn_left=0, bytes_left=total - matched, min_size=0, parked=[], strict_only=[],
                            closed=total > 0 and matched >= total)
             else:
                 fns, missing = item_functions(item, idx)
@@ -149,6 +149,7 @@ def evaluate(plan: dict, report: dict, strict: set[str] | frozenset = frozenset(
                            strict_only=sorted({f["name"] for f in left if f["name"] in strict
                                                and f["name"] not in parked}),
                            bytes_left=sum(f["size"] for f in todo),
+                           min_size=min((f["size"] for f in todo), default=0),
                            parked=sorted({f["name"] for f in left if f["name"] in parked}),
                            units=rec["units"] or sorted({f["unit"] for f in fns}), closed=not todo)
                 for m in missing:
@@ -332,7 +333,17 @@ def active_items(state: dict, cl: dict) -> list[tuple[dict, bool]]:
         elif not stage["alongside"]:
             rest = free(stage)
             break
-    return [(i, False) for i in now] or [(i, True) for i in rest]
+    return [(i, False) for i in quick_first(now)] or [(i, True) for i in quick_first(rest)]
+
+
+QUICK_SIZE = 0x180  # bytes: kickoff's HARD_SIZE; a smaller function can match in one pass
+
+
+def quick_first(items: list[dict]) -> list[dict]:
+    """Items with a function left under QUICK_SIZE first, plan order otherwise. Parking only
+    closes an item once every function is parked, so without this a hard item stays first and
+    each run re-plateaus on its next large function instead of taking quick work elsewhere."""
+    return sorted(items, key=lambda i: not (0 < i.get("min_size", 0) < QUICK_SIZE) and not i.get("data"))
 
 
 def batch_items(state: dict, cl: dict, n: int) -> list[tuple[dict, bool]]:

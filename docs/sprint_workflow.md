@@ -206,9 +206,10 @@ functions at 17–52 exact instructions and never touched the 84% one the sweep 
 Stop rule: at 30 minutes without a strict match, stop starting new large functions. Park
 every function you tried with its best score, mismatch and next hypothesis in
 `config/plan.toml` (`python3 tools/plan.py --park "FN=best 45/81: mismatch; next: idea"`),
-and commit that. A run that matches nothing still ships the plateau notes as a small docs PR,
-so the next run starts from them instead of retrying the same shapes. Only `--status no-change`
-without that commit throws the work away.
+commit that, and start the next item: `plan.py` offers items that still have a function under
+0x180 bytes before items that do not. A run that matches nothing still ships the plateau notes
+as a small `config/plan.toml` PR, so the next run starts from them instead of retrying the same
+shapes. Only `--status no-change` without that PR throws the work away.
 
 ## Queue accounting
 

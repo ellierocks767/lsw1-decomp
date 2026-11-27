@@ -116,6 +116,18 @@ class NextItemTests(unittest.TestCase):
         self.assertEqual(s["current"], "s2")
         self.assertEqual(s["next"]["item"]["id"], "side")  # still open, still worked
 
+    def test_items_with_quick_functions_come_first(self):
+        big = report(**{"core/a": [fn("a1", 10, True), fn("a2", 0x400)],
+                        "core/b": [fn("b1", 0x500), fn("b2", 40)],
+                        "game/c": [fn("c1", 0x200), fn("c2", 60), fn("c3", 70, True)], "data_only": []})
+        s = state_with(report_=big)  # b2 is parked: hub (c1) and core (a2, b1) are all large
+        self.assertEqual([i["id"] for i, _ in plan.active_items(s, NO_CLAIMS)], ["hub", "core"])
+        p = json.loads(json.dumps(PLAN))
+        p["parked"] = [{"function": "a2", "reason": "best 1/2"}]  # core now has 40-byte b2 left
+        s = state_with(plan_=p, report_=big)
+        self.assertEqual([i["id"] for i, _ in plan.active_items(s, NO_CLAIMS)], ["core", "hub"])
+        self.assertEqual(s["next"]["item"]["id"], "core")
+
     def test_batch_lists_distinct_free_items_then_looks_ahead(self):
         cl = {"items": {"hub": {"by": "x", "mine": False}}, "stale": []}
         rows = [(i["id"], la) for i, la in plan.batch_items(state_with(cl), cl, 5)]

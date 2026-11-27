@@ -594,7 +594,8 @@ def item_profile(rows: list[dict] | None, functions: list[str], sizes: dict[str,
     if functions and not quick:
         lines.append(f"HARD ITEM: no function under {HARD_SIZE:#x} bytes or at {NEAR:.0%} in the sweep. "
                      "Expect plateaus. Stop rule: at 30 min without a strict match, park what you "
-                     "tried with `tools/plan.py --park`, commit that, and finish no-change.")
+                     "tried with `tools/plan.py --park`, commit it for the PR and start the next item "
+                     "(`tools/kickoff.py` ranks items with quick functions first).")
     return lines
 
 
