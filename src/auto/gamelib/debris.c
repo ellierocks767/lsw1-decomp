@@ -1278,3 +1278,85 @@ debparticle_s *fn_8005ACFC(debinst_s *inst, debdef_s *def, f32 time) {
     }
     return p;
 }
+
+s32 fn_8000AEC4(f32);
+
+debparticle_s *fn_8005B9DC(debinst_s *inst, debdef_s *def, f32 time) {
+    struct nuvec_s v;
+    struct numtx_s m;
+    debparticle_s *p;
+    s32 rot_y;
+    s32 i;
+
+    if (inst->unk10a >= inst->unk106) {
+        inst->unk10a = 0;
+    }
+    if (def->unk2e == 7) {
+        p = inst->chunks[(s16)(inst->unk10a / 12)]->particles;
+        p += (s16)(inst->unk10a % 12);
+    } else {
+        p = inst->chunks[inst->unk10a / 32]->particles;
+        p += (s16)(inst->unk10a % 32);
+    }
+    inst->unk10a++;
+    p->time = time;
+    inst->last_time = time;
+    p->inv_life = 64.0f / def->life;
+
+    v.x = NuFsqrt(NuRandIntSeeded(&lbl_80408410));
+    v.z = 0.0f;
+    v.y = 0.0f;
+    rot_y = (s32)(NuRandIntSeeded(&lbl_80408410) * 65536.0f);
+    NuVecRotateZ(&v, &v, fn_8000AEC4(2.0f * NuRandIntSeeded(&lbl_80408410) - 1.0f));
+    NuVecRotateY(&v, &v, rot_y);
+    NuMtxSetIdentity(&m);
+    m._00 = def->unk58;
+    m._11 = def->unk5c;
+    m._22 = def->unk60;
+    NuVecMtxTransform(&v, &v, &m);
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->pos.x = v.x;
+    p->pos.y = v.y;
+    p->pos.z = v.z;
+
+    v.x = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk4c - def->unk4c;
+    v.y = (2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk50 - def->unk50) + def->unk48;
+    v.z = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk54 - def->unk54;
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->vel.x = v.x;
+    p->vel.y = v.y;
+    p->vel.z = v.z;
+
+    if (inst->cb != NULL) {
+        inst->cb(inst, def, p);
+    }
+
+    p->pos.x += inst->pos_off.x;
+    p->pos.y += inst->pos_off.y;
+    p->pos.z += inst->pos_off.z;
+    p->vel.x += inst->vel_off.x;
+    p->vel.y += inst->vel_off.y;
+    p->vel.z += inst->vel_off.z;
+
+    for (i = 0; i < def->repeat_count; i++) {
+        debparticle_s *p2;
+        if (inst->unk10a >= inst->unk106) {
+            inst->unk10a = 0;
+        }
+        if (def->unk2e == 7) {
+            p2 = inst->chunks[(s16)(inst->unk10a / 12)]->particles;
+            p2 += (s16)(inst->unk10a % 12);
+        } else {
+            p2 = inst->chunks[inst->unk10a / 32]->particles;
+            p2 += (s16)(inst->unk10a % 32);
+        }
+        inst->unk10a++;
+        *p2 = *p;
+        p2->time += (f32)(i + 1) * def->repeat_dt;
+    }
+
+    if (def->unk2a8 == 0) {
+        fn_8006E3E0(def);
+    }
+    return p;
+}
