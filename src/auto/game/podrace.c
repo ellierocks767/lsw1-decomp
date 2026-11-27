@@ -1099,3 +1099,48 @@ s32 SelectShopItem(ShopItem *items, s32 index) {
     if (bought) BuyShopItem(items, index, 1);
     return 1;
 }
+
+typedef struct ShopExtraDef { u16 nameIdx; u8 pad2[6]; s32 price; char *model; } ShopExtraDef;
+typedef struct ShopSpecial { s32 w[3]; } ShopSpecial;
+typedef struct ShopExtraItem {
+    char name[0x40];
+    char modelName[0x30];
+    u16 id;
+    u8 type;
+    u8 unlocked;
+    s32 price;
+    ShopSpecial special;
+    u8 pad[0x0c];
+} ShopExtraItem;
+extern ShopExtraItem ExtraItems[];
+extern ShopExtraItem GameMenu[];
+extern ShopExtraDef lbl_801D5994[];
+extern char *lbl_803DED88[];
+extern ShopSpecial lbl_804021DC[];
+extern s32 NuStrCpy(char *, char *);
+extern void NuStrCat(char *, const char *);
+
+void Shop_InitExtras(void) {
+    char buf[32];
+    s32 i;
+
+    for (i = 0; i <= 9; i++) {
+        NuStrCpy(ExtraItems[i].name, lbl_803DED88[lbl_801D5994[i].nameIdx]);
+        NuStrCpy(ExtraItems[i].modelName, lbl_801D5994[i].model);
+        NuSpecialFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), &ExtraItems[i].special, ExtraItems[i].modelName, 1);
+        ExtraItems[i].id = i;
+        ExtraItems[i].type = 3;
+        ExtraItems[i].unlocked = 0;
+        if ((lbl_803E0298.extraUnlocked >> i) & 1) {
+            ExtraItems[i].unlocked = 1;
+            lbl_803E0298.extraPurchased |= 1 << i;
+        }
+        ExtraItems[i].price = lbl_801D5994[i].price;
+    }
+    gShopExtraItemCount = 10;
+    for (i = 0; i < gShopExtraItemCount; i++) {
+        NuStrCpy(buf, GameMenu[i].name);
+        NuStrCat(buf, "b");
+        NuSpecialFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), &lbl_804021DC[i], buf, 1);
+    }
+}
