@@ -2414,6 +2414,10 @@ function = "fn_80098858"
 reason = "best 190/198: ProDG anchors the candidate induction pointer at rail_point (+8); next: inspect loop strength reduction and compare candidate pointer selection"
 
 [[parked]]
+function = "fn_8006E3E0"
+reason = "best 418/472 (472/472 insns, 0xe0 frame): loop-invariant @ha hoisting picks 0.015625f over 0.5f/lbl_80198758, shifting freqX f11->f10 and 0.0f f13->f11 across loops 2-5; next: match GCC loop-hoist priority for lbl_80198758/0.25f/0.5f over 0.015625f (e.g. avoid CSE collapsing 0.5f uses or permuter burst)"
+
+[[parked]]
 function = "fn_8009CC00"
 reason = "best 77/83: tail lfs lbl_8019E5B8 scheduled above stfs E98/EA0 (target keeps source order); next: permuter or a different tail shape (5B8 is a 0x50 table)"
 
@@ -2440,3 +2444,7 @@ reason = "best 304/449: register allocation and branch layout diverge in the des
 [[parked]]
 function = "Menu_Open"
 reason = "best 145/205: branch layout and temp registers differ around the per-type dispatch; next: cross-jump identical calls per branch, statement reorder for temp regs"
+
+[[parked]]
+function = "fn_80072028"
+reason = "best 212/250: preamble reg alloc + mr r10,r9 copy of lbl_8040AE5C + addi form of lbl_80348074.y in nested check; next: permuter burst or different local/pointer shape"

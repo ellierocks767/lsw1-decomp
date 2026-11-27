@@ -82,16 +82,39 @@ s32 PARTLookupType(char *name) {
 typedef struct {
     char name[16];
     s16 effectIds[8];
-    u8 unk20[0x2A - 0x20];
+    s8 kinds[8];
+    u8 numEffects;
+    u8 unk29;
     s8 page;
-    u8 unk2B[0x38 - 0x2B];
+    u8 unk2B;
+    f32 unk2C;
+    f32 unk30;
+    f32 unk34;
     f32 emissionRate;
-    u8 unk3C[0x58 - 0x3C];
+    f32 unk3C;
+    f32 unk40;
+    f32 unk44;
+    f32 unk48;
+    f32 unk4C;
+    f32 unk50;
+    f32 unk54;
     f32 emissionPeriod;
     f32 emissionPeriodRandom;
     f32 emissionPause;
     f32 emissionPauseRandom;
-    u8 unk64[0xB0 - 0x68];
+    s16 unk68[6];
+    s32 flags;
+    s32 unk78;
+    s32 unk7C;
+    f32 unk80;
+    f32 unk84;
+    s32 unk88;
+    s32 unk8C;
+    s32 unk90;
+    s32 unk94;
+    s32 unk98[4];
+    u8 unkA8[4];
+    f32 unkAC;
 } PartType;
 
 extern s32 lbl_804088AC;
@@ -623,28 +646,50 @@ void fn_80074840(void)
 typedef struct Part {
     u8 unk000[0x30];
     struct nuvec_s position;
-    u8 unk03C[0x8C - 0x3C];
+    u8 unk03C[0x80 - 0x3C];
+    struct nuvec_s velocity;
     struct nuvec_s boundsMin;
     struct nuvec_s boundsMax;
-    u8 unk0A4[0xD4 - 0xA4];
+    struct nuvec_s hitPos;
+    struct nuvec_s hitNormal;
+    u8 unk0BC[0xD4 - 0xBC];
     void *owner;
     u8 unk0D8[0xDC - 0xD8];
     f32 radius;
-    u8 unk0E0[0x104 - 0xE0];
+    f32 hitRadius;
+    u8 unk0E4[0xE8 - 0xE4];
+    f32 gravity;
+    u8 unk0EC[0xF4 - 0xEC];
+    f32 step;
+    f32 age;
+    u8 unk0FC[0x104 - 0xFC];
     u32 flags;
     u8 unk108[0x114 - 0x108];
     s32 rotationRates[2];
     u8 unk11C[0x126 - 0x11C];
     u8 rotationAxes[2];
     u32 state;
-    u8 unk12C[0x1A8 - 0x12C];
+    u8 special[0xC];
+    s32 specialName;
+    u8 unk13C[0x140 - 0x13C];
+    u8 unk140[0xC];
+    u8 unk14C[0xC];
+    u8 unk158[0xC];
+    u8 unk164[0xC];
+    u8 unk170[0xC];
+    u8 unk17C[0xC];
+    u8 unk188[0x1A8 - 0x188];
     void (*kill)(struct Part *, s32);
-    u8 unk1AC[0x1C0 - 0x1AC];
+    u8 unk1AC[0x1B8 - 0x1AC];
+    s32 (*canReset)(struct Part *);
+    u8 unk1BC[0x1C0 - 0x1BC];
     s32 *unk1C0;
     s32 *unk1C4;
     u8 unk1C8[0x1DC - 0x1C8];
     s32 unk1DC;
-    u8 unk1E0[0x1F4 - 0x1E0];
+    u8 unk1E0[0x1E4 - 0x1E0];
+    s32 debris;
+    u8 unk1E8[0x1F4 - 0x1E8];
 } Part;
 
 s32 fn_8005EB80(s32 *);
@@ -1245,5 +1290,279 @@ void fn_80076DF0(s16 *arg0, f32 y) {
         }
         x += half;
         y += zero;
+    }
+}
+
+extern struct nuvec_s lbl_803D9060;
+extern Entry6C *lbl_804088C0;
+extern PartType *lbl_804088C4;
+extern s32 lbl_8040AF0C;
+
+void fn_80074DDC(f32 best)
+{
+    struct nuvec_s d;
+    s32 i;
+    f32 dist;
+
+    if (lbl_8040AF0C != -1 && lbl_803D8280[lbl_8040AF0C].id != -1) {
+        NuVecSub(&d, &lbl_803D9060, &lbl_803D8280[lbl_8040AF0C].position);
+        dist = d.x * d.x + d.y * d.y + d.z * d.z;
+        if (dist == 0.0f) {
+            return;
+        }
+    }
+    lbl_8040AF0C = -1;
+    for (i = 0; i < 32; i++) {
+        if (lbl_803D8280[i].id != -1) {
+            NuVecSub(&d, &lbl_803D9060, &lbl_803D8280[i].position);
+            dist = d.x * d.x + d.y * d.y + d.z * d.z;
+            if (best < 0.0f || dist < best) {
+                lbl_8040AF0C = i;
+                best = dist;
+            }
+        }
+    }
+    lbl_804088C0 = NULL;
+    lbl_804088C4 = NULL;
+    if (lbl_8040AF0C != -1) {
+        lbl_804088C0 = &lbl_803D8280[lbl_8040AF0C];
+        if (lbl_804088C0->id != -1) {
+            lbl_804088C4 = &((PartType *)lbl_803D5680)[lbl_804088C0->id];
+        }
+    }
+}
+
+s32 NuSpecialFindMultiWC(void *, struct numtx_s *);
+void fn_8002D9E8(void *, void *, void *, void *, void *, void *);
+void fn_8002DAD0(void *);
+
+void fn_80074374(s32 keep)
+{
+    struct numtx_s tmp;
+    struct numtx_s *mtx;
+    Part *part;
+    s32 i;
+    s32 found;
+
+    for (i = 0, part = lbl_8040AEFC; i < lbl_80408888; i++, part++) {
+        if ((s32)part->state < 0 && !(part->flags & 0x1000)
+            && (part->canReset == NULL || part->canReset(part) != 0)) {
+            if (part->state & 0x10000000) {
+                fn_8002D9E8(part->unk164, part->unk140, part->unk170, part->unk14C, part->unk17C, part->unk158);
+                fn_8002DAD0(part->unk188);
+            }
+            part->state &= ~0x400000;
+            mtx = (struct numtx_s *)part;
+            if ((u32)part & 0xF) {
+                tmp = *(struct numtx_s *)part;
+                mtx = &tmp;
+            }
+            if (part->specialName != 0 && NuSpecialFindMultiWC(part->special, mtx) != 0) {
+                found = 1;
+                part->state |= 0x600000;
+            } else {
+                found = 0;
+            }
+            if (found == 0 && keep == 0 && (!(part->flags & 0x10) || (part->state & 0x800000))) {
+                fn_80074880(part, 0);
+            }
+        }
+    }
+}
+
+typedef struct {
+    u8 unk00[0xB4];
+    char *name;
+    u8 unkB8[0xD0 - 0xB8];
+} PartSceneItem;
+
+typedef struct {
+    u8 unk00[0x6C];
+    s32 count;
+    PartSceneItem *items;
+} PartSceneTable;
+
+typedef struct {
+    u8 unk00[0x1A0];
+    PartSceneTable *table;
+} PartScene;
+
+void fn_8006F7E8(char *buf, s32 len);
+s32 fn_8006F71C(void);
+f32 fn_8006F28C(void);
+s32 fn_8006F55C(void);
+s32 fn_8006F46C(void);
+s32 fn_80064A28(void *arg0);
+s32 fn_8006DDC4(char *name, s32 len);
+extern PartScene *lbl_8040848C;
+extern char lbl_801BB51C[];
+extern f32 lbl_8019A958[];
+extern const f32 lbl_8019A95C[];
+extern f32 lbl_8019A960[];
+
+static inline s32 Part_FindSceneEffect(char *name, PartScene *scene) {
+    s32 i;
+
+    if (*name == 0) {
+        return -1;
+    }
+    if (NuStrNCmp(name, lbl_801BB51C, 0x10) == 0) {
+        return 9999;
+    }
+    if (scene == NULL) {
+        return -1;
+    }
+    for (i = 0; i < scene->table->count; i++) {
+        if (NuStrNCmp(name, scene->table->items[i].name, 0x10) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+#define PART_LOOKUP(dst, n, k, s) \
+    if ((k) == 0) { (dst) = Part_FindSceneEffect(n, s); } \
+    else if ((k) == 1) { (dst) = Part_FindSceneEffect(n, lbl_8040848C); } \
+    else { (dst) = -1; }
+
+void fn_80074F48(PartType *t, s32 ver, PartScene *scene) {
+    char name[16];
+    s32 i;
+
+    fn_8006F7E8(t->name, 0x10);
+    if (ver > 5) {
+        for (i = 0; i < 8; i++) {
+            t->kinds[i] = fn_8006F71C();
+        }
+    } else if (ver > 1) {
+        t->kinds[0] = fn_8006F71C();
+        for (i = 1; i < 8; i++) {
+            t->kinds[i] = -1;
+        }
+    } else {
+        t->kinds[0] = 0;
+        for (i = 1; i < 8; i++) {
+            t->kinds[i] = -1;
+        }
+    }
+    if (ver > 5) {
+        for (i = 0; i < 8; i++) {
+            fn_8006F7E8(name, 0x10);
+            PART_LOOKUP(t->effectIds[i], name, t->kinds[i], scene);
+        }
+    } else {
+        fn_8006F7E8(name, 0x10);
+        PART_LOOKUP(t->effectIds[0], name, t->kinds[0], scene);
+    }
+    t->numEffects = 0;
+    for (i = 0; i < 8; i++) {
+        if (t->effectIds[i] != -1 && t->effectIds[i] != 9999) {
+            t->numEffects++;
+        }
+    }
+    if (ver > 5) {
+        t->unk29 = fn_8006F71C();
+    } else {
+        t->unk29 = 0;
+    }
+    t->unk2C = fn_8006F28C();
+    t->unk30 = fn_8006F28C();
+    t->unk34 = fn_8006F28C();
+    t->emissionRate = fn_8006F28C();
+    if (ver > 7) {
+        t->unk3C = fn_8006F28C();
+    } else {
+        t->unk3C = lbl_8019A958[0];
+    }
+    t->unk40 = fn_8006F28C();
+    t->unk44 = fn_8006F28C();
+    t->unk48 = fn_8006F28C();
+    t->unk4C = fn_8006F28C();
+    t->unk50 = fn_8006F28C();
+    t->unk54 = fn_8006F28C();
+    t->emissionPeriod = fn_8006F28C();
+    t->emissionPeriodRandom = fn_8006F28C();
+    t->emissionPause = fn_8006F28C();
+    t->emissionPauseRandom = fn_8006F28C();
+    t->unk68[0] = fn_8006F55C();
+    t->unk68[1] = fn_8006F55C();
+    t->unk68[2] = fn_8006F55C();
+    t->unk68[3] = fn_8006F55C();
+    t->unk68[4] = fn_8006F55C();
+    t->unk68[5] = fn_8006F55C();
+    t->flags = fn_8006F46C();
+    if (t->effectIds[0] == 9999) {
+        t->flags |= 0x10;
+    }
+    if (ver > 8) {
+        fn_8006F7E8(name, 0x10);
+        t->unk78 = fn_80064A28(name);
+        fn_8006F7E8(name, 0x10);
+        t->unk7C = fn_80064A28(name);
+        fn_8006F7E8(name, 0x10);
+        t->unk88 = fn_80064A28(name);
+        t->unk80 = fn_8006F28C();
+        t->unk84 = fn_8006F28C();
+    } else if (ver > 4) {
+        fn_8006F7E8(name, 0x10);
+        t->unk78 = fn_80064A28(name);
+        t->unk7C = -1;
+        fn_8006F7E8(name, 0x10);
+        t->unk88 = fn_80064A28(name);
+        t->unk80 = fn_8006F28C();
+        t->unk84 = lbl_8019A95C[0];
+    } else if (ver > 2) {
+        s32 k;
+        t->unk88 = t->unk7C = t->unk78 = -1;
+        k = fn_8006F71C();
+        fn_8006F7E8(name, 0x10);
+        if (k == 0) {
+            t->unk78 = fn_80064A28(name);
+        } else if (k == 1) {
+            t->unk88 = fn_80064A28(name);
+        }
+        t->unk80 = fn_8006F28C();
+        t->unk84 = lbl_8019A95C[0];
+    } else {
+        f32 z = lbl_8019A95C[0];
+        t->unk78 = -1;
+        t->unk7C = -1;
+        t->unk88 = -1;
+        t->unk80 = z;
+        t->unk84 = z;
+    }
+    if (ver > 3) {
+        fn_8006F7E8(name, 0x10);
+        t->unk94 = fn_80064A28(name);
+        fn_8006F7E8(name, 0x10);
+        t->unk8C = fn_80064A28(name);
+    } else {
+        t->unk8C = -1;
+        t->unk94 = -1;
+    }
+    if (ver > 11) {
+        fn_8006F7E8(name, 0x10);
+        t->unk90 = PARTLookupType(name);
+    } else {
+        t->unk90 = -1;
+    }
+    if (ver > 6) {
+        for (i = 0; i < 4; i++) {
+            fn_8006F7E8(name, 0x10);
+            t->unk98[i] = fn_8006DDC4(name, 0x10);
+        }
+        for (i = 0; i < 4; i++) {
+            t->unkA8[i] = fn_8006F71C();
+        }
+    } else {
+        for (i = 0; i < 4; i++) {
+            t->unk98[i] = -1;
+            t->unkA8[i] = 0;
+        }
+    }
+    if (ver > 9) {
+        t->unkAC = fn_8006F28C();
+    } else {
+        t->unkAC = lbl_8019A960[0];
     }
 }
