@@ -544,7 +544,7 @@ void instNuGCutLocatorSysStart(gcut_instance_view* instance)
 }
 
 extern s32 lbl_804081E4;
-extern void instNuGCutDebrisLocatorUpdate(gcut_locator_system*, gcut_locator_runtime_item*, gcut_locator_record*, s32, f32);
+extern void instNuGCutDebrisLocatorUpdate(gcut_locator_system*, gcut_locator_runtime_item*, gcut_locator_record*, f32, s32);
 void instNuGCutSceneUpdate(gcut_instance_view* instance, gcut_locator_system* system,
                           gcut_locator_runtime_item* item, gcut_locator_record* record,
                           f32 frame, s32 arg, s32 skip)
@@ -552,7 +552,7 @@ void instNuGCutSceneUpdate(gcut_instance_view* instance, gcut_locator_system* sy
     gcut_locator_event* event = &system->events[record->event];
     if (event->flags & 1) {
         if (!skip)
-            instNuGCutDebrisLocatorUpdate(system, item, record, arg, frame);
+            instNuGCutDebrisLocatorUpdate(system, item, record, frame, arg);
     } else if (event->flags & 2) {
         s32 callback = *(s32*)((u8*)&((gcut_event_callback*)lbl_804081EC)[event->index] + 0x10);
         if (callback && event->index != 0xffff)
@@ -1576,6 +1576,56 @@ store:
         if (event->index == 0xFFFF) {
 fail:
             fn_80009970(lbl_8019308C, 0xdaf)(str_NuGCutLocatorSysFixUp_CannotFixupLocator, event->name);
+        }
+    }
+}
+
+void fn_8003E0B4(gcut_instance_view* instance, f32 frame, s32 skip)
+{
+    s32* scene = (s32*)instance->scene;
+    gcut_rigid_runtime* runtime = *(gcut_rigid_runtime**)((u8*)instance + 0xa0);
+    gcut_rigid_system* system = (gcut_rigid_system*)scene[5];
+    u8 visible;
+    gcut_matrix matrix;
+    s32 i;
+    for (i = 0; i < system->count; i++) {
+        gcut_rigid_runtime_item* item = &runtime->items[i];
+        gcut_rigid_view* rigid = &system->rigids[i];
+        if (*((u8*)rigid + 0x58) & 2) continue;
+        if (!(*((u8*)rigid + 0x58) & 4)) continue;
+        if (rigid->state && fn_800407F4(rigid->state, (gcut_trigger_byte*)&item->a, &visible, frame)) {
+            if (visible)
+                fn_80013200(item, 1);
+            else
+                fn_80013200(item, 0);
+        }
+        if (fn_800131B8(item)) {
+            instNuGCutRigidSysEnd(rigid, frame, &matrix);
+            if (instance->flags & 0x1000000)
+                fn_8000D134(&matrix, &matrix, &instance->matrix);
+            fn_80013454(item, (gcut_rigid_view*)&matrix);
+            if (fn_800131B8(item) && *((u8*)rigid + 0x5a) != 0xff) {
+                s32 j;
+                gcut_locator_system* locsys = (gcut_locator_system*)scene[7];
+                gcut_locator_runtime* locrt = *(gcut_locator_runtime**)((u8*)instance + 0xa8);
+                for (j = 0; j < *((u8*)rigid + 0x59); j++) {
+                    s32 k = *((u8*)rigid + 0x5a) + j;
+                    s32 arg = (s32)&matrix;
+                    gcut_locator_runtime_item* litem = (gcut_locator_runtime_item*)(k * 8 + (s32)locrt->items);
+                    gcut_locator_record* record = (gcut_locator_record*)(k * 0x64 + (s32)locsys->records);
+                    gcut_locator_event* event = &locsys->events[record->event];
+                    if (event->flags & 1) {
+                        if (!skip)
+                            instNuGCutDebrisLocatorUpdate(locsys, litem, record, frame, arg);
+                    } else if (event->flags & 2) {
+                        s32 callback = *(s32*)((u8*)&((gcut_event_callback*)lbl_804081EC)[event->index] + 0x10);
+                        if (callback && event->index != 0xffff)
+                            ((void (*)(gcut_instance_view*, gcut_locator_system*, gcut_locator_runtime_item*, gcut_locator_record*, f32, s32, s32))callback)(instance, locsys, litem, record, frame, arg, skip);
+                    } else if ((event->flags & 4) && lbl_804081E4 && *(f32*)((u8*)instance + 0x98) != 0.0f) {
+                        ((void (*)(gcut_locator_system*, gcut_locator_runtime_item*, gcut_locator_record*, f32, s32, s32))lbl_804081E4)(locsys, litem, record, frame, arg, skip);
+                    }
+                }
+            }
         }
     }
 }
