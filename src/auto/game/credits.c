@@ -291,3 +291,30 @@ void fn_8010B780(void *arg0, s32 arg1, s32 arg2) {
         }
     }
 }
+
+s32 fn_80013890(s32, void *);
+s32 fn_8011FB44(s32);
+
+void fn_801093A4(u8 *arg0, u8 *arg1) {
+    s32 i;
+    s32 j;
+    u8 *e;
+    u8 *p;
+
+    if (arg1 != NULL) {
+        p = arg1 + 0xA8;
+        for (i = 0; i < arg1[0x1E]; i++) {
+            u8 *q = arg1 + i * 0x34;
+            if ((q[0xD8] & 0x18) == 0) {
+                e = *(u8 **)(arg0 + 0x58C);
+                for (j = 0; j < *(s32 *)(arg0 + 0x590); j++, e += 0xF4) {
+                    if (fn_80013890((s32)(e + 4), p) != 0) {
+                        fn_8011FB44((s32)e);
+                        break;
+                    }
+                }
+            }
+            p += 0x34;
+        }
+    }
+}
