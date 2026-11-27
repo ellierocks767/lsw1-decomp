@@ -803,13 +803,22 @@ struct socksys_rotation_s {
     u16 y;
 };
 
+struct socksys_segment_s {
+    u8 pad00[0x60];
+    struct nuvec_s start;
+    struct nuvec_s end;
+    u8 pad78[8];
+};
+
 struct socksys_rail_s {
     struct nugspline_s *camera;
-    u8 pad04[0x28];
+    u8 pad04[0x10];
+    struct nugspline_s *midpoint;
+    u8 pad18[0x14];
     u16 segment_count;
     u8 pad2e;
     u8 flag2f;
-    u8 pad30[4];
+    struct socksys_segment_s *segments;
     struct socksys_rotation_s *camera_rotations;
     struct socksys_rotation_s *midpoint_rotations;
     u8 pad3c[0xd8 - 0x3c];
@@ -826,15 +835,19 @@ struct socksys_position_s {
     s8 rail;
     s16 segment;
     f32 fraction;
-    u8 pad08[0x18];
+    struct nuvec_s rail_point;
+    struct nuvec_s camera_point;
     struct socksys_rotation_s camera_rotation;
     struct socksys_rotation_s midpoint_rotation;
     s16 next_segment;
-    u8 pad2a[2];
+    u8 flag2a;
+    u8 flag2b;
     f32 segment_position;
     f32 normalized_position;
+    u32 rail_mask;
 };
 
+extern struct nuvec_s lbl_802C4EDC;
 extern struct nuvec_s lbl_802C4EE8;
 
 static inline s32 socksys_rotation_delta(u16 from, u16 to)
@@ -896,4 +909,67 @@ s32 fn_8009CAEC(const struct socksys_rail_s *rail, s32 index)
         return 1;
     }
     return 0;
+}
+
+void fn_80098B70(struct socksys_rails_s *system, struct socksys_position_s *position,
+                 s32 rail_id, s32 segment, f32 fraction)
+{
+    position->rail = -1;
+    if (system != NULL && (u32)rail_id <= 31) {
+        struct socksys_rail_s *rail = &system->rails[rail_id];
+        struct nuvec_s *out;
+        const struct nuvec_s *from;
+        const struct nuvec_s *to;
+        s32 limit;
+
+        if (rail->flag2f) {
+            limit = rail->segment_count + 1;
+            if (segment > limit) {
+                segment = 0;
+            }
+        } else {
+            limit = rail->segment_count;
+            if (segment > limit) {
+                segment = limit;
+            }
+        }
+        if (segment < 0) {
+            segment = 0;
+        }
+        if (fraction < 0.0f) {
+            fraction = 0.0f;
+        } else if (fraction > 1.0f) {
+            fraction = 1.0f;
+        }
+        position->fraction = fraction;
+        position->rail = rail_id;
+        position->segment = segment;
+        position->next_segment = segment + 1;
+        if (position->next_segment == limit && rail->flag2f) {
+            position->next_segment = 0;
+        }
+        position->flag2a = 1;
+        position->flag2b = 0;
+        position->rail_mask = 1U << rail_id;
+        fn_8009758C(system, position);
+
+        position->camera_point = lbl_802C4EE8;
+        out = &position->rail_point;
+        if (rail->midpoint != NULL) {
+            struct nugspline_s *spline = rail->midpoint;
+            from = (struct nuvec_s *)(spline->pts + position->segment * spline->ptsize);
+            to = (struct nuvec_s *)(spline->pts + position->next_segment * spline->ptsize);
+        } else {
+            struct socksys_segment_s *points = &rail->segments[position->segment];
+            from = &points->start;
+            to = &points->end;
+        }
+        // This fallback is shared with other retail interpolation paths.
+        if (out == NULL) {
+            out = &lbl_802C4EDC;
+        }
+        out->x = (to->x - from->x) * position->fraction + from->x;
+        out->y = (to->y - from->y) * position->fraction + from->y;
+        out->z = (to->z - from->z) * position->fraction + from->z;
+    }
 }
