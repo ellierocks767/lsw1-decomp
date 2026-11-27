@@ -2732,3 +2732,7 @@ reason = "best 104/195: structure and addressing right; mismatch is the 4x clamp
 [[parked]]
 function = "MoveSubItemsLeft"
 reason = "not attempted separately: exact mirror of Right (+0x18 start, -4 shifts, wrap to arg2-1, consts 801AF894..8A0, arg1+0x3C) blocked on the same clamp form; next: solve Right's clamp then port"
+
+[[parked]]
+function = "CollideBoltStarFighter"
+reason = "best 178/199: &step re-addi'd (not CSE'd) before NuVecAddPS, f12/f13 swap in dist^2 sum, f29/f30 swap (z vs b); next: permuter on work/CollideBoltStarFighter/try.c, step via different local type"
