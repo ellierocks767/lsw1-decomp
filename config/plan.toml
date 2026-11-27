@@ -2472,3 +2472,11 @@ reason = "best 40/41: aggregate assignment and transform resets match, final slo
 [[parked]]
 function = "fn_80064670"
 reason = "best 47/48: aggregate transform copy and position stores match, final slot-base add has r8 and r9 reversed; next: test a shared typed slot-table declaration and offset-first accessor for the reload."
+
+[[parked]]
+function = "fn_80062FF8"
+reason = "best 98/121: typed list walks and cleanup recover the instruction count, but the second loop hoists the float load and has different cursor and entry registers; next: keep separate cursor lifetimes and delay the threshold load until the guarded comparison."
+
+[[parked]]
+function = "fn_800621C8"
+reason = "best 55/74: typed slot walk and reset arithmetic match, but the byte-state switch collapses cases 0 and 1 into a range and schedules the marker stores differently; next: recover the case-label layout and one shared indexed state-table base."
