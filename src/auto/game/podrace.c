@@ -1058,3 +1058,44 @@ s32 Shop_UpdateMenu(void) {
     if (d == 0) r = 0;
     return r;
 }
+
+void *fn_800AAD10(s32);
+s32 fn_800AAE44(s32);
+extern s32 gTotalStudsBalance[];
+
+s32 SelectShopItem(ShopItem *items, s32 index) {
+    s32 bought = 0;
+    ShopItem *item = (ShopItem *)((s32)(index * sizeof(ShopItem)) + (s32)items);
+
+    switch (item->type) {
+    case 0:
+        if (item->unlocked == 1) return 0;
+        if (gTotalStudsBalance[0] < item->price) return -1;
+        {
+            s32 id = item->id;
+            if (id >= 0) {
+                if (id <= 0x84) {
+                    if (!fn_800AAD10(id)) return -1;
+                    bought = fn_800AAE44(id);
+                }
+            }
+        }
+        break;
+    case 1:
+        if (item->unlocked == 1) return 1;
+        if (item->price == 0) return 1;
+        if (gTotalStudsBalance[0] < item->price) return -1;
+        bought = 1;
+        break;
+    case 3:
+        if (lbl_803E0298.studs < item->price) return -1;
+        if ((lbl_803E0298.extraPurchased >> item->id) & 1) return 0;
+        bought = 1;
+        lbl_803E0298.extraPurchased |= 1 << item->id;
+        break;
+    default:
+        return -1;
+    }
+    if (bought) BuyShopItem(items, index, 1);
+    return 1;
+}

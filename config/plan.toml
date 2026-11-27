@@ -2714,10 +2714,6 @@ function = "Shop_InitExtras"
 reason = "best 86/87: NuStrCat arg addi r4 scheduled one slot earlier than target; next: order_search/permuter on loop body (best in work/hc/Shop_InitExtras.best.c)"
 
 [[parked]]
-function = "SelectShopItem"
-reason = "best 76/85: target keeps signed id>=0 && id<=0x84 compares on lhz r31 (u16) but gcc folds to cmplwi; next: find id-typed local that blocks the range-merge (work/hc/SelectShopItem.best.c)"
-
-[[parked]]
 function = "fn_80146B8C"
 reason = "best 24-30/58: target keeps t in f1 and reloads *p after lo select (lfs f0,0(r9) after lo), loop-invariant n copy r8; next: CalcSplinePoint(arg0,t) loop shape/permuter (work/hc/fn_80146B8C.best.c)"
 
