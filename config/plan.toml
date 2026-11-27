@@ -2529,3 +2529,7 @@ reason = "retried: best 147/207: frame -0xb0 vs -0xb8, target uses r20..r31 (lbl
 [[parked]]
 function = "fn_8013DB18"
 reason = "draft 79/208 not hand-attempted (time limit spent on fn_8013EA90); next: typed PickupCollectDef loop (0x34 stride, f32 at 0x10/0x14/0x18/0x28/0x2C, ptr 0x24), u64 bitmask at effect1B4+0x50 via __ashldi3/__lshrdi3"
+
+[[parked]]
+function = "fn_8013C620"
+reason = "code 51/51 but MATCH (unverified references): 0.0f literal is address-taken (lis/addi r30, lfs 0(r30)) so strict check cannot compare it to lbl_801AEC5C; extern lbl_801AEC5C[] form scores 30/51; next: a const/static rodata form that keeps the address hoist and names the symbol"
