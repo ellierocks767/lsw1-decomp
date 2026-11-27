@@ -2341,3 +2341,102 @@ s32 fn_800631DC(char *name, s8 group, s32 skip) {
     }
     return -1;
 }
+
+extern const f32 lbl_801956E0[];
+extern const f32 lbl_801956E4[];
+extern struct nuvec_s lbl_8038E794;
+
+struct deb_emitter_point {
+    struct nuvec_s pos;
+    struct nuvec_s vel;
+    f32 time;
+};
+
+struct deb_emitter_slot {
+    u8 unk00[0x102];
+    s16 definition;
+    u8 unk104[0x168 - 0x104];
+    struct deb_emitter_point points[8];
+    u8 unk248[0x2EC - 0x248];
+};
+
+struct deb_size_key {
+    f32 t;
+    f32 size;
+};
+
+struct deb_emitter_def {
+    u8 unk00[0xA0];
+    f32 gravity;
+    f32 lifetime;
+    u8 unkA8[0x2AC - 0xA8];
+    struct deb_size_key sizes[8];
+    s8 count;
+    u8 unk2ED;
+    u8 flags;
+};
+
+static inline f32 DebSubF(f32 a, f32 b)
+{
+    return a - b;
+}
+
+s32 fn_80063834(s32 slot, void *arg1, f32 radius, f32 yscale, u8 mask)
+{
+    struct nuvec_s *target = arg1;
+    struct deb_emitter_slot *s;
+    struct deb_emitter_def *def;
+    s32 i;
+    s32 j;
+    u16 id;
+    f32 t;
+    f32 size;
+    f32 frac;
+    f32 r;
+    f32 dx;
+    f32 dy;
+    f32 dz;
+
+    s = (struct deb_emitter_slot *)(slot * 0x2EC + lbl_80408404);
+    id = s->definition;
+    if ((u16)(id + 1) > 1U) {
+        def = ((struct deb_emitter_def **)lbl_804083FC)[(s16)id];
+        if (def != NULL && (def->flags & mask) && def->count != 0) {
+            for (i = 0; i < def->count; i++) {
+                size = lbl_801956E0[0];
+                t = lbl_804083BC - ((struct deb_emitter_slot *)lbl_80408404)[slot].points[i].time;
+                if (t >= size && t <= def->lifetime) {
+                    lbl_8038E794.x = ((struct deb_emitter_slot *)lbl_80408404)[slot].points[i].vel.x * t;
+                    lbl_8038E794.y = ((struct deb_emitter_slot *)lbl_80408404)[slot].points[i].vel.y * t;
+                    lbl_8038E794.z = ((struct deb_emitter_slot *)lbl_80408404)[slot].points[i].vel.z * t;
+                    lbl_8038E794.y += def->gravity * (t * t);
+                    lbl_8038E794.x += ((struct deb_emitter_slot *)lbl_80408404)[slot].points[i].pos.x;
+                    lbl_8038E794.y += ((struct deb_emitter_slot *)lbl_80408404)[slot].points[i].pos.y;
+                    lbl_8038E794.z += ((struct deb_emitter_slot *)lbl_80408404)[slot].points[i].pos.z;
+                    frac = t / def->lifetime;
+                    for (j = 0; j < 7; j++) {
+                        if (def->sizes[j].t <= frac && def->sizes[j + 1].t >= frac) {
+                            size = (frac - def->sizes[j].t) / DebSubF(def->sizes[j + 1].t, def->sizes[j].t)
+                                 * (def->sizes[j + 1].size - def->sizes[j].size) + def->sizes[j].size;
+                            break;
+                        }
+                    }
+                }
+                if (size <= lbl_801956E0[0]) {
+                    continue;
+                }
+                r = size + radius;
+                dx = DebSubF(target->x, lbl_8038E794.x);
+                dy = DebSubF(target->y, lbl_8038E794.y);
+                dz = DebSubF(target->z, lbl_8038E794.z);
+                if (yscale != lbl_801956E4[0]) {
+                    dy *= r / (radius * yscale + size);
+                }
+                if (dx * dx + dy * dy + dz * dz < r * r) {
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
