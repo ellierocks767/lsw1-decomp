@@ -2456,3 +2456,7 @@ reason = "best 101/152: matched frame, grouped switch and three-word copies, but
 [[parked]]
 function = "fn_80059EA4"
 reason = "best 106/175: initial capacity checks and 56-byte copy loop shape recovered; lookup register lifetimes, shared failure block, and destination copy registers differ; next: recover typed range-copy lvalue and use a single early-exit path with scoped search locals"
+
+[[parked]]
+function = "fn_80058BE0"
+reason = "best 177/201: frame, rotation, normalization and final flag copy agree; one move missing from the initial vector copy, with guard/switch registers and final X load differing; next: trace ProDG aggregate-copy temporaries to recover its separate stack and pointer bases"
