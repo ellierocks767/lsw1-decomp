@@ -76,3 +76,21 @@ void fn_8013F4CC(void *arg0) {
         }
     }
 }
+
+int sprintf(char *, const char *, ...);
+s32 fn_800701F8(char *, void *, u32 *);
+void (*fn_80009948(const char *, s32))(void *, ...);
+extern char str_Extension_Rtl[];
+extern char str_SourceFile_RtlIf[];
+extern s32 lbl_801AEF1C[];
+
+void LoadLights(void *arg0) {
+    char name[256];
+    u32 n;
+    sprintf(name, str_Extension_Rtl, (s8 *)arg0 + 0x80);
+    n = *(u32 *)((s8 *)arg0 + 0x188);
+    *(s32 *)((s8 *)arg0 + 0x760) = fn_800701F8(name, (s8 *)arg0 + 0x184, &n);
+    if (*(u32 *)((s8 *)arg0 + 0x184) >= *(u32 *)((s8 *)arg0 + 0x188)) {
+        fn_80009948(str_SourceFile_RtlIf, 0x18F)(lbl_801AEF1C);
+    }
+}
