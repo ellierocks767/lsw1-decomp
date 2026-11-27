@@ -14,6 +14,8 @@ from doldecomp/dolsdk2004. CrashWOC's CodeWarrior game code generation does not 
   Go off plan only when Ellie asks, when a tooling fix unlocks more plan bytes than the item,
   or when Dolphin runtime evidence is asked for or needed to settle an ambiguity; state the
   off-plan choice and its reason in the PR. Revise the plan file when `tools/plan.py` says so.
+  Unattended runs follow [strategy](docs/strategy.md#unattended-runs): a plateau is parked and
+  the run moves on to the next function or item, for about an hour, never quitting after one.
   [Workflow gaps](docs/workflow_gaps.md) ranks the known tooling and process gaps.
 - **Improve the workflow as you go.** Fix drafting, m2c, sweep and search tools when
   that unlocks matches more effectively than hand-editing each function. Preserve

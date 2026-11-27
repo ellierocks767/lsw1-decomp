@@ -1,7 +1,10 @@
 # The matching plan, in order. docs/strategy.md explains it; tools/plan.py reads it.
 #
-# Stages run in file order; items within a stage run in file order. The current stage is the
-# first one that is not closed. Progress is never typed here: an item's remaining bytes and
+# Stages are a priority, not a gate. The current stage is the first one that is not closed;
+# tools offer open items in this order: quick items (data, or a function under 0x180 bytes) in
+# alongside and current stages, quick items in later stages, the retry lane (parked functions
+# at 85% or better not yet retried, as item `parked-retry`), then the rest of the current
+# stage, then the rest of later stages. Progress is never typed here: an item's remaining bytes and
 # functions come from build/GL5E4F/report.json (a function is done when its fuzzy match is
 # 100%), so this file only changes when the plan does.
 #
@@ -14,13 +17,17 @@
 #
 # Claims: an item is claimed by the worktree that ran `kickoff.py --start --item ID` (recorded
 # in the git common directory, so every local worktree sees it) or by an unmerged branch or open
-# PR named `t3/plan-ID`. A claim ends when its branch merges into origin/main.
+# PR named `t3/plan-ID`. A claim ends when its branch merges into origin/main. A claim record
+# expires 3 hours after `--start` unless `sprint_finish.py` marked it finished; a finished record
+# holds only while its branch has an open PR, for at most 6 hours.
 #
 # Revise this file (bump `revision`, say why in the PR, update docs/strategy.md) when a tool
 # reports that the plan needs revision, or when evidence changes the order. Parking a function
-# needs a reason that names its best score and the next hypothesis.
+# (`tools/plan.py --park`) needs no revision bump, but its reason names the best score and the
+# next hypothesis. Parking an already parked function replaces its reason and marks it
+# `retried:`, which takes it out of the retry lane.
 
-revision = 15
+revision = 16
 # The `# at revision N` comments record each item's size when the plan was written; they are
 # not read by tools.
 

@@ -39,8 +39,9 @@ orchestration and continuation. [Strategy](strategy.md) describes current opport
   tool fix's scope or on collecting its matches.
 - **Ownership is by claim and branch name.** Run `python3 tools/git_origin.py fetch origin`
   first. An item is claimed by a record under `<git common dir>/lsw1-plan-claims/` (every
-  local worktree sees it; stale once its worktree or branch is gone or its post-claim commits
-  are merged into `origin/main`), by a local or `origin` `t3/plan-<item>` branch not yet
+  local worktree sees it; stale once its worktree or branch is gone, its post-claim commits
+  are merged into `origin/main`, it is 3 hours old and unfinished, or `sprint_finish.py` marked
+  it finished and its branch has no open PR (6 hours at most)), by a local or `origin` `t3/plan-<item>` branch not yet
   merged, or by an open PR of that name (asked through `gh`; `--no-remote` turns that off).
   `python3 tools/plan.py` lists claims; `--release ID` drops a record. Legacy
   `t3/sprint-<unit-leaf>` branches still own their unit, and so the items listing it;
@@ -206,8 +207,11 @@ functions at 17–52 exact instructions and never touched the 84% one the sweep 
 Stop rule: at 30 minutes without a strict match, stop starting new large functions. Park
 every function you tried with its best score, mismatch and next hypothesis in
 `config/plan.toml` (`python3 tools/plan.py --park "FN=best 45/81: mismatch; next: idea"`),
-commit that, and start the next item: `plan.py` offers items that still have a function under
-0x180 bytes before items that do not. A run that matches nothing still ships the plateau notes
+commit that, and start the next item: `plan.py` offers quick items (data, or a function under
+0x180 bytes) in any stage first, then the `parked-retry` lane of near misses, then large work.
+Parking a function that is already parked replaces its reason and marks it `retried:`. An
+unattended run keeps going this way for about an hour; ending after one plateau wastes the
+slot. A run that matches nothing still ships the plateau notes
 as a small `config/plan.toml` PR, so the next run starts from them instead of retrying the same
 shapes. Only `--status no-change` without that PR throws the work away.
 

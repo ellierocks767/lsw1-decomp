@@ -7,9 +7,10 @@
     python3 tools/kickoff.py --start UNIT [FN ...] --off-plan "REASON"           # off-plan unit sprint
     python3 tools/kickoff.py --start-lane sweep|near-misses --off-plan "REASON"  # off-plan lane
 
-Recommendation: the plan's next item (`tools/plan.py`, config/plan.toml, docs/strategy.md): the
-first open, unblocked, unclaimed item of the current stage, or a look-ahead item of the next
-stage when every open one is claimed. A missing sweep is rerun first; a stale one (a commit
+Recommendation: the plan's next item (`tools/plan.py`, config/plan.toml, docs/strategy.md):
+the first free item in `plan.active_items()` order, which ranks items with a quick function
+(under QUICK_SIZE) first in any stage, then the parked-retry lane, then the remaining large
+work, current stage first. A missing sweep is rerun first; a stale one (a commit
 touched src/, include/ or the sweep tools since it ran) is rerun on the item's units. The lane
 figures (near misses, drafts, units, workflow blockers) are printed as off-plan context, with
 the lane the pre-plan rule would pick.
@@ -18,7 +19,7 @@ the lane the pre-plan rule would pick.
 or the build is missing, prints ownership conflicts, saves the queue and baseline through
 `sprint_finish.record_baseline` and opens a `sprint_bench` run with lane, unit, item and model
 (`--model`, else `$LSW1_MODEL`). `--start --item ID` also claims the item (`plan.claim`); it
-refuses an item outside the plan's active stages (`plan.active_items`), and `--start UNIT` and `--start-lane` refuse
+refuses a blocked, closed or unlisted item (`plan.active_items`), and `--start UNIT` and `--start-lane` refuse
 outright, unless `--off-plan "REASON"` is given, which is then recorded in the bench run and the
 saved queue. An item another checkout claims needs `--force` as well. The near-miss lane's queue
 is the plan target set's near misses, then the rest of the current stage's (`--all`: global).
@@ -574,7 +575,7 @@ def plan_gate(lane: str, item_id: str | None, args) -> tuple[str | None, dict | 
     forced = args.force and plan.taken(state["claims"], item_id)
     if item_id not in active and not own and not forced and not args.off_plan:
         why = (f"blocked ({item['blocked'].rstrip('.')})" if item["blocked"]
-               else "not in the plan's active stages")
+               else "not an active plan item")
         return f"error: item {item_id} is {why}; {hint}. Pass --off-plan \"REASON\" to proceed", state
     return None, state
 

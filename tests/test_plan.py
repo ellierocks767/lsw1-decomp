@@ -1,5 +1,5 @@
-"""plan.py: closure with parked functions, current stage, next item with claims and look-ahead,
-stale claims, revision warnings and yield. Fixture plan/report dicts; no retail inputs."""
+"""plan.py: closure with parked functions, current stage, ranked items with claims, the
+parked-retry lane, claim expiry, re-parking, revision warnings and yield. Fixture plan/report dicts; no retail inputs."""
 import json
 import subprocess
 import tempfile
@@ -93,7 +93,7 @@ class NextItemTests(unittest.TestCase):
         cl["items"]["core"] = {"by": "y", "mine": False}
         s = state_with(cl)
         self.assertEqual((s["next"]["item"]["id"], s["next"]["stage"], s["next"]["lookahead"]), ("game", "s2", True))
-        self.assertTrue(any("stage s1 is not closed but has no recommendable item" in w for w in s["warnings"]))
+        self.assertFalse(any("no open item is free" in w for w in s["warnings"]))
         cl["items"]["core"] = {"by": "me", "mine": True}
         s = state_with(cl)
         self.assertEqual((s["next"]["item"]["id"], s["next"]["mine"]), ("core", True))
@@ -108,9 +108,10 @@ class NextItemTests(unittest.TestCase):
         self.assertEqual(s["current"], "s1")
         self.assertEqual(s["next"]["item"]["id"], "side")
         active = [i["id"] for i, la in plan.active_items(s, NO_CLAIMS)]
-        self.assertEqual(active, ["side", "hub", "core"])
+        self.assertEqual(active, ["side", "hub", "core", "game", "data", "parked-retry"])
         cl = {"items": {k: {"by": "x", "mine": False} for k in ("side", "hub", "core")}, "stale": []}
-        self.assertEqual([(i["id"], la) for i, la in plan.active_items(s, cl)], [("game", True)])
+        self.assertEqual([(i["id"], la) for i, la in plan.active_items(s, cl)],
+                         [("game", True), ("data", True), ("parked-retry", False)])
         done = report(**{"core/a": [], "core/b": [], "game/c": [fn("c1", 50, True), fn("c2", 60)]})
         s = state_with(plan_=p, report_=done)
         self.assertEqual(s["current"], "s2")
@@ -121,17 +122,20 @@ class NextItemTests(unittest.TestCase):
                         "core/b": [fn("b1", 0x500), fn("b2", 40)],
                         "game/c": [fn("c1", 0x200), fn("c2", 60), fn("c3", 70, True)], "data_only": []})
         s = state_with(report_=big)  # b2 is parked: hub (c1) and core (a2, b1) are all large
-        self.assertEqual([i["id"] for i, _ in plan.active_items(s, NO_CLAIMS)], ["hub", "core"])
+        # quick work in later stages, then the retry lane (b2 at 9/10), then the large current items
+        self.assertEqual([(i["id"], la) for i, la in plan.active_items(s, NO_CLAIMS)],
+                         [("game", True), ("data", True), ("parked-retry", False), ("hub", False), ("core", False)])
         p = json.loads(json.dumps(PLAN))
         p["parked"] = [{"function": "a2", "reason": "best 1/2"}]  # core now has 40-byte b2 left
         s = state_with(plan_=p, report_=big)
-        self.assertEqual([i["id"] for i, _ in plan.active_items(s, NO_CLAIMS)], ["core", "hub"])
+        self.assertEqual([i["id"] for i, _ in plan.active_items(s, NO_CLAIMS)], ["core", "game", "data", "hub"])
         self.assertEqual(s["next"]["item"]["id"], "core")
+        self.assertIn("later stage", plan.describe_next(state_with(report_=big)))
 
     def test_batch_lists_distinct_free_items_then_looks_ahead(self):
         cl = {"items": {"hub": {"by": "x", "mine": False}}, "stale": []}
         rows = [(i["id"], la) for i, la in plan.batch_items(state_with(cl), cl, 5)]
-        self.assertEqual(rows, [("core", False), ("game", True), ("data", True)])
+        self.assertEqual(rows, [("core", False), ("game", True), ("data", True), ("parked-retry", False)])
         self.assertEqual(len(plan.batch_items(state_with(), NO_CLAIMS, 2)), 2)
 
     def test_blocked_items_are_never_recommended(self):
@@ -143,17 +147,52 @@ class NextItemTests(unittest.TestCase):
         self.assertEqual(s["current"], "s2")
         self.assertEqual(s["next"]["item"]["id"], "data")  # look-ahead past the blocked stage
         self.assertTrue(s["next"]["lookahead"])
-        self.assertTrue(any("stage s2" in w for w in s["warnings"]))
+        self.assertNotIn("stuck", [i["id"] for i, _ in plan.active_items(s, NO_CLAIMS)])
 
     def test_zero_verified_bench_run_and_yield(self):
         records = [{"run_id": "r1", "item": "core", "verified": 0, "verified_bytes": 0, "new_verified": 0, "new_verified_bytes": 0, "active_seconds": 1800},
                    {"run_id": "r2", "item": "hub", "verified": 4, "verified_bytes": 400, "new_verified": 4, "new_verified_bytes": 400, "active_seconds": 1800},
                    {"run_id": "r3", "unit": "old", "verified": 0, "active_seconds": 60}]
         s = state_with(records=records)
-        self.assertIn("bench run r1 on item core added no new strict matches", s["warnings"])
-        self.assertEqual(len([w for w in s["warnings"] if "bench run" in w]), 1)
+        self.assertFalse([w for w in s["warnings"] if "bench run" in w])  # counted in yield instead
         y = s["yield"]["s1"]
-        self.assertEqual((y["runs"], y["verified"], y["fn_per_hour"], y["bytes_per_hour"]), (2, 4, 4.0, 400.0))
+        self.assertEqual((y["runs"], y["zero"], y["verified"], y["fn_per_hour"], y["bytes_per_hour"]),
+                         (2, 1, 4, 4.0, 400.0))
+
+    def test_no_free_item_warns(self):
+        cl = {"items": {k: {"by": "x", "mine": False} for k in ("hub", "core", "game", "data", "parked-retry")},
+              "stale": []}
+        s = state_with(cl)
+        self.assertIsNone(s["next"])
+        self.assertTrue(any("no open item is free" in w for w in s["warnings"]))
+
+
+class RetryLaneTests(unittest.TestCase):
+    def test_closeness_parses_the_recorded_best(self):
+        self.assertEqual(plan.park_closeness("best 45/50: lhax"), 0.9)
+        self.assertEqual(plan.park_closeness("Best: 99/100 after permuter"), 0.99)
+        self.assertEqual(plan.park_closeness("hand draft 155/331"), 155 / 331)
+        self.assertIsNone(plan.park_closeness("no score"))
+        self.assertIsNone(plan.park_closeness("best 5/0"))
+
+    def test_lane_holds_unretried_near_misses_closest_first(self):
+        p = json.loads(json.dumps(PLAN))
+        p["parked"] = [{"function": "b2", "reason": "best 9/10"}, {"function": "b1", "reason": "best 99/100"},
+                       {"function": "a2", "reason": "best 1/2"}, {"function": "c2", "reason": "retried: best 9/10"},
+                       {"function": "a1", "reason": "best 9/10"}]  # a1 is matched
+        s = state_with(plan_=p)
+        retry = plan.find_item(s, plan.RETRY_ID)
+        self.assertEqual((retry["functions"], retry["stage"], retry["closed"]), (["b1", "b2"], "retry", False))
+        self.assertEqual(retry["closeness"], {"b1": 0.99, "b2": 0.9})
+        self.assertEqual(plan.functions_for(plan.RETRY_ID, s), ["b1", "b2"])
+        p["parked"] = [{"function": "a2", "reason": "best 1/2"}]
+        self.assertTrue(plan.find_item(state_with(plan_=p), plan.RETRY_ID)["closed"])
+
+    def test_retry_lane_comes_after_quick_work(self):
+        cl = {"items": {k: {"by": "x", "mine": False} for k in ("hub", "core", "game", "data")}, "stale": []}
+        s = state_with(cl)
+        self.assertEqual(s["next"]["item"]["id"], plan.RETRY_ID)
+        self.assertIn("retry lane", plan.describe_next(s))
 
 
 class ClaimTests(unittest.TestCase):
@@ -203,6 +242,25 @@ class ClaimTests(unittest.TestCase):
         rec = {"item": "core", "branch": "t3/x", "worktree": str(Path(self.tmp.name) / "gone")}
         self.assertIn("is gone", plan.record_stale(rec, self.root))
 
+    def test_unfinished_claims_expire(self):
+        now = 1_000_000
+        plan.claim("hub", root=self.root, now=now)
+        self.assertIsNone(plan.read_records(self.root, now=now + 3600)[0]["stale"])
+        stale = plan.read_records(self.root, now=now + (plan.CLAIM_HOURS + 0.5) * 3600)[0]["stale"]
+        self.assertIn("expired", stale)
+
+    def test_finished_claims_hold_while_the_pr_is_open(self):
+        now = 1_000_000
+        plan.claim("hub", root=self.root, now=now)
+        self.assertEqual(plan.finish_claims(self.root, now=now + 60), ["hub"])
+        self.assertEqual(plan.finish_claims(self.root, now=now + 90), [])  # already finished
+        later = now + (plan.CLAIM_HOURS + 1) * 3600  # past the unfinished expiry: finished records outlive it
+        self.assertIsNone(plan.read_records(self.root, {"t3/work"}, now=later)[0]["stale"])
+        self.assertIsNone(plan.read_records(self.root, None, now=later)[0]["stale"])  # GitHub not asked
+        self.assertIn("no open PR", plan.read_records(self.root, {"t3/other"}, now=later)[0]["stale"])
+        old = now + (plan.FINISHED_HOURS + 1) * 3600
+        self.assertIn("finished", plan.read_records(self.root, {"t3/work"}, now=old)[0]["stale"])
+
     def test_plan_branches_and_legacy_sprints_claim(self):
         cl = plan.claims(self.state, root=self.root, records=[], branches={"core": "branch or PR"},
                          sprints={"c"})
@@ -214,22 +272,29 @@ class ClaimTests(unittest.TestCase):
         self.assertTrue(cl["items"]["hub"]["mine"])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class ParkFunctionsTest(unittest.TestCase):
-    def test_appends_and_skips_existing(self):
+    def test_appends_new_and_replaces_existing(self):
         with tempfile.TemporaryDirectory() as d:
             path = Path(d) / "plan.toml"
             path.write_text('[[parked]]\nfunction = "old"\nreason = "x"\n')
-            done = plan.park_functions(["new=best 45/81: lhax; next: base var", "old=again"], path)
-            self.assertEqual(done, ["new"])
+            path.write_text('[[parked]]\nfunction = "old"\nreason = "best 9/10"\n\n'
+                            '[[parked]]\nfunction = "keep"\nreason = "x"\n')
+            added, again = plan.park_functions(["new=best 45/81: lhax; next: base var", "old=best 95/100"], path)
+            self.assertEqual((added, again), (["new"], ["old"]))
             import tomllib
             rows = tomllib.loads(path.read_text())["parked"]
-            self.assertEqual([r["function"] for r in rows], ["old", "new"])
-            self.assertIn("lhax", rows[1]["reason"])
+            self.assertEqual([r["function"] for r in rows], ["old", "keep", "new"])
+            self.assertEqual(rows[0]["reason"], "retried: best 95/100")  # leaves the retry lane
+            self.assertEqual(rows[1]["reason"], "x")
+            self.assertIn("lhax", rows[2]["reason"])
+            plan.park_functions(["old=retried: again"], path)
+            self.assertEqual(tomllib.loads(path.read_text())["parked"][0]["reason"], "retried: again")
 
     def test_needs_reason(self):
         with self.assertRaises(plan.PlanError):
             plan.park_functions(["bare"], Path("/nonexistent"))
+
+
+if __name__ == "__main__":
+    unittest.main()

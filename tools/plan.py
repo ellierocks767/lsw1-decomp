@@ -24,13 +24,22 @@ Claims: `claim(ID)` (run by `kickoff.py --start --item ID`) writes
 `<git common dir>/lsw1-plan-claims/ID.json`, which every local worktree sees. A local or origin
 branch or an open PR named `t3/plan-ID` also claims the item, as does a legacy
 `t3/sprint-<unit>` branch for an item listing that unit. A record is stale (ignored) when its
-worktree is gone, its branch is gone, or its branch gained commits since the claim and they
-are merged into origin/main. This checkout's own claim is "mine", not taken.
+worktree is gone, its branch is gone, its branch gained commits since the claim and they are
+merged into origin/main, or it has outlived its run: an unfinished record expires CLAIM_HOURS
+after the claim (an unattended run lasts about an hour, and its worktree outlives it), and a
+record `sprint_finish.py` marked finished holds only while its branch has an open PR, at most
+FINISHED_HOURS. This checkout's own claim is "mine", not taken.
 
-`active_items()` are the open, unblocked, unclaimed items of the open alongside stages before
-the current stage, then of the current stage; when none is free, those of the next open stage,
-flagged as look-ahead. `next_item()` is the first of them. `kickoff.py --start --item` accepts
-any active item.
+`active_items()` ranks every open, unblocked, unclaimed item (stages are a priority, not a
+gate): items with a function under QUICK_SIZE in the alongside and current stages, then quick
+items of later stages, then the parked-retry lane, then the rest of the current stage, then the
+rest of later stages. A later-stage item is flagged as look-ahead. `next_item()` is the first.
+`kickoff.py --start --item` accepts any active item.
+
+The parked-retry lane is the synthetic item `parked-retry` (stage `retry`): parked functions
+whose reason records a best of at least RETRY_RATIO ("best N/M"), closest first. A run that
+re-parks one (`--park` on a parked function) replaces its reason with a "retried:" one, which
+leaves the lane, so each near miss gets one fresh attempt.
 `plan_targets()` is what other tools default to: this checkout's claimed item, else the next item.
 """
 from __future__ import annotations
@@ -38,6 +47,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -51,6 +61,11 @@ PLAN = ROOT / "config" / "plan.toml"
 REPORT = ROOT / "build" / "GL5E4F" / "report.json"
 PLAN_PREFIX = "t3/plan-"
 CLAIMS = "lsw1-plan-claims"
+CLAIM_HOURS = 3.0     # an unfinished claim expires: unattended runs last about an hour
+FINISHED_HOURS = 6.0  # a finished claim holds this long at most while its PR is open
+RETRY_ID, RETRY_STAGE = "parked-retry", "retry"
+RETRY_RATIO = 0.85    # a park this close to a match is worth one fresh attempt
+RETRIED = "retried: "
 
 
 class PlanError(Exception):
@@ -103,6 +118,37 @@ def index_report(report: dict) -> dict:
 
 def parked_names(plan: dict) -> dict[str, str]:
     return {p["function"]: p.get("reason", "") for p in plan.get("parked", []) if p.get("function")}
+
+
+def park_closeness(reason: str) -> float | None:
+    """The best N/M ratio a park reason records ("best 45/47", "Best 100/101 ..."), else None."""
+    m = (re.search(r"(?i)\bbest\D{0,3}(\d+)\s*/\s*(\d+)", reason)
+         or re.search(r"\b(\d+)\s*/\s*(\d+)\b", reason))
+    if not m or not int(m[2]) or int(m[1]) > int(m[2]):
+        return None
+    return int(m[1]) / int(m[2])
+
+
+def retry_item(parked: dict[str, str], idx: dict, strict: set[str] | frozenset) -> dict:
+    """The parked-retry lane: unmatched parked functions at RETRY_RATIO or closer that were not
+    retried yet, closest first."""
+    rows = []
+    for name, reason in parked.items():
+        ratio = park_closeness(reason)
+        fns = idx["by_name"].get(name, [])
+        if (ratio is None or ratio < RETRY_RATIO or reason.startswith(RETRIED) or name in strict
+                or not fns or all(f["matched"] for f in fns)):
+            continue
+        rows.append((-ratio, fns[0]["size"], name))
+    rows.sort()
+    return {"id": RETRY_ID, "stage": RETRY_STAGE, "units": sorted({f["unit"] for _, _, n in rows
+                                                                  for f in idx["by_name"][n]}),
+            "blocked": None, "data": False, "whole_units": False, "retry": True,
+            "note": f"parked functions at {RETRY_RATIO:.0%} or closer, one fresh attempt each",
+            "functions": [n for _, _, n in rows], "fn_left": len(rows),
+            "closeness": {n: round(-r, 3) for r, _, n in rows},
+            "bytes_left": sum(s for _, s, _ in rows), "min_size": min((s for _, s, _ in rows), default=0),
+            "parked": [], "strict_only": [], "closed": not rows}
 
 
 # --- evaluation -----------------------------------------------------------------------------
@@ -170,6 +216,10 @@ def evaluate(plan: dict, report: dict, strict: set[str] | frozenset = frozenset(
         warnings.append(f"{n} unmatched function(s) of {unit} are in no item")
     current = (next((s for s in stages if not s["closed"] and not s["alongside"]), None)
                or next((s for s in stages if not s["closed"]), None))
+    retry = retry_item(parked, idx, strict)
+    stages.append({"id": RETRY_STAGE, "title": "Parked near misses (retry lane)", "items": [retry],
+                   "alongside": False, "retry": True, "closed": retry["closed"], "fn_left": retry["fn_left"],
+                   "bytes_left": retry["bytes_left"], "data": False})
     return {"revision": plan.get("revision"), "stages": stages, "current": current["id"] if current else None,
             "warnings": warnings, "parked": parked}
 
@@ -212,11 +262,40 @@ def release(item_id: str, root: Path | None = None) -> bool:
     return False
 
 
-def record_stale(rec: dict, root: Path | None = None) -> str | None:
-    """Why a claim record no longer holds, or None while it does."""
+def finish_claims(root: Path | None = None, now: float | None = None) -> list[str]:
+    """Mark this checkout's claim records finished (run by sprint_finish.py); the items they
+    name. A finished record then holds only while the branch has an open PR."""
+    root = (root or ROOT).resolve()
+    d, done = claims_dir(root), []
+    for path in sorted(d.glob("*.json")) if d.is_dir() else []:
+        try:
+            rec = json.loads(path.read_text())
+        except (OSError, ValueError):
+            continue
+        if rec.get("worktree") != str(root) or rec.get("finished"):
+            continue
+        rec["finished"] = round(now or time.time())
+        path.write_text(json.dumps(rec, indent=2) + "\n")
+        done.append(rec.get("item") or path.stem)
+    return done
+
+
+def record_stale(rec: dict, root: Path | None = None, open_heads: set[str] | None = None,
+                 now: float | None = None) -> str | None:
+    """Why a claim record no longer holds, or None while it does. OPEN_HEADS are the head
+    branches of open PRs, None when GitHub was not asked."""
     tree = rec.get("worktree")
     if not tree or not Path(tree).exists():
         return f"worktree {tree} is gone"
+    now = now or time.time()
+    if rec.get("finished"):
+        hours = (now - rec["finished"]) / 3600
+        if hours > FINISHED_HOURS:
+            return f"finished {hours:.1f} h ago"
+        if open_heads is not None and rec.get("branch") not in open_heads:
+            return "finished with no open PR"
+    elif rec.get("time") and (now - rec["time"]) / 3600 > CLAIM_HOURS:
+        return f"expired: claimed {(now - rec['time']) / 3600:.1f} h ago and never finished"
     branch = rec.get("branch")
     if not branch:
         return None
@@ -230,7 +309,20 @@ def record_stale(rec: dict, root: Path | None = None) -> str | None:
     return None
 
 
-def read_records(root: Path | None = None) -> list[dict]:
+def open_pr_heads() -> set[str] | None:
+    """Head branch names of the repository's open PRs, or None when gh cannot answer."""
+    import next_target as nt
+    try:
+        out = subprocess.run(["gh", "pr", "list", "--repo", nt.REPO, "--state", "open", "--limit", "200",
+                              "--json", "headRefName", "--jq", ".[].headRefName"],
+                             cwd=ROOT, capture_output=True, text=True, timeout=15)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return set(out.stdout.split()) if out.returncode == 0 else None
+
+
+def read_records(root: Path | None = None, open_heads: set[str] | None = None,
+                 now: float | None = None) -> list[dict]:
     out = []
     d = claims_dir(root)
     for path in sorted(d.glob("*.json")) if d.is_dir() else []:
@@ -240,7 +332,7 @@ def read_records(root: Path | None = None) -> list[dict]:
             continue
         rec.setdefault("item", path.stem)
         rec["path"] = str(path)
-        rec["stale"] = record_stale(rec, root)
+        rec["stale"] = record_stale(rec, root, open_heads, now)
         out.append(rec)
     return out
 
@@ -258,7 +350,7 @@ def claims(state: dict, remote: bool = True, root: Path | None = None, records: 
     and PRs, and legacy t3/sprint-* branches owning one of an item's units."""
     root = (root or ROOT).resolve()
     me, branch = str(root), current_branch(root)
-    records = read_records(root) if records is None else records
+    records = read_records(root, open_pr_heads() if remote else None) if records is None else records
     branches = plan_branches(remote) if branches is None else branches
     if sprints is None:
         import next_target as nt
@@ -319,48 +411,41 @@ def next_item(state: dict, cl: dict) -> dict | None:
     return {"item": item, "stage": item["stage"], "lookahead": lookahead, "mine": False}
 
 
-def active_items(state: dict, cl: dict) -> list[tuple[dict, bool]]:
-    """[(item, lookahead)]: the free items of the open alongside stages up to and including the
-    current stage; when none is free, those of the next open non-alongside stage (look-ahead)."""
-    pending = [s for s in state["stages"] if not s["closed"]]
-    free = lambda st: [i for i in open_items(st) if not taken(cl, i["id"])]
-    now, rest, seen_current = [], [], False
-    for stage in pending:
-        if not seen_current:
-            if stage["alongside"] or stage["id"] == state["current"]:
-                now += free(stage)
-            seen_current = stage["id"] == state["current"]
-        elif not stage["alongside"]:
-            rest = free(stage)
-            break
-    return [(i, False) for i in quick_first(now)] or [(i, True) for i in quick_first(rest)]
-
-
 QUICK_SIZE = 0x180  # bytes: kickoff's HARD_SIZE; a smaller function can match in one pass
 
 
-def quick_first(items: list[dict]) -> list[dict]:
-    """Items with a function left under QUICK_SIZE first, plan order otherwise. Parking only
-    closes an item once every function is parked, so without this a hard item stays first and
-    each run re-plateaus on its next large function instead of taking quick work elsewhere."""
-    return sorted(items, key=lambda i: not (0 < i.get("min_size", 0) < QUICK_SIZE) and not i.get("data"))
+def quick(item: dict) -> bool:
+    """The item has a function left under QUICK_SIZE (or is the data item)."""
+    return bool(item.get("data")) or 0 < item.get("min_size", 0) < QUICK_SIZE
+
+
+def active_items(state: dict, cl: dict) -> list[tuple[dict, bool]]:
+    """[(item, lookahead)] for every open, unblocked, unclaimed item, best first. Stages are a
+    priority, not a gate: an unattended run that plateaus on a large function parks it and moves
+    on, so quick work anywhere beats a large function of the current stage. Tiers, each in plan
+    order: quick items of the alongside and current stages; quick items of later stages; the
+    parked-retry lane; the rest of the alongside and current stages; the rest of later stages."""
+    now, later, retry, seen_current = [], [], [], False
+    for stage in state["stages"]:
+        if stage["closed"]:
+            continue
+        free = [i for i in open_items(stage) if not taken(cl, i["id"])]
+        if stage.get("retry"):
+            retry += free
+        elif not seen_current and (stage["alongside"] or stage["id"] == state["current"]):
+            now += free
+        else:
+            later += free
+        seen_current = seen_current or stage["id"] == state["current"]
+    tiers = ([(i, False) for i in now if quick(i)] + [(i, True) for i in later if quick(i)]
+             + [(i, False) for i in retry]
+             + [(i, False) for i in now if not quick(i)] + [(i, True) for i in later if not quick(i)])
+    return tiers
 
 
 def batch_items(state: dict, cl: dict, n: int) -> list[tuple[dict, bool]]:
-    """Up to N distinct free items for parallel children, one item each: active_items() first,
-    then the free items of later open stages in plan order (look-ahead)."""
-    out = active_items(state, cl)[:n]
-    seen = {i["id"] for i, _ in out}
-    for stage in state["stages"]:
-        if len(out) >= n:
-            break
-        if stage["closed"]:
-            continue
-        for item in open_items(stage):
-            if len(out) < n and item["id"] not in seen and not taken(cl, item["id"]):
-                out.append((item, True))
-                seen.add(item["id"])
-    return out
+    """Up to N distinct free items for parallel children, one item each, in active_items() order."""
+    return active_items(state, cl)[:n]
 
 
 # --- bench yield ----------------------------------------------------------------------------
@@ -374,15 +459,17 @@ def bench_records() -> list[dict]:
 
 
 def stage_yield(state: dict, records: list[dict]) -> dict[str, dict]:
-    """{stage: {runs, verified, verified_bytes, active_hours, fn_per_hour, bytes_per_hour}} over
+    """{stage: {runs, zero (runs that matched nothing), verified, verified_bytes, active_hours, fn_per_hour, bytes_per_hour}} over
     finished bench runs that carry an item id."""
     out: dict[str, dict] = {}
     for rec in records:
         item = find_item(state, rec.get("item") or "")
         if not item or not rec.get("active_seconds") or rec.get("new_verified") is None:
             continue
-        y = out.setdefault(item["stage"], {"runs": 0, "verified": 0, "verified_bytes": 0, "active_hours": 0.0})
+        y = out.setdefault(item["stage"], {"runs": 0, "zero": 0, "verified": 0, "verified_bytes": 0,
+                                           "active_hours": 0.0})
         y["runs"] += 1
+        y["zero"] += not rec["new_verified"]
         y["verified"] += rec["new_verified"] or 0
         y["verified_bytes"] += rec.get("new_verified_bytes") or 0
         y["active_hours"] += rec["active_seconds"] / 3600
@@ -417,13 +504,8 @@ def status(remote: bool = True, plan: dict | None = None, report: dict | None = 
     state["claims"] = cl
     state["next"] = next_item(state, cl)
     state["mine"] = mine(cl)
-    cur = stage_of(state, state["current"])
-    if cur and not [i for i in open_items(cur) if not taken(cl, i["id"])]:
-        state["warnings"].append(f"stage {cur['id']} is not closed but has no recommendable item "
-                                 "(what is left is claimed, parked or blocked)")
-    for rec in records:
-        if rec.get("item") and rec.get("new_verified") == 0:
-            state["warnings"].append(f"bench run {rec.get('run_id')} on item {rec['item']} added no new strict matches")
+    if state["current"] and not active_items(state, cl):
+        state["warnings"].append("no open item is free (what is left is claimed, parked or blocked)")
     state["yield"] = stage_yield(state, records)
     return state
 
@@ -475,8 +557,8 @@ def describe_next(state: dict) -> str:
     if not nxt:
         return "no recommendable item"
     i = nxt["item"]
-    tag = " (yours)" if nxt.get("mine") else (" (look-ahead: every open item of the current stage is claimed)"
-                                               if nxt["lookahead"] else "")
+    tag = (" (yours)" if nxt.get("mine") else " (retry lane: parked near misses, closest first)" if i.get("retry")
+           else " (later stage: quick work ahead of the current stage's large functions)" if nxt["lookahead"] else "")
     left = (f"{i['bytes_left']:,} data bytes left" if i["data"]
             else f"{i['fn_left']} functions, {i['bytes_left']:,} bytes left")
     return f"stage {nxt['stage']}, item {i['id']}{tag}: {left}"
@@ -488,12 +570,14 @@ def print_status(state: dict) -> None:
     for s in state["stages"]:
         n_open = sum(1 for i in s["items"] if not i["closed"])
         mark = "closed" if s["closed"] else ("current" if s["id"] == state["current"]
-                                             else "alongside" if s["alongside"] else "")
+                                             else "alongside" if s["alongside"] else "retry lane" if s.get("retry")
+                                             else "")
         mark += " (data bytes)" if s["data"] else ""
         print(f"{s['id']:<20}{len(s['items']):>6}{n_open:>6}{s['fn_left']:>9}{s['bytes_left']:>12,}  {mark}")
     shown = [s for s in state["stages"] if not s["closed"] and s["alongside"]
              and state["stages"].index(s) < state["stages"].index(stage_of(state, state["current"]))]
-    for cur in shown + [s for s in [stage_of(state, state["current"])] if s]:
+    retry = [s for s in state["stages"] if s.get("retry") and not s["closed"]]
+    for cur in shown + [s for s in [stage_of(state, state["current"])] if s] + retry:
         print(f"\nStage {cur['id']} ({cur['title']}{', alongside' if cur['alongside'] else ''}):")
         print(f"  {'item':<18}{'fn left':>8}{'bytes left':>12}  claim")
         for i in cur["items"]:
@@ -520,7 +604,7 @@ def print_status(state: dict) -> None:
     if not state["yield"]:
         print("  no measurement yet (kickoff.py --start --item ID opens a bench run)")
     for sid, y in state["yield"].items():
-        print(f"  {sid}: {y['runs']} run(s), {y['verified']} fn / {y['verified_bytes']:,} B in "
+        print(f"  {sid}: {y['runs']} run(s) ({y.get('zero', 0)} matched nothing), {y['verified']} fn / {y['verified_bytes']:,} B in "
               f"{y['active_hours']:.1f} active h = {y['fn_per_hour']:.1f} fn/h, {y['bytes_per_hour']:,.0f} B/h")
 
 
@@ -530,31 +614,39 @@ def jsonable(state: dict) -> dict:
     return out
 
 
-def park_functions(rows: list[str], path: Path | None = None) -> list[str]:
-    """Append `[[parked]]` rows ("FN=reason") to the plan; skip names already parked. Returns the
-    names written. A run that matches nothing still leaves its plateau here, so the next run
-    does not retry the same functions blind (the item closes once all its functions are parked)."""
+def park_functions(rows: list[str], path: Path | None = None) -> tuple[list[str], list[str]]:
+    """Record plateaus ("FN=reason") in the plan: append a `[[parked]]` row for a new name, and
+    replace the reason of an already parked one with a "retried: " reason (it leaves the retry
+    lane). Returns (names added, names re-parked). A run that matches nothing still leaves its
+    plateau here, so the next run does not retry the same functions blind."""
     path = path or PLAN
-    for row in rows:
-        fn, sep, reason = row.partition("=")
-        if not sep or not fn.strip() or not reason.strip():
-            raise PlanError(f"--park needs FN=reason (best score, mismatch, next hypothesis): {row!r}")
-    text = path.read_text()
-    have = {p["function"] for p in tomllib.loads(text).get("parked", []) if p.get("function")}
-    out, written = [], []
+    parsed = []
     for row in rows:
         fn, sep, reason = row.partition("=")
         fn, reason = fn.strip(), reason.strip()
         if not sep or not fn or not reason:
             raise PlanError(f"--park needs FN=reason (best score, mismatch, next hypothesis): {row!r}")
+        parsed.append((fn, reason))
+    text = path.read_text()
+    have = {p["function"] for p in tomllib.loads(text).get("parked", []) if p.get("function")}
+    out, added, again = [], [], []
+    for fn, reason in parsed:
         if fn in have:
+            new = reason if reason.startswith(RETRIED) else RETRIED + reason
+            pat = re.compile(rf'(\[\[parked\]\]\nfunction = {re.escape(json.dumps(fn))}\nreason = ).*')
+            text, n = pat.subn(lambda m: m[1] + json.dumps(new), text, count=1)
+            if n:
+                again.append(fn)
             continue
         have.add(fn)
-        written.append(fn)
-        out.append(f'[[parked]]\nfunction = "{fn}"\nreason = {json.dumps(reason)}\n')
+        added.append(fn)
+        out.append(f'[[parked]]\nfunction = {json.dumps(fn)}\nreason = {json.dumps(reason)}\n')
     if out:
-        path.write_text(text.rstrip("\n") + "\n\n" + "\n".join(out))
-    return written
+        text = text.rstrip("\n") + "\n\n" + "\n".join(out)
+    if added or again:
+        tomllib.loads(text)  # never write a plan that no longer parses
+        path.write_text(text)
+    return added, again
 
 
 def main(argv=None) -> int:
@@ -571,11 +663,13 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     if args.park:
         try:
-            done = park_functions(args.park)
+            added, again = park_functions(args.park)
         except PlanError as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 2
-        print(f"parked {len(done)} in config/plan.toml: {' '.join(done) or '(all already parked)'}")
+        print(f"parked {len(added)} in config/plan.toml: {' '.join(added) or '-'}")
+        if again:
+            print(f"re-parked {len(again)} (reason replaced, marked retried): {' '.join(again)}")
         return 0
     if args.release:
         print(f"released {args.release}" if release(args.release) else f"no claim record for {args.release}")
@@ -594,7 +688,7 @@ def main(argv=None) -> int:
             print("error: no free item", file=sys.stderr)
             return 2
         for item, la in rows:
-            tag = " (look-ahead)" if la else ""
+            tag = " (retry lane)" if item.get("retry") else " (later stage)" if la else ""
             print(f"{item['id']:<20} {item['stage']:<16} {item['fn_left']:>4} fn {item['bytes_left']:>8,} B{tag}"
                   f"   python3 tools/kickoff.py --start --item {item['id']}")
         if len(rows) < args.batch:
@@ -616,6 +710,8 @@ def main(argv=None) -> int:
         print(f"functions left ({item['fn_left']}): " + " ".join(item["functions"]))
         if item["parked"]:
             print("parked: " + " ".join(item["parked"]))
+        if item.get("closeness"):
+            print("closeness: " + " ".join(f"{n}={c:.0%}" for n, c in item["closeness"].items()))
         if item.get("strict_only"):
             print("strict-only (verified; awaits promotion): " + " ".join(item["strict_only"]))
         return 0

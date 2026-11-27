@@ -531,6 +531,14 @@ def main(argv=None) -> int:
     saved = sprint_bench.finish(record)
     if saved:
         print(f"- Benchmark: {saved}")
+    try:  # a finished run's claim now holds only while its PR is open (plan.record_stale)
+        import plan
+        done = plan.finish_claims()
+    except Exception as exc:  # the claim store must not fail the finish
+        print(f"- Plan claim: not marked finished ({exc})")
+    else:
+        if done:
+            print(f"- Plan claim finished: {' '.join(done)} (held while the PR is open)")
     if failures:
         print(f"\nFAILED: {', '.join(failures)}", file=sys.stderr)
         return 1
