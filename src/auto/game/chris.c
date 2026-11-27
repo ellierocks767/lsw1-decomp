@@ -377,3 +377,18 @@ void Progress_SetSuperkitFlags(void)
     }
     gSuperkitTotal[0] = lbl_8040B0FF;
 }
+
+s32 NuStrCmp(char *a, char *b);
+extern char lbl_801E1780[2][16];
+
+s32 LookupRippleEffectIndex(char *name)
+{
+    s32 i;
+
+    for (i = 0; i < 2; i++) {
+        if (NuStrCmp(lbl_801E1780[i], name) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
