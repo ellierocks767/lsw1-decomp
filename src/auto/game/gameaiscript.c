@@ -6447,3 +6447,83 @@ s32 Action_BigJumpToLocator(void *sys, void *process, struct gameaiscript_packet
         return result;
     }
 }
+
+extern u8 lbl_803E0198[];
+
+s32 Action_PlaceOnSock(void *sys, void *process, struct gameaiscript_packet_s *packet,
+    char **params, s32 count, s32 firstTime, f32 time)
+{
+    f32 minDX = 3.4028235e38f;
+    f32 maxDX = minDX;
+    f32 minDY = minDX;
+    f32 maxDY = minDY;
+    f32 distance = 0.0f;
+    u8 *object;
+    struct gameaiscript_sockpos_s *sock;
+    struct gameaiscript_vec_s *position;
+    char *value;
+    s32 i;
+    f32 random;
+    s32 angle;
+
+    if (packet != 0 && packet->owner != 0 && (object = packet->owner->object) != 0 && firstTime != 0) {
+        *(f32 *)(object + 0xf18) = distance;
+        *(f32 *)(object + 0xf1c) = distance;
+        *(u32 *)(object + 0xf24) &= ~0x10000;
+        for (i = 0; i < count; i++) {
+            if ((value = NuStrIStr(params[i], str_ScriptParam_Distance)) != 0)
+                distance = AIParamToFloat(packet, value + 9);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_MinDX)) != 0)
+                minDX = AIParamToFloat(packet, value + 6);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_MaxDX)) != 0)
+                maxDX = AIParamToFloat(packet, value + 6);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_MinDY)) != 0)
+                minDY = AIParamToFloat(packet, value + 6);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_MaxDY)) != 0)
+                maxDY = AIParamToFloat(packet, value + 6);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_DX)) != 0)
+                *(f32 *)(object + 0xf18) = AIParamToFloat(packet, value + 3);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_DY)) != 0)
+                *(f32 *)(object + 0xf1c) = AIParamToFloat(packet, value + 3);
+            else if (NuStrIStr(params[i], str_ScriptDir_Backwards) != 0)
+                *(u32 *)(object + 0xf24) |= 0x10000;
+        }
+        sock = (struct gameaiscript_sockpos_s *)(object + 0x600);
+        position = (struct gameaiscript_vec_s *)(object + 0x6c);
+        if (minDX != 3.4028235e38f && maxDX != 3.4028235e38f) {
+            /* The two terms use separate random samples. */
+            random = fn_8000C038();
+            random = maxDX * random + minDX * (1.0f - fn_8000C038());
+            *(f32 *)(object + 0xf18) = random;
+        }
+        if (minDY != 3.4028235e38f && maxDY != 3.4028235e38f) {
+            random = fn_8000C038();
+            random = maxDY * random + minDY * (1.0f - fn_8000C038());
+            *(f32 *)(object + 0xf1c) = random;
+        }
+        MoveSockPosition(*(s32 *)((u8 *)lbl_80409410 + 0x2dc), lbl_803E0198, distance, sock);
+        if (*(f32 *)(object + 0xf18) != 0.0f || *(f32 *)(object + 0xf1c) != 0.0f) {
+            *(f32 *)(object + 0x6c) = *(f32 *)(object + 0xf18);
+            *(f32 *)(object + 0x70) = *(f32 *)(object + 0xf1c);
+            *(f32 *)(object + 0x74) = 0.0f;
+            NuVecRotateX(position, position, *(u16 *)(object + 0x624));
+            if (*(u32 *)(object + 0xf24) & 0x10000)
+                NuVecRotateY(position, position, *(u16 *)(object + 0x626));
+            else
+                NuVecRotateY(position, position, NuAngAdd(*(u16 *)(object + 0x626), 0x8000));
+        } else {
+            *(f32 *)(object + 0x6c) = *(f32 *)(object + 0x70) = *(f32 *)(object + 0x74) = 0.0f;
+        }
+        NuVecAdd(position, position, (struct gameaiscript_vec_s *)(object + 0x608));
+        angle = *(u16 *)(object + 0x626);
+        *(u16 *)(object + 0x27e) = angle;
+        if (*(u32 *)(object + 0xf24) & 0x10000)
+            *(u16 *)(object + 0x27e) = NuAngAdd(angle & 0xffff, 0x8000);
+        *(u16 *)(object + 0x1068) = *(u16 *)(object + 0x1066) = *(u16 *)(object + 0x27e);
+        *(struct gameaiscript_vec_s *)(object + 0x9c) = lbl_803E04C4
+            = *(struct gameaiscript_vec_s *)(object + 0x90) = *(struct gameaiscript_vec_s *)(object + 0xa8)
+            = *(struct gameaiscript_vec_s *)(object + 0x6c);
+        *(struct gameaiscript_vec_s *)(object + 0x78) = lbl_801D5964;
+    }
+    return 1;
+}
