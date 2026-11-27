@@ -2719,7 +2719,7 @@ reason = "best 153/195 (was 104): lo/hi are rodata literals 0.0f/1.0f; clamp = M
 
 [[parked]]
 function = "MoveSubItemsLeft"
-reason = "not attempted separately: exact mirror of Right (+0x18 start, -4 shifts, wrap to arg2-1, consts 801AF894..8A0, arg1+0x3C) blocked on the same clamp form; next: solve Right's clamp then port"
+reason = "retried: best 153/195: mirror of Right with literals, early block matches; final 4 lerps use clamp result f31 directly where target copies t=fmr f11,f31 and fmadds on f11 (6 insns short), loop clamp t/1.0 regs swapped; next: find clamp/lerp shape keeping t and clamp temp distinct (work/hc/MoveSubItemsLeft.best.c)"
 
 [[parked]]
 function = "CollideBoltStarFighter"
