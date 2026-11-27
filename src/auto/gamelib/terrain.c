@@ -862,3 +862,83 @@ void fn_80058F04(const struct nuvec_s *axis, struct nuvec_s *offset)
     adjustment->vector.x = along * axis->x + across * axis->z;
     adjustment->vector.z = along * axis->z - across * axis->x;
 }
+
+typedef struct NUTERRAINCOMPACTENTRY_s {
+    u8 pad00[0x2C];
+    s32 field2C;
+    s16 index;
+    u8 pad32[6];
+} TerrainCompactEntry;
+
+typedef struct NUTERRAININDEXEDENTRY_s {
+    u8 pad00[0x40];
+    u32 active;
+    u8 pad44[4];
+    s16 compactIndex;
+    u8 pad4A[0x22];
+} TerrainIndexedEntry;
+
+typedef struct NUTERRAINTRACKEDENTRY_s {
+    u32 active;
+    s16 index;
+    u8 pad06[0x12];
+} TerrainTrackedEntry;
+
+typedef struct NUTERRAINENTRYSTATE_s {
+    TerrainCompactEntry *compactEntries;
+    u8 pad004[0x64];
+    TerrainIndexedEntry *indexedEntries;
+    u8 pad06C[0xE0];
+    s16 compactCount;
+    u8 pad14E[2];
+    s32 remapCount;
+    u8 pad154[0x44];
+    TerrainTrackedEntry trackedEntries[64];
+    u8 pad798[0x1400];
+    s16 remapStart;
+    s16 remapLength;
+    u8 pad1B9C[0x18];
+    s16 *remap;
+    u8 pad1BB8[0x89E4];
+    s32 indexedCount;
+} TerrainEntryState;
+
+extern TerrainEntryState *lbl_8040AE4C;
+
+s32 fn_8005A160(s32 index)
+{
+    s32 i;
+    s32 remapIndex;
+
+    if (index < 0 || index >= lbl_8040AE4C->indexedCount ||
+        lbl_8040AE4C->indexedEntries[index].active == 0) {
+        return 0;
+    }
+
+    lbl_8040AE4C->compactCount--;
+    lbl_8040AE4C->remapCount--;
+    lbl_8040AE4C->indexedEntries[
+        lbl_8040AE4C->compactEntries[lbl_8040AE4C->compactCount].index].compactIndex =
+        lbl_8040AE4C->indexedEntries[index].compactIndex;
+    lbl_8040AE4C->compactEntries[lbl_8040AE4C->indexedEntries[index].compactIndex] =
+        lbl_8040AE4C->compactEntries[lbl_8040AE4C->compactCount];
+    lbl_8040AE4C->compactEntries[lbl_8040AE4C->compactCount].field2C = -1;
+    lbl_8040AE4C->indexedEntries[index].active = 0;
+
+    for (i = 0, remapIndex = lbl_8040AE4C->remapStart;
+         i < lbl_8040AE4C->remapLength;
+         i++, remapIndex++) {
+        if (lbl_8040AE4C->remap[remapIndex] == lbl_8040AE4C->compactCount) {
+            lbl_8040AE4C->remap[remapIndex] = lbl_8040AE4C->remap[lbl_8040AE4C->remapCount];
+            break;
+        }
+    }
+
+    lbl_8040AE4C->remapLength--;
+    for (i = 0; i < 64; i++) {
+        if (lbl_8040AE4C->trackedEntries[i].index == index) {
+            lbl_8040AE4C->trackedEntries[i].active = 0;
+        }
+    }
+    return 1;
+}
