@@ -146,11 +146,11 @@ void fn_80063D78(s32 *arg0) {
     }
 }
 
-s32 fn_8005EF6C(s32);
+void fn_8005EF6C(s32, f32);
 extern s32 lbl_80408404;
 
-void fn_80064888(s32 arg0) {
-    fn_8005EF6C(lbl_80408404 + (arg0 * 0x2EC));
+void fn_80064888(s32 arg0, f32 farg0) {
+    fn_8005EF6C(lbl_80408404 + (arg0 * 0x2EC), farg0);
 }
 
 extern s32 lbl_80408404;
@@ -161,10 +161,10 @@ void fn_800648D8(s32 arg0, s16 arg1) {
     }
 }
 
-s32 fn_8005A8E4();
+void *fn_8005A8E4(void *, void *, f32);
 
-void fn_80064CD4(void) {
-    fn_8005A8E4();
+void fn_80064CD4(void *a, void *b, f32 c) {
+    fn_8005A8E4(a, b, c);
 }
 
 s32 NuScratchAlloc32(s32);
@@ -713,4 +713,1087 @@ void fn_8005FF74(s32 effect, void *arg1, s32 arg2, s16 angleZ, s16 angleY, void 
                         duration, 0, lbl_80195648[0]);
         }
     }
+}
+
+typedef struct debrisnode_s {
+    u8 pad00[8];
+    s8 *deb;
+    u8 pad0c[0x4c];
+    struct debrisnode_s *prev;
+    struct debrisnode_s *next;
+    u16 unk60;
+} debrisnode_s;
+
+extern debrisnode_s *lbl_8038E6D8[];
+extern s32 lbl_80408414;
+extern s32 lbl_80408418;
+
+void fn_8005D8BC(void) {
+    s32 start = lbl_80408418;
+    debrisnode_s *node;
+    while (lbl_8038E6D8[lbl_80408418] == NULL) {
+        lbl_80408418++;
+        if (lbl_80408418 > 4) {
+            lbl_80408418 = 0;
+        }
+        if (lbl_80408418 == start) {
+            break;
+        }
+    }
+    if (lbl_8038E6D8[lbl_80408418] != NULL) {
+        node = lbl_8038E6D8[lbl_80408414];
+        while (node != NULL) {
+            s8 *deb = node->deb;
+            if (deb != NULL && *(u8 *)(deb + 0x278) != 0) {
+                f32 v = *(f32 *)(deb + 0x2dc) * 500.0f + (f32)(s32)*(u16 *)(deb + 0x2e8);
+                if (v > 65535.0f) {
+                    v = 65535.0f;
+                }
+                node->unk60 = (s16)v;
+            }
+            node = node->next;
+        }
+    }
+}
+
+void fn_8005E80C(s32 *);
+extern s16 *lbl_804083E0;
+extern s32 lbl_8040AEB4;
+
+typedef struct debris_eb80_s {
+    u8 pad00[0x102];
+    s16 unk102;
+    u8 pad104[0x1e8];
+} debris_eb80_s;
+
+typedef struct debrisinfo_s {
+    u8 pad00[0x3c8];
+    s16 unk3c8[8];
+} debrisinfo_s;
+
+s32 fn_8005EB80(s32 *arg0) {
+    s32 i;
+    s16 type;
+    if (*arg0 != -1) {
+        for (i = lbl_8040AEB4; i < lbl_804083F0; i++) {
+            if (lbl_804083E0[i] == *arg0) {
+                *arg0 = -1;
+                return;
+            }
+        }
+        type = *(s16 *)((s8 *)lbl_80408404 + (*arg0) * 0x2ec + 0x102);
+        if (type != 0) {
+            debrisinfo_s *info = ((debrisinfo_s **)lbl_804083FC)[type];
+            void **p;
+            fn_8005E80C(arg0);
+            p = fn_80064BF4(lbl_80408404 + (*arg0) * 0x2ec);
+            if (p != NULL) {
+                fn_80064C54((void *)(lbl_80408404 + (*arg0) * 0x2ec), p);
+            }
+            for (i = 0; i < 8; i++) {
+                if (info->unk3c8[i] == *arg0) {
+                    info->unk3c8[i] = -1;
+                }
+            }
+            ((debris_eb80_s *)lbl_80408404)[*arg0].unk102 = 0;
+            lbl_8040AEB4--;
+            lbl_804083E0[lbl_8040AEB4] = *arg0;
+            *arg0 = -1;
+        }
+    }
+}
+
+s32 fn_80060120(void *, s32, f32, f32, f32);
+extern f32 lbl_804083BC;
+
+typedef struct debris_f114_s {
+    u8 pad00[0x104];
+    s16 unk104;
+    u8 pad106[0x22];
+    f32 unk128;
+    f32 unk12c;
+    f32 unk130;
+    f32 unk134;
+    f32 unk138;
+    f32 unk13c;
+    u8 pad140[0x14];
+    s32 unk154;
+    s16 unk158;
+    u8 pad15a[6];
+    f32 unk160;
+    f32 unk164;
+    u8 pad168[0x178];
+    f32 unk2e0;
+    f32 unk2e4;
+    u8 pad2e8[4];
+} debris_f114_s;
+
+s32 fn_8005F114(void *arg0, s32 arg1, void *arg2, void *arg3, void *arg4, s32 arg5) {
+    s32 *handle = (s32 *)arg0;
+    f32 *pos = (f32 *)arg2;
+    f32 *v3 = (f32 *)arg3;
+    f32 *v4 = (f32 *)arg4;
+    fn_80060120(handle, arg1, pos[0], pos[1], pos[2]);
+    if (*handle != -1) {
+        f32 diff;
+        ((debris_f114_s *)lbl_80408404)[*handle].unk154 = arg5;
+        ((debris_f114_s *)lbl_80408404)[*handle].unk158 = 0;
+        diff = ((debris_f114_s *)lbl_80408404)[*handle].unk160 - lbl_804083BC;
+        ((debris_f114_s *)lbl_80408404)[*handle].unk160 -= diff;
+        ((debris_f114_s *)lbl_80408404)[*handle].unk164 -= diff;
+        ((debris_f114_s *)lbl_80408404)[*handle].unk2e4 = ((debris_f114_s *)lbl_80408404)[*handle].unk2e0;
+        ((debris_f114_s *)lbl_80408404)[*handle].unk104 = 1;
+        if (v3 != NULL) {
+            f32 x = v3[0];
+            f32 y = v3[1];
+            f32 z = v3[2];
+            s32 idx = *handle;
+            if (idx != -1) {
+                ((debris_f114_s *)lbl_80408404)[idx].unk134 = x;
+                ((debris_f114_s *)lbl_80408404)[idx].unk138 = y;
+                ((debris_f114_s *)lbl_80408404)[idx].unk13c = z;
+            }
+        }
+        if (v4 != NULL) {
+            f32 x = v4[0];
+            f32 y = v4[1];
+            f32 z = v4[2];
+            s32 idx = *handle;
+            if (idx != -1) {
+                ((debris_f114_s *)lbl_80408404)[idx].unk128 = x;
+                ((debris_f114_s *)lbl_80408404)[idx].unk12c = y;
+                ((debris_f114_s *)lbl_80408404)[idx].unk130 = z;
+            }
+            return idx;
+        }
+    }
+}
+
+f32 NuRandIntSeeded(s32 *);
+extern f32 lbl_804083C0;
+
+typedef struct debrisdef_ef6c_s {
+    u8 pad00[0x1c];
+    f32 unk1c;
+    f32 unk20;
+    f32 unk24;
+    f32 unk28;
+    u8 unk2c;
+    u8 pad2d[0x23];
+    f32 unk50;
+    f32 unk54;
+    u8 pad58[0x295];
+    u8 unk2ed;
+} debrisdef_ef6c_s;
+
+typedef struct debris_ef6c_s {
+    u8 pad00[0x102];
+    s16 unk102;
+    u8 pad104[0x4c];
+    s16 unk150;
+    s16 unk152;
+    u8 pad154[8];
+    f32 unk15c;
+    f32 unk160;
+    f32 unk164;
+} debris_ef6c_s;
+
+void fn_8005EF6C(s32 arg0, f32 farg0) {
+    debris_ef6c_s *deb = (debris_ef6c_s *)arg0;
+    s32 frames = (s32)(farg0 * 60.0f);
+    if (deb != NULL) {
+        debrisdef_ef6c_s *def = ((debrisdef_ef6c_s **)lbl_804083FC)[deb->unk102];
+        f32 t;
+        if (def->unk2ed == 4) {
+            t = lbl_804083C0;
+        } else {
+            t = lbl_804083BC;
+        }
+        if (def->unk20 != 0.0f || def->unk28 != 0.0f) {
+            deb->unk160 = t;
+        } else {
+            f32 period = def->unk1c + def->unk24;
+            f32 base = period * (f32)(s32)(t / period);
+            if (def->unk2c == 7 && def->unk24 == 0.0f) {
+                deb->unk150 = (s16)((f32)frames * def->unk50);
+                deb->unk152 = (s16)((f32)frames * def->unk54);
+                deb->unk160 = base + period;
+            } else {
+                deb->unk160 = base + farg0 + period;
+            }
+            while (deb->unk160 > t) {
+                deb->unk160 -= period;
+            }
+        }
+        deb->unk164 = NuRandIntSeeded(&lbl_80408410) * def->unk20 + (deb->unk160 + def->unk1c);
+        deb->unk15c = -10.0f;
+    }
+}
+
+typedef struct debriscmd_s {
+    void *obj;
+    s32 unk04;
+    s32 unk08;
+    s32 unk0c;
+    struct debriscmd_s *next;
+    s32 unk14;
+    f32 unk18;
+    u16 unk1c;
+    s16 unk1e;
+    s16 unk20;
+    u8 pad22[2];
+    f32 unk24;
+    f32 unk28;
+} debriscmd_s;
+
+typedef struct debristrash2_s {
+    void *obj;
+    void *owner;
+    s32 state;
+    u8 pad0c[0x4c];
+    struct debristrash2_s *prev;
+    struct debristrash2_s *next;
+    u8 pad60[4];
+} debristrash2_s;
+
+extern debriscmd_s *lbl_8038E5D8[2][32];
+extern s32 lbl_804083CC;
+extern s32 lbl_804083D0;
+extern s32 lbl_8040AE74;
+extern debriscmd_s **lbl_8040AE78;
+extern s32 lbl_8040AE7C[2];
+extern debristrash2_s *lbl_8040AE90;
+
+static inline void cmd_unlink(debriscmd_s **head, debriscmd_s *node) {
+    while (*head != NULL) {
+        if (*head == node) {
+            *head = node->next;
+            break;
+        }
+        head = &(*head)->next;
+    }
+    node->next = NULL;
+}
+
+static inline void cmd_append(debriscmd_s **head, debriscmd_s *node) {
+    while (*head != NULL) {
+        head = &(*head)->next;
+    }
+    *head = node;
+    node->next = NULL;
+}
+
+void fn_8005ECC8(void *arg0) {
+    s32 i;
+    for (i = 0; i < lbl_804083CC + lbl_804083D0; i++) {
+        if (lbl_8040AE90[i].state == 0 && lbl_8040AE90[i].owner == arg0) {
+            s32 q, slot;
+            debriscmd_s *cmd;
+            s32 qidx, bidx;
+            debristrash2_s *tr;
+            s32 list_idx;
+            void *obj = lbl_8040AE90[i].obj;
+
+            for (q = 0; q < 2; q++) {
+                for (slot = 0; slot < 32; slot++) {
+                    debriscmd_s *cur = lbl_8038E5D8[q][slot];
+                    while (cur != NULL) {
+                        debriscmd_s *nxt = cur->next;
+                        if (cur->obj == obj) {
+                            cmd_unlink(&lbl_8038E5D8[q][slot], cur);
+                            lbl_8040AE78[--lbl_8040AE74] = cur;
+                            cur->obj = NULL;
+                        }
+                        cur = nxt;
+                    }
+                }
+            }
+
+            lbl_8040AE78[lbl_8040AE74]->obj = lbl_8040AE90[i].obj;
+            lbl_8040AE78[lbl_8040AE74]->unk04 = 0;
+            if (*(u8 *)((s8 *)arg0 + 0x2e) == 7) {
+                lbl_8040AE78[lbl_8040AE74]->unk08 = 9;
+            } else {
+                lbl_8040AE78[lbl_8040AE74]->unk08 = 2;
+            }
+            lbl_8040AE78[lbl_8040AE74]->unk0c = 0;
+
+            cmd = lbl_8040AE78[lbl_8040AE74];
+            qidx = (*(u8 *)((s8 *)arg0 + 0x2ed) == 4);
+            bidx = (lbl_8040AE7C[qidx] + 4) & 31;
+            cmd_append(&lbl_8038E5D8[qidx][bidx], cmd);
+            lbl_8040AE74++;
+
+            tr = (debristrash2_s *)(i * 0x64 + (u32)lbl_8040AE90);
+            list_idx = *(s8 *)((s8 *)arg0 + 0x2ed);
+            if ((debristrash2_s *)lbl_8038E6D8[list_idx] == tr) {
+                debristrash2_s *nxt = tr->next;
+                lbl_8038E6D8[list_idx] = (debrisnode_s *)nxt;
+                if (nxt != NULL) {
+                    nxt->prev = NULL;
+                }
+            } else if (tr->prev != NULL) {
+                tr->prev->next = tr->next;
+                if (tr->next != NULL) {
+                    tr->next->prev = tr->prev;
+                }
+            }
+            tr->prev = NULL;
+            tr->next = NULL;
+            lbl_8040AE90[i].obj = NULL;
+            lbl_8040AE90[i].owner = NULL;
+        }
+    }
+}
+
+typedef struct debris_e80c_s {
+    void *objs[0x20];
+    u8 pad80[0x80];
+    s16 count;
+    s16 type;
+    s16 unk104;
+    s16 unk106;
+    u8 pad108[0x16e];
+    u8 unk276;
+    u8 pad277[0x75];
+} debris_e80c_s;
+
+void fn_8005E80C(s32 *arg0) {
+    debris_e80c_s *d = (debris_e80c_s *)((*arg0) * 0x2ec + lbl_80408404);
+    s16 type = d->type;
+    if (type != 0) {
+        s8 *def = ((s8 **)lbl_804083FC)[type];
+        if (d->count != 0) {
+            s32 i;
+            s32 total;
+            for (i = 0; i < ((debris_e80c_s *)lbl_80408404)[*arg0].count; i++) {
+                s32 q, slot;
+                debriscmd_s *cmd;
+                s32 qidx, bidx;
+                void *obj = ((debris_e80c_s *)((*arg0) * 0x2ec + lbl_80408404))->objs[i];
+
+                for (q = 0; q < 2; q++) {
+                    for (slot = 0; slot < 32; slot++) {
+                        debriscmd_s *cur = lbl_8038E5D8[q][slot];
+                        while (cur != NULL) {
+                            debriscmd_s *nxt = cur->next;
+                            if (cur->obj == obj) {
+                                cmd_unlink(&lbl_8038E5D8[q][slot], cur);
+                                lbl_8040AE78[--lbl_8040AE74] = cur;
+                                cur->obj = NULL;
+                            }
+                            cur = nxt;
+                        }
+                    }
+                }
+
+                lbl_8040AE78[lbl_8040AE74]->obj = ((debris_e80c_s *)lbl_80408404)[*arg0].objs[i];
+                lbl_8040AE78[lbl_8040AE74]->unk04 = 0;
+                if (*(u8 *)(def + 0x2e) == 7) {
+                    lbl_8040AE78[lbl_8040AE74]->unk08 = 9;
+                } else {
+                    lbl_8040AE78[lbl_8040AE74]->unk08 = 2;
+                }
+                lbl_8040AE78[lbl_8040AE74]->unk0c = 0;
+
+                cmd = lbl_8040AE78[lbl_8040AE74];
+                qidx = (*(u8 *)(def + 0x2ed) == 4);
+                bidx = (lbl_8040AE7C[qidx] + 4) & 31;
+                cmd_append(&lbl_8038E5D8[qidx][bidx], cmd);
+                lbl_8040AE74++;
+            }
+
+            total = lbl_804083CC + lbl_804083D0;
+            {
+                s32 j;
+                for (j = 0; j < total; j++) {
+                    debristrash2_s *tr = &lbl_8040AE90[j];
+                    if (tr->obj == ((debris_e80c_s *)lbl_80408404)[*arg0].objs[0]) {
+                        if (((debris_e80c_s *)lbl_80408404)[*arg0].unk276 != 0) {
+                            s32 list_idx = *(s8 *)(def + 0x2ed);
+                            if ((debristrash2_s *)lbl_8038E6D8[list_idx] == tr) {
+                                debristrash2_s *nxt = tr->next;
+                                lbl_8038E6D8[list_idx] = (debrisnode_s *)nxt;
+                                if (nxt != NULL) {
+                                    nxt->prev = NULL;
+                                }
+                            } else if (tr->prev != NULL) {
+                                tr->prev->next = tr->next;
+                                if (tr->next != NULL) {
+                                    tr->next->prev = tr->prev;
+                                }
+                            }
+                            tr->prev = NULL;
+                            tr->next = NULL;
+                        }
+                        tr->obj = NULL;
+                        tr->owner = NULL;
+                    }
+                }
+            }
+
+            for (i = 0; i < ((debris_e80c_s *)lbl_80408404)[*arg0].count; i++) {
+                ((debris_e80c_s *)lbl_80408404)[*arg0].objs[i] = NULL;
+            }
+            {
+                debris_e80c_s *d2 = (debris_e80c_s *)((*arg0) * 0x2ec + lbl_80408404);
+                d2->unk106 = 0;
+                d2->count = 0;
+            }
+        }
+    }
+}
+
+void fn_8006E3E0(void *);
+
+typedef struct debparticle_s {
+    struct nuvec_s pos;
+    f32 time;
+    struct nuvec_s vel;
+    f32 inv_life;
+} debparticle_s;
+
+typedef struct debchunk_s {
+    u8 pad00[0x20];
+    debparticle_s particles[32];
+} debchunk_s;
+
+typedef struct debinst_s {
+    debchunk_s *chunks[0x20];
+    u8 pad80[0x40];
+    struct numtx_s mtx;
+    s16 unk100;
+    s16 unk102;
+    s16 unk104;
+    s16 unk106;
+    s16 unk108;
+    s16 unk10a;
+    u8 pad10c[0x10];
+    struct nuvec_s pos_off;
+    struct nuvec_s vel_off;
+    u8 pad134[0x10];
+    void (*cb)(struct debinst_s *, void *, debparticle_s *);
+    u8 pad148[8];
+    s16 unk150;
+    s16 unk152;
+    u8 pad154[0xc];
+    f32 unk160;
+    u8 pad164[0xfa];
+    s16 unk25e;
+    f32 unk260;
+    f32 unk264;
+    u8 pad268[0x78];
+    f32 start_time;
+    f32 last_time;
+    u8 pad2e8[4];
+} debinst_s;
+
+typedef struct debdef_s {
+    u8 pad00[0x2e];
+    u8 unk2e;
+    u8 pad2f[0x19];
+    f32 unk48;
+    f32 unk4c;
+    f32 unk50;
+    f32 unk54;
+    f32 unk58;
+    f32 unk5c;
+    f32 unk60;
+    struct nuvec_s unk64;
+    u8 pad70[0x30];
+    f32 gravity;
+    f32 life;
+    u8 pada8[0x200];
+    s32 unk2a8;
+    u8 pad2ac[0x15c];
+    s16 repeat_count;
+    s16 unk40a;
+    f32 repeat_dt;
+    f32 ramp_time;
+    f32 unk414;
+} debdef_s;
+
+debparticle_s *fn_8005ACFC(debinst_s *inst, debdef_s *def, f32 time) {
+    struct nuvec_s v;
+    s16 idx;
+    debparticle_s *p;
+    s32 rot_y;
+    s32 rot_z;
+    f32 speed;
+    s32 i;
+
+    if (inst->unk10a >= inst->unk106) {
+        inst->unk10a = 0;
+    }
+    if (def->unk2e == 7) {
+        return NULL;
+    }
+    p = inst->chunks[inst->unk10a / 32]->particles;
+    p += (s16)(inst->unk10a % 32);
+    inst->unk10a++;
+    p->time = time;
+    inst->last_time = time;
+    p->inv_life = 64.0f / def->life;
+
+    rot_y = (s32)((2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk50 - def->unk50) + def->unk5c);
+    rot_z = (s32)((2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk54 - def->unk54) + def->unk60);
+
+    if (def->ramp_time != 0.0f && (lbl_804083BC - inst->start_time) < def->ramp_time) {
+        v.y = def->unk58 * ((lbl_804083BC - inst->start_time) / def->ramp_time);
+    } else {
+        v.y = def->unk58;
+    }
+
+    v.z = 0.0f;
+    v.x = 0.0f;
+    NuVecRotateZ(&v, &v, rot_z);
+    NuVecRotateY(&v, &v, rot_y);
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->pos.x = v.x;
+    p->pos.y = v.y;
+    p->pos.z = v.z;
+
+    {
+        f32 r = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk4c - def->unk4c;
+        v.z = 0.0f;
+        v.y = r + def->unk48;
+        v.x = 0.0f;
+    }
+    NuVecRotateZ(&v, &v, rot_z);
+    NuVecRotateY(&v, &v, rot_y);
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->vel.x = v.x;
+    p->vel.y = v.y;
+    p->vel.z = v.z;
+
+    if (inst->cb != NULL) {
+        inst->cb(inst, def, p);
+    }
+
+    p->pos.x += inst->pos_off.x;
+    p->pos.y += inst->pos_off.y;
+    p->pos.z += inst->pos_off.z;
+    p->vel.x += inst->vel_off.x;
+    p->vel.y += inst->vel_off.y;
+    p->vel.z += inst->vel_off.z;
+
+    for (i = 0; i < def->repeat_count; i++) {
+        debparticle_s *p2;
+        s32 chunk;
+        s16 rem;
+        debparticle_s *base;
+        if (inst->unk10a >= inst->unk106) {
+            inst->unk10a = 0;
+        }
+        base = inst->chunks[inst->unk10a / 32]->particles;
+        p2 = &base[(s16)(inst->unk10a % 32)];
+        inst->unk10a++;
+        *p2 = *p;
+        p2->time += (f32)(i + 1) * def->repeat_dt;
+    }
+
+    if (def->unk2a8 == 0) {
+        fn_8006E3E0(def);
+    }
+    return p;
+}
+
+s32 fn_8000AEC4(f32);
+
+debparticle_s *fn_8005B9DC(debinst_s *inst, debdef_s *def, f32 time) {
+    struct nuvec_s v;
+    struct numtx_s m;
+    debparticle_s *p;
+    s32 rot_y;
+    s32 i;
+
+    if (inst->unk10a >= inst->unk106) {
+        inst->unk10a = 0;
+    }
+    if (def->unk2e == 7) {
+        p = inst->chunks[(s16)(inst->unk10a / 12)]->particles;
+        p += (s16)(inst->unk10a % 12);
+    } else {
+        p = inst->chunks[inst->unk10a / 32]->particles;
+        p += (s16)(inst->unk10a % 32);
+    }
+    inst->unk10a++;
+    p->time = time;
+    inst->last_time = time;
+    p->inv_life = 64.0f / def->life;
+
+    v.x = NuFsqrt(NuRandIntSeeded(&lbl_80408410));
+    v.z = 0.0f;
+    v.y = 0.0f;
+    rot_y = (s32)(NuRandIntSeeded(&lbl_80408410) * 65536.0f);
+    NuVecRotateZ(&v, &v, fn_8000AEC4(2.0f * NuRandIntSeeded(&lbl_80408410) - 1.0f));
+    NuVecRotateY(&v, &v, rot_y);
+    NuMtxSetIdentity(&m);
+    m._00 = def->unk58;
+    m._11 = def->unk5c;
+    m._22 = def->unk60;
+    NuVecMtxTransform(&v, &v, &m);
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->pos.x = v.x;
+    p->pos.y = v.y;
+    p->pos.z = v.z;
+
+    v.x = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk4c - def->unk4c;
+    v.y = (2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk50 - def->unk50) + def->unk48;
+    v.z = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk54 - def->unk54;
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->vel.x = v.x;
+    p->vel.y = v.y;
+    p->vel.z = v.z;
+
+    if (inst->cb != NULL) {
+        inst->cb(inst, def, p);
+    }
+
+    p->pos.x += inst->pos_off.x;
+    p->pos.y += inst->pos_off.y;
+    p->pos.z += inst->pos_off.z;
+    p->vel.x += inst->vel_off.x;
+    p->vel.y += inst->vel_off.y;
+    p->vel.z += inst->vel_off.z;
+
+    for (i = 0; i < def->repeat_count; i++) {
+        debparticle_s *p2;
+        if (inst->unk10a >= inst->unk106) {
+            inst->unk10a = 0;
+        }
+        if (def->unk2e == 7) {
+            p2 = inst->chunks[(s16)(inst->unk10a / 12)]->particles;
+            p2 += (s16)(inst->unk10a % 12);
+        } else {
+            p2 = inst->chunks[inst->unk10a / 32]->particles;
+            p2 += (s16)(inst->unk10a % 32);
+        }
+        inst->unk10a++;
+        *p2 = *p;
+        p2->time += (f32)(i + 1) * def->repeat_dt;
+    }
+
+    if (def->unk2a8 == 0) {
+        fn_8006E3E0(def);
+    }
+    return p;
+}
+
+debparticle_s *fn_8005C29C(debinst_s *inst, debdef_s *def, f32 time) {
+    struct nuvec_s v;
+    struct nuvec_s dir = {1.0f, 0.0f, 0.0f};
+    struct nuvec_s plane_pt;
+    struct nuvec_s end_pos;
+    struct nuvec_s d0;
+    struct nuvec_s d1;
+    debchunk_s *chunk;
+    debparticle_s *p;
+    f32 dot0, dot1;
+
+    if (inst->unk10a >= inst->unk106) {
+        inst->unk10a = 0;
+    }
+    if (def->unk2e == 7) {
+        return NULL;
+    }
+    chunk = inst->chunks[inst->unk10a / 32];
+    p = &chunk->particles[(s16)(inst->unk10a % 32)];
+    p->time = time;
+    inst->last_time = time;
+    p->inv_life = 64.0f / def->life;
+
+    v.x = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk58 - def->unk58;
+    v.y = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk5c - def->unk5c;
+    v.z = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk60 - def->unk60;
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->pos.x = v.x;
+    p->pos.y = v.y;
+    p->pos.z = v.z;
+
+    v.x = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk4c - def->unk4c;
+    v.y = (2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk50 - def->unk50) + def->unk48;
+    v.z = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk54 - def->unk54;
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->vel.x = v.x;
+    p->vel.y = v.y;
+    p->vel.z = v.z;
+
+    NuVecRotateY(&dir, &dir, inst->unk25e);
+    NuVecScale(&plane_pt, &dir, inst->unk260);
+    end_pos.x = p->pos.x + def->life * p->vel.x;
+    end_pos.y = 0.0f;
+    end_pos.z = p->pos.z + def->life * p->vel.z;
+    NuVecSub(&d0, &plane_pt, &p->pos);
+    NuVecSub(&d1, &plane_pt, &end_pos);
+    dot0 = d0.x * dir.x + d0.z * dir.z;
+    dot1 = d1.x * dir.x + d1.z * dir.z;
+    if ((dot0 < 0.0f && dot1 > 0.0f) || (dot0 > 0.0f && dot1 < 0.0f)) {
+        f32 t = def->life * ((0.0f - dot0) / (dot1 - dot0));
+        if (lbl_8040AE74 < lbl_804083CC + lbl_804083D0) {
+            lbl_8040AE78[lbl_8040AE74]->obj = chunk;
+            lbl_8040AE78[lbl_8040AE74]->unk04 = (s32)(t * 60.0f);
+            lbl_8040AE78[lbl_8040AE74]->unk08 = 6;
+            lbl_8040AE78[lbl_8040AE74]->unk0c = 0;
+            lbl_8040AE78[lbl_8040AE74]->unk1c = inst->unk102;
+            lbl_8040AE78[lbl_8040AE74]->unk20 = inst->unk25e;
+            lbl_8040AE78[lbl_8040AE74]->unk1e = 0;
+            lbl_8040AE78[lbl_8040AE74]->unk24 = inst->unk260;
+            lbl_8040AE78[lbl_8040AE74]->unk28 = inst->unk264;
+            lbl_8040AE78[lbl_8040AE74]->unk14 = (s16)(inst->unk10a % 32);
+            lbl_8040AE78[lbl_8040AE74]->unk18 = t;
+            AddChunkControlToStack(lbl_8040AE78[lbl_8040AE74], (void **)&lbl_8038E5D8[0][lbl_8040AE7C[0]]);
+            lbl_8040AE74++;
+        }
+    }
+
+    if (inst->cb != NULL) {
+        inst->cb(inst, def, p);
+    }
+    inst->unk10a++;
+
+    p->pos.x += inst->pos_off.x;
+    p->pos.y += inst->pos_off.y;
+    p->pos.z += inst->pos_off.z;
+    p->vel.x += inst->vel_off.x;
+    p->vel.y += inst->vel_off.y;
+    p->vel.z += inst->vel_off.z;
+
+    if (def->unk2a8 == 0) {
+        fn_8006E3E0(def);
+    }
+    return p;
+}
+
+void *fn_8005A8E4(void *arg0, void *arg1, f32 time) {
+    debinst_s *inst = (debinst_s *)arg0;
+    debdef_s *def = (debdef_s *)arg1;
+    struct nuvec_s v;
+    struct nuvec_s offset;
+    debparticle_s *p;
+    s32 i;
+
+    if (inst->unk10a >= inst->unk106) {
+        inst->unk10a = 0;
+    }
+    if (def->unk2e == 7) {
+        p = inst->chunks[(s16)(inst->unk10a / 12)]->particles;
+        p += (s16)(inst->unk10a % 12);
+    } else {
+        p = inst->chunks[inst->unk10a / 32]->particles;
+        p += (s16)(inst->unk10a % 32);
+    }
+    inst->unk10a++;
+    p->time = time;
+    inst->last_time = time;
+    p->inv_life = 64.0f / def->life;
+
+    NuVecScale(&offset, &def->unk64, time - inst->unk160);
+
+    v.x = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk58 - def->unk58;
+    v.y = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk5c - def->unk5c;
+    v.z = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk60 - def->unk60;
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->pos.x = v.x + offset.x;
+    p->pos.y = v.y + offset.y;
+    p->pos.z = v.z + offset.z;
+
+    v.x = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk4c - def->unk4c;
+    v.y = (2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk50 - def->unk50) + def->unk48;
+    v.z = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk54 - def->unk54;
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->vel.x = v.x;
+    p->vel.y = v.y;
+    p->vel.z = v.z;
+
+    if (inst->cb != NULL) {
+        inst->cb(inst, def, p);
+    }
+
+    p->pos.x += inst->pos_off.x;
+    p->pos.y += inst->pos_off.y;
+    p->pos.z += inst->pos_off.z;
+    p->vel.x += inst->vel_off.x;
+    p->vel.y += inst->vel_off.y;
+    p->vel.z += inst->vel_off.z;
+
+    for (i = 0; i < def->repeat_count; i++) {
+        debparticle_s *p2;
+        if (inst->unk10a >= inst->unk106) {
+            inst->unk10a = 0;
+        }
+        if (def->unk2e == 7) {
+            p2 = inst->chunks[(s16)(inst->unk10a / 12)]->particles;
+            p2 += (s16)(inst->unk10a % 12);
+        } else {
+            p2 = inst->chunks[inst->unk10a / 32]->particles;
+            p2 += (s16)(inst->unk10a % 32);
+        }
+        inst->unk10a++;
+        *p2 = *p;
+        p2->time += (f32)(i + 1) * def->repeat_dt;
+    }
+
+    if (def->unk2a8 == 0) {
+        fn_8006E3E0(def);
+    }
+    return p;
+}
+
+debparticle_s *fn_8005B0BC(debinst_s *inst, debdef_s *def, f32 time) {
+    struct nuvec_s v;
+    struct nuvec_s base;
+    debparticle_s *p;
+    s32 rot_y, rot_z;
+    s32 i;
+
+    if (inst->unk10a >= inst->unk106) {
+        inst->unk10a = 0;
+    }
+    if (def->unk2e == 7) {
+        return NULL;
+    }
+    p = inst->chunks[inst->unk10a / 32]->particles;
+    p += (s16)(inst->unk10a % 32);
+    inst->unk10a++;
+    p->time = time;
+    inst->last_time = time;
+    p->inv_life = 64.0f / def->life;
+
+    NuVecScale(&base, &def->unk64, time - inst->unk160);
+    NuVecAdd(&base, &base, (struct nuvec_s *)&def->unk58);
+
+    v.z = 0.0f;
+    v.y = base.x;
+    v.x = 0.0f;
+    rot_y = (s32)((f32)inst->unk150 + base.y);
+    rot_z = (s32)((f32)inst->unk152 + base.z);
+    NuVecRotateZ(&v, &v, rot_z);
+    NuVecRotateY(&v, &v, rot_y);
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->pos.x = v.x;
+    p->pos.y = v.y;
+    p->pos.z = v.z;
+
+    {
+        f32 r = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk4c - def->unk4c;
+        v.z = 0.0f;
+        v.y = r + def->unk48;
+        v.x = 0.0f;
+    }
+    NuVecRotateZ(&v, &v, rot_z);
+    NuVecRotateY(&v, &v, rot_y);
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->vel.x = v.x;
+    p->vel.y = v.y;
+    p->vel.z = v.z;
+
+    if (inst->cb != NULL) {
+        inst->cb(inst, def, p);
+    }
+
+    p->pos.x += inst->pos_off.x;
+    p->pos.y += inst->pos_off.y;
+    p->pos.z += inst->pos_off.z;
+    p->vel.x += inst->vel_off.x;
+    p->vel.y += inst->vel_off.y;
+    p->vel.z += inst->vel_off.z;
+
+    for (i = 0; i < def->repeat_count; i++) {
+        debparticle_s *p2;
+        if (inst->unk10a >= inst->unk106) {
+            inst->unk10a = 0;
+        }
+        p2 = inst->chunks[inst->unk10a / 32]->particles;
+        p2 += (s16)(inst->unk10a % 32);
+        inst->unk10a++;
+        *p2 = *p;
+        p2->time += (f32)(i + 1) * def->repeat_dt;
+    }
+
+    if (def->unk2a8 == 0) {
+        fn_8006E3E0(def);
+    }
+
+    if (def->unk50 == 0.0f) {
+        inst->unk150 = 0;
+    } else {
+        inst->unk150 = (s16)((f32)inst->unk150 + def->unk50);
+    }
+    if (def->unk54 == 0.0f) {
+        inst->unk152 = 0;
+    } else {
+        inst->unk152 = (s16)((f32)inst->unk152 + def->unk54);
+    }
+    return p;
+}
+
+f32 NuSinApprox(s32);
+
+debparticle_s *fn_8005B56C(debinst_s *inst, debdef_s *def, f32 time) {
+    struct nuvec_s v;
+    struct nuvec_s base;
+    debparticle_s *p;
+    f32 s0, s1;
+    s32 rot_y, rot_z;
+    s32 i;
+
+    if (inst->unk10a >= inst->unk106) {
+        inst->unk10a = 0;
+    }
+    if (def->unk2e == 7) {
+        return NULL;
+    }
+    p = inst->chunks[inst->unk10a / 32]->particles;
+    p += (s16)(inst->unk10a % 32);
+    inst->unk10a++;
+    p->time = time;
+    inst->last_time = time;
+    p->inv_life = 64.0f / def->life;
+
+    NuVecScale(&base, &def->unk64, time - inst->unk160);
+    NuVecAdd(&base, &base, (struct nuvec_s *)&def->unk58);
+
+    rot_y = (s32)(NuRandIntSeeded(&lbl_80408410) * 65536.0f - 32768.0f);
+    s0 = NuSinApprox((s32)(base.z - def->unk54));
+    s1 = NuSinApprox((s32)(base.z + def->unk54));
+    rot_z = fn_8000AEC4(NuRandIntSeeded(&lbl_80408410) * (s1 - s0) + s0);
+    rot_y = (s32)((f32)rot_y * def->unk50 * (1.0f / 32768.0f));
+    rot_y = (s32)((f32)rot_y + base.y);
+
+    v.x = base.x;
+    v.z = 0.0f;
+    v.y = 0.0f;
+    NuVecRotateZ(&v, &v, rot_z);
+    NuVecRotateY(&v, &v, rot_y);
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->pos.x = v.x;
+    p->pos.y = v.y;
+    p->pos.z = v.z;
+
+    {
+        f32 spd = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk4c - def->unk4c;
+        v.z = 0.0f;
+        v.x = spd + def->unk48;
+        v.y = 0.0f;
+    }
+    NuVecRotateZ(&v, &v, rot_z);
+    NuVecRotateY(&v, &v, rot_y);
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->vel.x = v.x;
+    p->vel.y = v.y;
+    p->vel.z = v.z;
+
+    if (inst->cb != NULL) {
+        inst->cb(inst, def, p);
+    }
+
+    p->pos.x += inst->pos_off.x;
+    p->pos.y += inst->pos_off.y;
+    p->pos.z += inst->pos_off.z;
+    p->vel.x += inst->vel_off.x;
+    p->vel.y += inst->vel_off.y;
+    p->vel.z += inst->vel_off.z;
+
+    for (i = 0; i < def->repeat_count; i++) {
+        debparticle_s *p2;
+        if (inst->unk10a >= inst->unk106) {
+            inst->unk10a = 0;
+        }
+        p2 = inst->chunks[inst->unk10a / 32]->particles;
+        p2 += (s16)(inst->unk10a % 32);
+        inst->unk10a++;
+        *p2 = *p;
+        p2->time += (f32)(i + 1) * def->repeat_dt;
+    }
+
+    if (def->unk2a8 == 0) {
+        fn_8006E3E0(def);
+    }
+    return p;
+}
+
+debparticle_s *fn_8005C6C8(debinst_s *inst, debdef_s *def, f32 time) {
+    struct nuvec_s v;
+    debparticle_s *p;
+    s32 rot_y, rot_z;
+    s32 step;
+    f32 scale;
+    s32 i;
+
+    if (inst->unk10a >= inst->unk106) {
+        inst->unk10a = 0;
+    }
+    if (def->unk2e == 7) {
+        return NULL;
+    }
+    p = inst->chunks[inst->unk10a / 32]->particles;
+    p += (s16)(inst->unk10a % 32);
+    inst->unk10a++;
+    p->time = time;
+    inst->last_time = time;
+    p->inv_life = 64.0f / def->life;
+
+    rot_y = (s32)((2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk50 - def->unk50) + def->unk5c);
+    rot_z = (s32)((2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk54 - def->unk54) + def->unk60);
+
+    if (def->ramp_time != 0.0f && (lbl_804083BC - inst->start_time) < def->ramp_time) {
+        v.y = def->unk58 * ((lbl_804083BC - inst->start_time) / def->ramp_time);
+    } else {
+        v.y = def->unk58;
+    }
+
+    step = 0x10000 / def->unk40a;
+    scale = 1.0f - NuSinApprox((s32)(((f32)((rot_y + 0x10000) % step) / (f32)step) * 32768.0f));
+    scale = (1.0f - def->unk414) * scale + def->unk414;
+    v.z = 0.0f;
+    v.x = 0.0f;
+    v.y *= scale;
+    NuVecRotateZ(&v, &v, rot_z);
+    NuVecRotateY(&v, &v, rot_y);
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->pos.x = v.x;
+    p->pos.y = v.y;
+    p->pos.z = v.z;
+
+    {
+        f32 r = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk4c - def->unk4c;
+        v.z = 0.0f;
+        v.y = r + def->unk48;
+        v.x = 0.0f;
+    }
+    NuVecRotateZ(&v, &v, rot_z);
+    NuVecRotateY(&v, &v, rot_y);
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->vel.x = v.x;
+    p->vel.y = v.y;
+    p->vel.z = v.z;
+
+    if (inst->cb != NULL) {
+        inst->cb(inst, def, p);
+    }
+
+    p->pos.x += inst->pos_off.x;
+    p->pos.y += inst->pos_off.y;
+    p->pos.z += inst->pos_off.z;
+    p->vel.x += inst->vel_off.x;
+    p->vel.y += inst->vel_off.y;
+    p->vel.z += inst->vel_off.z;
+
+    for (i = 0; i < def->repeat_count; i++) {
+        debparticle_s *p2;
+        if (inst->unk10a >= inst->unk106) {
+            inst->unk10a = 0;
+        }
+        p2 = inst->chunks[inst->unk10a / 32]->particles;
+        p2 += (s16)(inst->unk10a % 32);
+        inst->unk10a++;
+        *p2 = *p;
+        p2->time += (f32)(i + 1) * def->repeat_dt;
+    }
+
+    if (def->unk2a8 == 0) {
+        fn_8006E3E0(def);
+    }
+    return p;
 }

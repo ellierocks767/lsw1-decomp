@@ -2460,3 +2460,27 @@ reason = "retried: best 133/135: li r10,0 + stb xdf after c4/c8 vs li r0; 2nd pa
 [[parked]]
 function = "fn_8003BA5C"
 reason = "best 729/830 (work/fn_8003BA5C/best.c, short pass: time, 8 candidates): instruction count 825/830; remaining: f-reg alloc (t in f12/over f31), child vis-test branch polarity on 0x1000000 (target shares the lbl_801B0F08 else-block), anims[alt] at 0xbc should form base+lwzx, len-1 end compare copies len to f11, 0xde s8 arg reg; next: give instance a real struct (anims[2] at 0xbc, s8 at 0xde), try vis-test with ternary matrix arg / swapped if, then order_search on float temps"
+
+[[parked]]
+function = "fn_800533F8"
+reason = "best 256/282: 0 opcode/length diffs, only FPR cycles in pos/end_pos (f10/f12/f11/f9) and normal2 (f8/f9/f10) after order_search (720) and 60s permuter (2608 iters); next: test NuVecSub/NuVecAdd inline or local float temps for pos/end_pos and normal2"
+
+[[parked]]
+function = "fn_80053860"
+reason = "best 214/324: frame -0x48 vs -0x50 (stmw r24 vs r23, missing mr r31,r0 and mr r27,r30 preheader copies) and f28/f29 min_x/max_x swap after variant_search (2000); next: recover why wall->unk2 copies r30->r27 in inner loop preheader and swap min_x/max_x allocation"
+
+[[parked]]
+function = "fn_8005D9C0"
+reason = "best 40/43: 0 length diffs, only add r9,r6,r9 operand order and stw r8,0x27c vs sth r0,0x100 swap after 1271 candidates; next: test struct field typing or separate zero local for unk27c"
+
+[[parked]]
+function = "fn_8005D6E4"
+reason = "best 114/118: 0 opcode/length diffs, only r9/r11 swap in debris_insert after variant_search (29) and 25s permuter (1302 iters); next: test inlining debris_insert without helper or different index expression"
+
+[[parked]]
+function = "fn_8005CB34"
+reason = "best 170/176: 0 length diffs, only align/lbl_804083CC schedule at @40 and r10/r11 swap on lbl_8040AE78 after variant_search (2000) and 30s permuter (1430 iters); next: test variptr_u union or inline align macro for arg0"
+
+[[parked]]
+function = "fn_8005BE2C"
+reason = "best 249/284 (284 vs 284 insns, permuter 1530): f28/f29 swap in quadratic roots + r6/r7 swap + unk18 max_t scheduling; next: inspect SolveQuadratic inline / focused permuter on quadratic+cmd block"

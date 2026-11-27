@@ -322,7 +322,112 @@ void fn_8004BDD0(void *arg0) {
 
 f32 NuCosApprox(s32);
 f32 NuSinApprox(s32);
-extern void *lbl_8040AE5C;
+f32 NuFsqrt(f32);
+
+typedef struct terrainvec_s {
+    f32 x;
+    f32 y;
+    f32 z;
+} terrainvec_s;
+
+typedef struct terrainpoly_s {
+    u8 pad00[0x18];
+    terrainvec_s verts[4];
+    terrainvec_s normal;
+    terrainvec_s normal2;
+    u8 unk60;
+    u8 pad61;
+    u8 flags;
+    u8 pad63;
+} terrainpoly_s;
+
+typedef struct terrainnode_s {
+    terrainvec_s origin;
+    u8 pad0c[0x20];
+    s32 unk2c;
+    s16 unk30;
+    u8 pad32[6];
+} terrainnode_s;
+
+typedef struct terrainsphere_s {
+    terrainvec_s pos;
+    f32 rad;
+} terrainsphere_s;
+
+typedef struct terrainwall_s {
+    u16 count;
+    u8 unk2;
+    u8 flags;
+    terrainvec_s pts[1];
+} terrainwall_s;
+
+typedef struct terrainwallpt_s {
+    terrainvec_s pos;
+    u8 unk_c;
+    u8 unk_d;
+    u8 unk_e;
+    u8 unk_f;
+} terrainwallpt_s;
+
+typedef struct terrainhdr_s {
+    terrainnode_s *nodes;
+    u8 pad04[0x144];
+    terrainwall_s *walls;
+} terrainhdr_s;
+
+typedef struct terrainscan_s {
+    u8 pad00[0x1c];
+    terrainvec_s start;
+    terrainvec_s delta;
+    u8 unk34;
+    s8 unk35;
+    u8 pad36[6];
+    f32 horiz_dist;
+    u8 pad40[0x0c];
+    f32 len;
+    f32 rad;
+    f32 rad_sq;
+    u8 pad58[4];
+    f32 unk5c;
+    u8 pad60[4];
+    f32 unk64;
+    u8 pad68[4];
+    s16 unk6c;
+    u8 pad6e[2];
+    terrainvec_s pos;
+    terrainvec_s end_pos;
+    u8 type;
+    u8 pad89;
+    s16 unk8a;
+    u8 pad8c[4];
+    terrainpoly_s *hit_poly;
+    terrainpoly_s *poly;
+    f32 best_t;
+    u8 pad9c[8];
+    f32 unk_a4;
+    terrainvec_s norm;
+    u8 padb4[0x48];
+    terrainvec_s local_verts[4];
+    u8 pad12c[0x1c];
+    s32 inline_list[1];
+} terrainscan_s;
+
+extern terrainscan_s *lbl_8040AE5C;
+extern terrainhdr_s *lbl_8040AE4C;
+extern s32 *lbl_8040A5F4;
+extern s32 lbl_8040A588;
+extern s32 lbl_8040A5CC;
+extern s32 lbl_8040A5D0;
+extern s32 lbl_8040839C;
+extern s32 lbl_804083A0;
+extern terrainwallpt_s *lbl_8040A5B4;
+extern s32 lbl_8040A5B8;
+extern s32 lbl_8040A5BC;
+extern s32 lbl_8040A5E8;
+extern terrainsphere_s lbl_802B13B4[];
+
+s32 fn_80052590(terrainpoly_s *, f32, f32, f32, f32);
+void fn_80052CAC(void);
 
 void fn_8004F590(void *arg0)
 {
@@ -549,4 +654,104 @@ void HVQM4BufaSetFree(HVQM4AudioQueue* queue, HVQM4AudioNode* node)
     }
     node->nextFree = NULL;
     OSRestoreInterrupts(interrupts);
+}
+
+s32 fn_8005241C(terrainvec_s *p, f32 r) {
+    f32 sum_r;
+    f32 r_sq;
+    f32 d_sq;
+    f32 dz;
+    f32 t;
+
+    if (p->z < -lbl_8040AE5C->rad - r) {
+        return 0;
+    }
+    sum_r = lbl_8040AE5C->rad + r;
+    if (p->z > sum_r + lbl_8040AE5C->len) {
+        return 0;
+    }
+    r_sq = sum_r * sum_r;
+    d_sq = p->x * p->x + p->y * p->y;
+    if (d_sq > r_sq) {
+        return 0;
+    }
+    dz = NuFsqrt(r_sq - d_sq);
+    t = p->z - dz;
+    if (t < 0.0f || t > lbl_8040AE5C->len) {
+        d_sq += p->z * p->z;
+        if (d_sq < r_sq) {
+            dz = 1.0f / NuFsqrt(d_sq);
+            lbl_8040AE5C->type = 20;
+            lbl_8040AE5C->best_t = 0.0f;
+            lbl_8040AE5C->norm.x = -p->x * dz;
+            lbl_8040AE5C->norm.y = -p->y * dz;
+            lbl_8040AE5C->norm.z = -p->z * dz;
+            return 1;
+        }
+        return 0;
+    }
+    d_sq = t / lbl_8040AE5C->len;
+    if (d_sq < lbl_8040AE5C->best_t) {
+        lbl_8040AE5C->type = 4;
+        lbl_8040AE5C->best_t = d_sq;
+        lbl_8040AE5C->norm.x = -p->x;
+        lbl_8040AE5C->norm.y = -p->y;
+        lbl_8040AE5C->norm.z = -dz;
+        return 1;
+    }
+    return 0;
+}
+
+s32 fn_80052224(s32 idx) {
+    f32 d_sq;
+    f32 dz;
+    f32 t;
+
+    if (lbl_8040AE5C->local_verts[idx].z < -lbl_8040AE5C->rad) {
+        return 0;
+    }
+    if (lbl_8040AE5C->local_verts[idx].z > lbl_8040AE5C->rad + lbl_8040AE5C->len) {
+        return 0;
+    }
+    d_sq = lbl_8040AE5C->local_verts[idx].x * lbl_8040AE5C->local_verts[idx].x +
+           lbl_8040AE5C->local_verts[idx].y * lbl_8040AE5C->local_verts[idx].y;
+    if (d_sq > lbl_8040AE5C->rad_sq) {
+        return 0;
+    }
+    dz = NuFsqrt(lbl_8040AE5C->rad_sq - d_sq);
+    t = lbl_8040AE5C->local_verts[idx].z - dz;
+    if (t < 0.0f || t > lbl_8040AE5C->len) {
+        d_sq += lbl_8040AE5C->local_verts[idx].z * lbl_8040AE5C->local_verts[idx].z;
+        if (d_sq < lbl_8040AE5C->rad_sq) {
+            f32 pen;
+            d_sq = NuFsqrt(d_sq);
+            pen = d_sq - lbl_8040AE5C->rad;
+            if (pen < lbl_8040AE5C->best_t) {
+                terrainpoly_s *poly = lbl_8040AE5C->poly;
+                dz = (lbl_8040AE5C->pos.x - poly->verts[idx].x) * poly->normal.x +
+                     (lbl_8040AE5C->pos.y - poly->verts[idx].y) * poly->normal.y +
+                     (lbl_8040AE5C->pos.z - poly->verts[idx].z) * poly->normal.z;
+                if (dz > 0.0f) {
+                    dz = 1.0f / d_sq;
+                    lbl_8040AE5C->best_t = pen;
+                    lbl_8040AE5C->type = 19;
+                    lbl_8040AE5C->norm.x = -lbl_8040AE5C->local_verts[idx].x * dz;
+                    lbl_8040AE5C->norm.y = -lbl_8040AE5C->local_verts[idx].y * dz;
+                    lbl_8040AE5C->norm.z = -lbl_8040AE5C->local_verts[idx].z * dz;
+                    return 1;
+                }
+            }
+        }
+        return 0;
+    }
+    d_sq = t / lbl_8040AE5C->len;
+    if (d_sq < lbl_8040AE5C->best_t) {
+        lbl_8040AE5C->type = 3;
+        lbl_8040AE5C->best_t = d_sq;
+        lbl_8040AE5C->norm.x = -lbl_8040AE5C->local_verts[idx].x;
+        lbl_8040AE5C->norm.y = -lbl_8040AE5C->local_verts[idx].y;
+        lbl_8040AE5C->norm.z = -dz;
+        return 1;
+    }
+    return 0;
 }
