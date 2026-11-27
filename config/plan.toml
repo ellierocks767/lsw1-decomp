@@ -2668,3 +2668,7 @@ reason = "best 69/150: reg alloc of hoisted global-base copies (r26-r29) and slo
 [[parked]]
 function = "NuAnimCurveSetApplyToJointBasic"
 reason = "best 186/211 (work/NuAnimCurveSetApplyToJointBasic/v32.c): FP regalloc only (radius/rb f29/f28 swapped; hit-block frac-t0 and quotient f11/f12 swapped); next: longer permuter run from v32 or vary hit-block temp reuse (dx for numerator helped +10)"
+
+[[parked]]
+function = "fn_8011C090"
+reason = "best 39/43: first byte load folds to lbzu instead of addi plus lbzx; next: test a shared indexed read at loop entry and latch without constant-folding the initial index"
