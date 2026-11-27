@@ -334,27 +334,100 @@ typedef struct terrainpoly_s {
     u8 pad00[0x18];
     terrainvec_s verts[4];
     terrainvec_s normal;
+    terrainvec_s normal2;
+    u8 unk60;
+    u8 pad61;
+    u8 flags;
+    u8 pad63;
 } terrainpoly_s;
 
+typedef struct terrainnode_s {
+    terrainvec_s origin;
+    u8 pad0c[0x20];
+    s32 unk2c;
+    s16 unk30;
+    u8 pad32[6];
+} terrainnode_s;
+
+typedef struct terrainsphere_s {
+    terrainvec_s pos;
+    f32 rad;
+} terrainsphere_s;
+
+typedef struct terrainwall_s {
+    u16 count;
+    u8 unk2;
+    u8 flags;
+    terrainvec_s pts[1];
+} terrainwall_s;
+
+typedef struct terrainwallpt_s {
+    terrainvec_s pos;
+    u8 unk_c;
+    u8 unk_d;
+    u8 unk_e;
+    u8 unk_f;
+} terrainwallpt_s;
+
+typedef struct terrainhdr_s {
+    terrainnode_s *nodes;
+    u8 pad04[0x144];
+    terrainwall_s *walls;
+} terrainhdr_s;
+
 typedef struct terrainscan_s {
-    u8 pad00[0x4c];
+    u8 pad00[0x1c];
+    terrainvec_s start;
+    terrainvec_s delta;
+    u8 unk34;
+    s8 unk35;
+    u8 pad36[6];
+    f32 horiz_dist;
+    u8 pad40[0x0c];
     f32 len;
     f32 rad;
     f32 rad_sq;
-    u8 pad58[0x18];
+    u8 pad58[4];
+    f32 unk5c;
+    u8 pad60[4];
+    f32 unk64;
+    u8 pad68[4];
+    s16 unk6c;
+    u8 pad6e[2];
     terrainvec_s pos;
-    u8 pad7c[0x0c];
+    terrainvec_s end_pos;
     u8 type;
-    u8 pad89[0x0b];
+    u8 pad89;
+    s16 unk8a;
+    u8 pad8c[4];
+    terrainpoly_s *hit_poly;
     terrainpoly_s *poly;
     f32 best_t;
-    u8 pad9c[0x0c];
+    u8 pad9c[8];
+    f32 unk_a4;
     terrainvec_s norm;
     u8 padb4[0x48];
     terrainvec_s local_verts[4];
+    u8 pad12c[0x1c];
+    s32 inline_list[1];
 } terrainscan_s;
 
 extern terrainscan_s *lbl_8040AE5C;
+extern terrainhdr_s *lbl_8040AE4C;
+extern s32 *lbl_8040A5F4;
+extern s32 lbl_8040A588;
+extern s32 lbl_8040A5CC;
+extern s32 lbl_8040A5D0;
+extern s32 lbl_8040839C;
+extern s32 lbl_804083A0;
+extern terrainwallpt_s *lbl_8040A5B4;
+extern s32 lbl_8040A5B8;
+extern s32 lbl_8040A5BC;
+extern s32 lbl_8040A5E8;
+extern terrainsphere_s lbl_802B13B4[];
+
+s32 fn_80052590(terrainpoly_s *, f32, f32, f32, f32);
+void fn_80052CAC(void);
 
 void fn_8004F590(void *arg0)
 {

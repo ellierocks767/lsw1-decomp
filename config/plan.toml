@@ -2448,3 +2448,11 @@ reason = "best 145/205: branch layout and temp registers differ around the per-t
 [[parked]]
 function = "fn_80072028"
 reason = "best 212/250: preamble reg alloc + mr r10,r9 copy of lbl_8040AE5C + addi form of lbl_80348074.y in nested check; next: permuter burst or different local/pointer shape"
+
+[[parked]]
+function = "fn_800533F8"
+reason = "best 256/282: 0 opcode/length diffs, only FPR cycles in pos/end_pos (f10/f12/f11/f9) and normal2 (f8/f9/f10) after order_search (720) and 60s permuter (2608 iters); next: test NuVecSub/NuVecAdd inline or local float temps for pos/end_pos and normal2"
+
+[[parked]]
+function = "fn_80053860"
+reason = "best 214/324: frame -0x48 vs -0x50 (stmw r24 vs r23, missing mr r31,r0 and mr r27,r30 preheader copies) and f28/f29 min_x/max_x swap after variant_search (2000); next: recover why wall->unk2 copies r30->r27 in inner loop preheader and swap min_x/max_x allocation"
