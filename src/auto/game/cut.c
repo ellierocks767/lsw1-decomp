@@ -1592,3 +1592,73 @@ gcut_instance_view *fn_8011EBF4(CutSceneState *state, s32 index)
     }
     return NULL;
 }
+
+typedef struct CutCharacterName {
+    u8 pad00[0xC];
+    char *name;
+} CutCharacterName;
+
+typedef struct CutCharacterType {
+    CutCharacterName named;
+    u8 pad10[0x38];
+} CutCharacterType;
+
+typedef struct CutCharacterInstance {
+    u8 pad00[0x54];
+} CutCharacterInstance;
+
+typedef struct CutCharacterTable {
+    u8 pad00[0x18];
+    CutCharacterInstance *instances;
+    u8 pad1C[4];
+    CutCharacterType *types;
+} CutCharacterTable;
+
+typedef struct CutScenePlayer {
+    u8 pad00[0x64];
+    CutCharacterName *named;
+    u8 pad68[0x1A4];
+    s32 state;
+} CutScenePlayer;
+
+typedef struct CutCharacterIndex {
+    u8 type;
+    u8 unknown;
+} CutCharacterIndex;
+
+extern CutCharacterTable *lbl_80408DF0;
+extern CutCharacterIndex *lbl_804093E8;
+extern CutScenePlayer *gPlayer1Pointer[8];
+
+void *fn_8011C3A8(void *scene, const char *name, s32 useCharacterTable)
+{
+    if (useCharacterTable) {
+        /* Integer address arithmetic preserves the retail index-first byte load. */
+        u32 indices = (u32)lbl_804093E8;
+        if (indices != 0) {
+            s32 i = 0;
+            while (*(u8 *)(i * sizeof(CutCharacterIndex) + indices) != 255 && i < 64) {
+                u8 type = *(u8 *)(i * sizeof(CutCharacterIndex) + indices);
+                if (NuStrICmp((char *)name, lbl_80408DF0->types[type].named.name) == 0) {
+                    return &lbl_80408DF0->instances[i];
+                }
+                ++i;
+                indices = (u32)lbl_804093E8;
+            }
+        }
+    } else {
+        s32 offset = 0;
+        CutScenePlayer **playerSlot = gPlayer1Pointer;
+        CutScenePlayer **base = playerSlot;
+        CutScenePlayer **last = playerSlot + 7;
+        do {
+            CutScenePlayer *player = *playerSlot++;
+            if (player != NULL && player->state < 0 &&
+                NuStrICmp(player->named->name, (char *)name) == 0) {
+                return *(CutScenePlayer **)((u8 *)base + offset);
+            }
+            offset += sizeof(*base);
+        } while ((s32)playerSlot <= (s32)last);
+    }
+    return NULL;
+}
