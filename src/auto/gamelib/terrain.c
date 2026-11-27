@@ -1,4 +1,5 @@
 #include "types.h"
+#include "numath/numath.h"
 
 
 typedef struct HVQM4AudioNode HVQM4AudioNode;
@@ -320,8 +321,6 @@ void fn_8004BDD0(void *arg0) {
     }
 }
 
-f32 NuCosApprox(s32);
-f32 NuSinApprox(s32);
 typedef struct NUTERRAINFLAGS_s {
     u8 pad00[0x60];
     u8 flags[4];
@@ -744,7 +743,6 @@ void fn_8005592C(void)
     lbl_8040A5A0 = index;
 }
 
-extern f32 NuFsqrt(f32);
 extern const f32 lbl_801950CC[];
 extern u32 lbl_8040AE6C;
 
@@ -815,4 +813,49 @@ void fn_800559FC(void)
             lbl_8040AE5C->scaledDirection[2] = lbl_8040AE5C->direction[2] * inverseLength;
             return;
     }
+}
+
+typedef struct NUTERRAINPLANARADJUSTMENT_s {
+    struct nuvec_s vector;
+    f32 fieldC;
+    f32 limit;
+} TerrainPlanarAdjustment;
+
+extern TerrainPlanarAdjustment *lbl_8040A5C0;
+
+void fn_80058F04(const struct nuvec_s *axis, struct nuvec_s *offset)
+{
+    TerrainPlanarAdjustment *adjustment = lbl_8040A5C0;
+    f32 vectorZ = adjustment->vector.z;
+    f32 vectorX = adjustment->vector.x;
+    f32 axisX = axis->x;
+    f32 axisZ = axis->z;
+    f32 limit = adjustment->limit;
+    f32 along = vectorX * axisX + vectorZ * axisZ;
+    f32 across = vectorX * axisZ - vectorZ * axisX;
+    f32 lower;
+    f32 acrossScale;
+    f32 acrossLimit;
+
+    if (along > limit) {
+        along = limit;
+    }
+    lower = -limit;
+    if (along < lower) {
+        along = lower;
+    }
+    acrossScale = 0.2f;
+    acrossLimit = limit * acrossScale;
+    if (across > acrossLimit) {
+        across = acrossLimit;
+    }
+    acrossLimit = lower * acrossScale;
+    if (across < acrossLimit) {
+        across = acrossLimit;
+    }
+
+    offset->x -= (along * axisX + across * axisZ) - vectorX;
+    offset->z -= (along * axis->z - across * axis->x) - adjustment->vector.z;
+    adjustment->vector.x = along * axis->x + across * axis->z;
+    adjustment->vector.z = along * axis->z - across * axis->x;
 }
