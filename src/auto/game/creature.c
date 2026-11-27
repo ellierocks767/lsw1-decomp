@@ -534,3 +534,42 @@ void fn_800A3224(char *obj) {
     *(f32 *)(obj + 0x1E8) = 0.0f;
     *(u32 *)(obj + 0x20C) &= ~0x40000;
 }
+
+struct creature_vec_s {
+    f32 x, y, z;
+};
+void NuVecRotateX(struct creature_vec_s *dst, struct creature_vec_s *src, u16 a);
+void NuVecRotateY(struct creature_vec_s *dst, struct creature_vec_s *src, u16 a);
+
+void CurrentStart(char *obj, s32 force, s32 tilt)
+{
+    struct creature_vec_s v;
+    s32 *tbl;
+    s8 idx;
+
+    *(f32 *)(*(char **)(obj + 0xEEC) + 0x730) = 0.0f;
+    idx = *(s8 *)(obj + 0x601);
+    if (idx != -1) {
+        tbl = *(s32 **)((char *)lbl_80409410 + 0x2DC);
+        if (tbl != NULL && *(f32 *)(*tbl + idx * 0x104 + 0x6C) != 0.0f
+            && (force != 0 || *(s8 *)(*(char **)(obj + 0xEEC) + 0x7E5) == 1
+                || *(s8 *)(*(char **)(obj + 0xEEC) + 0x7E5) == 4)) {
+            *(f32 *)(*(char **)(obj + 0xEEC) + 0x730) =
+                *(f32 *)(**(s32 **)((char *)lbl_80409410 + 0x2DC) + *(s8 *)(obj + 0x601) * 0x104 + 0x6C);
+            v.x = v.y = 0.0f;
+            if (*(u32 *)(obj + 0xF24) & 0x400) {
+                v.z = *(f32 *)(*(char **)(obj + 0xEEC) + 0x730) * *(f32 *)(obj + 0xF04);
+            } else {
+                v.z = *(f32 *)(*(char **)(obj + 0xEEC) + 0x730) * *(f32 *)(*(char **)(obj + 0xEEC) + 0x708);
+            }
+            if (tilt != 0) {
+                NuVecRotateX((struct creature_vec_s *)(obj + 0x78), &v, *(u16 *)(obj + 0x624));
+                NuVecRotateY((struct creature_vec_s *)(obj + 0x78), (struct creature_vec_s *)(obj + 0x78), *(u16 *)(obj + 0x626));
+            } else {
+                NuVecRotateY((struct creature_vec_s *)(obj + 0x78), (struct creature_vec_s *)(obj + 0x78), *(u16 *)(obj + 0x27E));
+            }
+            *(struct creature_vec_s *)(obj + 0xF3C) = *(struct creature_vec_s *)(obj + 0x78);
+            *(u32 *)(obj + 0x440) &= ~0x1000;
+        }
+    }
+}
