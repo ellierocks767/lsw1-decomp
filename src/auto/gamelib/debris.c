@@ -2103,3 +2103,35 @@ void fn_80065AE0(s32 set, s32 index) {
     }
     lbl_8038E840[set].count2--;
 }
+
+int strcmp(const char *, const char *);
+extern s32 lbl_804083F4;
+extern s32 lbl_8038E820[8];
+
+struct deb_named_def {
+    char name[0x11];
+    s8 group;
+};
+
+s32 fn_800633A4(char *name, s8 group) {
+    s32 i;
+    struct deb_named_def *def;
+
+    if (group >= 0 && group < 8 && lbl_8038E820[group] != 0) {
+        for (i = 1; i < lbl_804083F4; i++) {
+            def = ((struct deb_named_def **)lbl_804083FC)[i];
+            if (def != NULL && def->group == group && strcmp(def->name, name) == 0) {
+                return i;
+            }
+        }
+    }
+    for (i = 1; i < lbl_804083F4; i++) {
+        if (((struct deb_named_def **)lbl_804083FC)[i] != NULL
+            && ((((struct deb_named_def **)lbl_804083FC)[i]->group == 0 && lbl_8038E820[0] != 0)
+                || (((struct deb_named_def **)lbl_804083FC)[i]->group == 1 && lbl_8038E820[1] != 0))
+            && strcmp(((struct deb_named_def **)lbl_804083FC)[i]->name, name) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
