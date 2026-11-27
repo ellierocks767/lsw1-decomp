@@ -2584,3 +2584,27 @@ reason = "best 53/79: loop reg alloc (data r12 vs r10, walker r10 vs r11, zero i
 [[parked]]
 function = "fn_8004B8F0"
 reason = "best 99/113: reg alloc in copy loop (end/ring/limit r10/r8/r11) and li r30 placement; next: permuter from work/hc/best_fn_8004B8F0.c"
+
+[[parked]]
+function = "fn_8013C8E8"
+reason = "retried: best 74/85: kind/pos copy match; left: target mr-copies both ready flags (s16 inline return reproduces them, 72/85) and keeps an unthreaded beq cr7 re-test of a on the b==0 path; an inline pickup_both(x,y) param copy reproduces the unthreaded test (76 exact) but materialises x&&y; next: combine s16 return with a test form whose first a-compare uses a different pseudo than the else-if (a)"
+
+[[parked]]
+function = "SetCreatureLights"
+reason = "best 178/294: six &dir/&col local addresses CSE'd into r20-r24 (target recomputes, only &amb kept in r25), 12 saved GPRs vs 7; next: find source form that stops gcse of local struct addresses; fn_8013F548 (inline loop/peel?), permuter"
+
+[[parked]]
+function = "fn_8013D7E0"
+reason = "retried: best 127/135: D8 lis scheduled before base beq, D4 via hoisted pmin addi instead of in-loop lis+lfs@l, stfs 0x20 before lfs E0; next: permuter burst on e8 form or restructure min loop so tbl hoists but D4 stays in-loop"
+
+[[parked]]
+function = "fn_8013EA90"
+reason = "retried: best 147/207: frame -0xb0 vs -0xb8, target uses r20..r31 (lbl_801E15E8+0x24 base shared by both special lookups, &ctx copied r21->r29, raw kind kept in r11 with extsb per use); next: steer second NuSpecialFindMultiWC lookup onto shared base and extra ctx pointer copy, then 180s permuter burst"
+
+[[parked]]
+function = "fn_8013DB18"
+reason = "draft 79/208 not hand-attempted (time limit spent on fn_8013EA90); next: typed PickupCollectDef loop (0x34 stride, f32 at 0x10/0x14/0x18/0x28/0x2C, ptr 0x24), u64 bitmask at effect1B4+0x50 via __ashldi3/__lshrdi3"
+
+[[parked]]
+function = "fn_8013C620"
+reason = "code 51/51 but MATCH (unverified references): 0.0f literal is address-taken (lis/addi r30, lfs 0(r30)) so strict check cannot compare it to lbl_801AEC5C; extern lbl_801AEC5C[] form scores 30/51; next: a const/static rodata form that keeps the address hoist and names the symbol"
