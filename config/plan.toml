@@ -2692,3 +2692,7 @@ reason = "retried: best 96/99 (work/hc/b464_best.c): loads emit last-source-firs
 [[parked]]
 function = "fn_8010A0D8"
 reason = "best 97/144 (work/hc/a/h7.c): clamp frac>1.0 folds 9C reuse (target reloads lbl_801AA09C after b stores), float reg alloc and a/b stack slots/f30-f31 swapped; next: decl-order search over a/b/c and f32 locals, then timeout 180 permuter burst"
+
+[[parked]]
+function = "fn_80040B4C"
+reason = "best 15/54: mismatch, target computes -align twice (no CSE) with size copied to r8; next: source form that blocks CSE of the two negs (separate block/helper with own params), permuter burst"
