@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game/levels.h"
 
 struct fn_80140918_s {
     s32 x;
@@ -88,4 +89,67 @@ void fn_801433C0(void *records, s32 count)
             remaining -= 1;
         } while (remaining != 0);
     }
+}
+
+struct CHRIS43468_s {
+    f32 field00[4];
+    void *field10;
+    s32 field14;
+    s32 field18;
+    s32 field1C;
+    u8 pad20[0xC];
+    u8 *field2C;
+};
+
+struct CHRISBUFFER_s {
+    void *entries;
+    s32 capacity;
+    s32 count;
+};
+
+extern u8 lbl_801E17C0[];
+extern f32 lbl_802E9B40[4];
+
+void *memset(void *dest, int ch, unsigned int count);
+
+void fn_80143468(struct CHRIS43468_s *state, u8 *data)
+{
+    struct CHRISBUFFER_s *buffer;
+    s32 capacity;
+
+    if (lbl_80409410->unk198 == 0x56) {
+        lbl_802E9B40[0] = 4.0f;
+        lbl_802E9B40[1] = 4.0f;
+        lbl_802E9B40[2] = 4.0f;
+        lbl_802E9B40[3] = 1.0f;
+        state->field00[0] = -141.0f;
+        state->field00[1] = -121.0f;
+        state->field00[2] = -1034.0f;
+        state->field00[3] = 1.0f;
+        state->field10 = NULL;
+    } else {
+        lbl_802E9B40[0] = 4.0f;
+        lbl_802E9B40[1] = 4.0f;
+        lbl_802E9B40[2] = 4.0f;
+        lbl_802E9B40[3] = 1.0f;
+        state->field00[0] = -141.0f;
+        state->field00[1] = -121.0f;
+        state->field00[2] = -1034.0f;
+        state->field00[3] = 1.0f;
+        state->field10 = lbl_801E17C0;
+    }
+    buffer = (struct CHRISBUFFER_s *)(data + 0x636D0);
+    if (buffer != NULL) {
+        capacity = buffer->capacity;
+        if (capacity != 0) {
+            memset(buffer->entries, 0, capacity * 0x60);
+            buffer->count = 0;
+        }
+    }
+    state->field14 = 0;
+    state->field1C = 4;
+    state->field18 = 0;
+    state->field2C = data;
+    *(f32 *)(data + 0x6372C) = 1.0f;
+    *(f32 *)(data + 0x63730) = 1.0f;
 }
