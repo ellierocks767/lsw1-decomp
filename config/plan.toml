@@ -2464,3 +2464,7 @@ reason = "best 281/467: three vector locals recover the frame, but constant hois
 [[parked]]
 function = "fn_80053860"
 reason = "best 210/324: typed endpoint assignments reproduce the 12-byte copies and the frame now matches, but bounds temporaries and inner-loop register copies differ; next: stage each axis extent before the radius term and split list flags from segment metadata"
+
+[[parked]]
+function = "fn_80050C5C"
+reason = "best 321/811: typed batch traversal and four local vector copies recover the frame, but branch duplication and constant lifetimes differ; next: recover the inlined signed edge tests and preserve their shared floor and ceiling record paths"
