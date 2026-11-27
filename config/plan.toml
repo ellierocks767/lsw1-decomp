@@ -2396,3 +2396,7 @@ reason = "best 77/83: tail lfs lbl_8019E5B8 scheduled above stfs E98/EA0 (target
 [[parked]]
 function = "fn_80098190"
 reason = "best 191/211: memset arg lbl_8019E17C (4-byte rodata ptr) target emits lis/addi/lwz 0 but ProDG folds to lwz @l, which shifts the prologue schedule and entry-pointer setup; next: find the declaration shape that keeps addi (only such access in the binary), then permuter"
+
+[[parked]]
+function = "fn_8007B0C4"
+reason = "best 74/117: fwd/back callee-saved regs swapped, hoisted pb[0] load gets extra clrlwi, found_* returns placed after else-branch; next: permuter"

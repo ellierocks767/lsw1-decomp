@@ -34,9 +34,12 @@ struct AIREFSCRIPT_s {
 };
 
 struct AISCRIPT_s {
-    u8 unk0[0x10];
+    u8 unk0[0xC];
+    char *script; /* 0x0C */
     struct AILIST_s states; /* 0x10 */
     struct AIPARAM_s params[4]; /* 0x18 */
+    u8 unk38[4];
+    u32 flags; /* 0x3C */
 };
 
 void (*fn_80009948(char *file, s32 line))();
@@ -274,6 +277,104 @@ void ScriptKeyword_STATE(struct nufpar_s *parser)
             lbl_80408CD0 = NULL;
             lbl_80408CC4 = NULL;
             lbl_80408CD4 = NULL;
+        }
+    }
+}
+
+#define AISCRIPT_UTF8_CONT(c) ((u8)((c) + 0x80) <= 0x3F)
+#define AISCRIPT_IS_BREAK(c, p) \
+    (((c) == ' ' && (p)[1] != '!' && (p)[1] != '?') || ((c) == '.' && (p)[1] != '.') || \
+     (u32)((c) - ',') <= 1)
+
+s32 fn_8007B0C4(u8 *s, s32 pos)
+{
+    s32 fwd;
+    s32 back;
+    s32 len;
+    s32 last;
+    s32 i;
+    u8 *pf;
+    u8 *pb;
+    u8 c;
+
+    while (AISCRIPT_UTF8_CONT(s[pos])) {
+        pos--;
+    }
+    back = fwd = pos;
+    len = NuStrLen((char *)s);
+    pb = s + pos;
+    last = len - 1;
+    i = 0;
+    pf = pb;
+    do {
+        if (fwd < len) {
+            c = pf[0];
+            if (AISCRIPT_IS_BREAK(c, pf)) {
+                goto found_fwd;
+            }
+        }
+        if (fwd < last) {
+            pf++;
+            fwd++;
+        }
+        while (AISCRIPT_UTF8_CONT(*pf)) {
+            pf++;
+            fwd++;
+        }
+        if (back >= 0) {
+            c = pb[0];
+            if (AISCRIPT_IS_BREAK(c, pb)) {
+                goto found_back;
+            }
+            if (back > 0) {
+                pb--;
+                back--;
+            }
+        }
+        while (AISCRIPT_UTF8_CONT(*pb)) {
+            pb--;
+            back--;
+        }
+    } while (++i <= 10);
+    if (s[pos] == '~') {
+        if (pos > 0 && s[pos - 1] == '~') {
+            pos--;
+        }
+    } else if (pos > 0 && s[pos - 1] == '~' && pos > 1 && s[pos - 2] != '~') {
+        pos--;
+    }
+    return pos;
+found_fwd:
+    return fwd;
+found_back:
+    return back;
+}
+
+void fn_8007CC34(struct nufpar_s *parser)
+{
+    s32 done = 0;
+    char *str;
+
+    if (lbl_80408CC0 != NULL && lbl_80408CC0->script == NULL) {
+        lbl_80408CC0->flags &= ~0x20000000;
+        while (!done && fn_80006398(parser) != 0) {
+            while (!done && NuFParGetWord(parser) != 0) {
+                if (NuStrICmp((char *)parser->word.b, str_ScriptToken_CloseBrace) == 0) {
+                    done = 1;
+                } else if ((str = NuStrIStr((char *)parser->word.b, str_ScriptSource_Script)) != NULL) {
+                    str += 7;
+                    lbl_80408CC0->script = AIScriptCopyString(str, lbl_80408CB8, lbl_80408CBC);
+                } else if (NuStrIStr((char *)parser->word.b, str_ScriptSource_Source) != NULL) {
+                    if (NuStrIStr((char *)parser->word.b, str_ScriptSource_Global) != NULL) {
+                        lbl_80408CC0->flags &= ~0x20000000;
+                    } else if (NuStrIStr((char *)parser->word.b, str_ScriptSource_Level) != NULL) {
+                        lbl_80408CC0->flags |= 0x20000000;
+                    }
+                }
+            }
+        }
+        if (lbl_80408CC0->script != NULL) {
+            lbl_80408CC0->flags |= 0x40000000;
         }
     }
 }
