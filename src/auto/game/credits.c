@@ -338,3 +338,30 @@ void fn_8010BA24(u8 *arg0) {
         fn_800AC058(**(s32 **)(*(u8 **)(arg0 + 0xEEC) + 0x61C), 1);
     }
 }
+
+s32 CloseDoorObstacle(s32, void *);
+
+void fn_801091AC(u8 *arg0, char *arg1) {
+    s32 i;
+    s32 j;
+    u8 *e;
+
+    if (arg0 != NULL) {
+        e = *(u8 **)(arg0 + 0x248);
+        for (i = 0; i < *(s32 *)(arg0 + 0x24C); i++) {
+            char *n = *(char **)e;
+            if (n != NULL && NuStrICmp(arg1, n) == 0) goto found;
+            e += *(u16 *)(e + 4);
+        }
+    }
+    e = NULL;
+found:
+    if (e != NULL) {
+        *(u32 *)(*(u8 **)e + 0x18) &= ~0x20;
+        *(u32 *)(*(u8 **)e + 0x18) |= 8;
+        CloseDoorObstacle(0, *(void **)e);
+        for (j = 0; j < e[6]; j++) {
+            *(u32 *)(*(u8 **)(e + 0x14 + j * 4) + 0x18) &= ~0x20;
+        }
+    }
+}
