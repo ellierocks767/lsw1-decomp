@@ -1023,6 +1023,7 @@ void fn_8013EA90(struct NUPICKUPPOOL_s *pool, struct NUPICKUP_s *first, s32 coun
 {
     struct NUPICKUP_s *p;
     struct PickupDrawCtx *mp;
+    struct PickupCollectDef *d;
     struct PickupVec v;
     struct PickupDrawCtx ctx;
     struct PickupVec pos;
@@ -1069,6 +1070,7 @@ void fn_8013EA90(struct NUPICKUPPOOL_s *pool, struct NUPICKUP_s *first, s32 coun
             fn_8000DDD0(mp, p->angle30);
             NuMtxTranslate(mp, p);
         }
+        d = lbl_801E15E8;
         p->enabled3C = NuSpecialFindMultiWC(*(void **)((u8 *)lbl_801E15E8 + 0x24 + p->kind3E * 0x34), mp);
         if (p->link18 == 0 && dist < lbl_801AEDB0[0]) {
             f32 s = lbl_801AEDB4[0] - dist / lbl_801AEDB0[0];
@@ -1076,7 +1078,7 @@ void fn_8013EA90(struct NUPICKUPPOOL_s *pool, struct NUPICKUP_s *first, s32 coun
             v.y = p->baseY + lbl_8040904C;
             if (p->kind3E == 5) {
                 f = (f32)(s32)((struct PickupDrawView *)lbl_80409410)->sub->alpha * s;
-                fn_80027C58(&v, (s32)f, p->word32, 0, p->word34, lbl_801E15E8[5].height14);
+                fn_80027C58(&v, (s32)f, p->word32, 0, p->word34, d[5].height14);
             } else {
                 f = (f32)(s32)((struct PickupDrawView *)lbl_80409410)->sub->alpha * s;
                 fn_80027C58(&v, (s32)f, p->word32, 0, p->word34, lbl_801AEDC0[0]);

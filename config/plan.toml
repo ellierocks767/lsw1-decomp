@@ -2524,7 +2524,7 @@ reason = "retried: best 127/135: D8 lis scheduled before base beq, D4 via hoiste
 
 [[parked]]
 function = "fn_8013EA90"
-reason = "retried: best 146/207: frame -0xb0 vs -0xb8, target uses r20..r31 (lbl_801E15E8+0x24 base shared by both special lookups, &ctx copied r21->r29, raw kind kept in r11 with extsb per use); next: steer second NuSpecialFindMultiWC lookup onto shared base and extra ctx pointer copy, then 180s permuter burst"
+reason = "retried: best 147/207: frame -0xb0 vs -0xb8, target uses r20..r31 (lbl_801E15E8+0x24 base shared by both special lookups, &ctx copied r21->r29, raw kind kept in r11 with extsb per use); next: steer second NuSpecialFindMultiWC lookup onto shared base and extra ctx pointer copy, then 180s permuter burst"
 
 [[parked]]
 function = "fn_8013DB18"
