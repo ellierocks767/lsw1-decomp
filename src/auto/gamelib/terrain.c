@@ -36,11 +36,13 @@ typedef struct {
 typedef struct HVQM4DvdStream {
     u8 fileInfo[0x3c];
     void* buffer;
-    u8 unk40[0xc];
+    void* ringBuffer;
+    u8 unk44[8];
     s32 driveStatus;
-    u8 unk50[8];
+    s32 endOffset;
+    s32 limitOffset;
     s32 readOffset;
-    u8 unk5c[4];
+    void* bufferPos;
     s32 nextOffset;
     s32 result;
     s32 seeking;

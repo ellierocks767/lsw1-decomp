@@ -2548,3 +2548,15 @@ reason = "best 36/37: target enters loop at the DVDGetCommandBlockStatus call sk
 [[parked]]
 function = "HVQM4BufvGetFree"
 reason = "best 40/44 without register asm (44/44 only with asm(\"r30\") on found, rejected as unnatural): found is CSE'd into cur in the unlink loads; next: different loop/found structure so found stays a separate pseudo, body in work/hc"
+
+[[parked]]
+function = "HVQM4PlayerExViRetrace"
+reason = "best 49/60: u64 nextTime<=elapsed tail reloads and early-return shape differ; next: goto-style/ret var, longer permuter"
+
+[[parked]]
+function = "fn_8004AF88"
+reason = "best 49/64: data-pointer reg alloc/scheduling in node loop; next: pointer-walk loop or longer permuter"
+
+[[parked]]
+function = "fn_8004B66C"
+reason = "best 44/76: target reloads nextOffset (0x60) repeatedly but caches endOffset; next: volatile/typedef variants"
