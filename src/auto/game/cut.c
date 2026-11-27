@@ -1564,3 +1564,15 @@ s32 FindCutScene(char *name) {
     }
     return -1;
 }
+
+void fn_8011B45C(void)
+{
+    CutSceneFlagRecord *record = lbl_8040A760;
+
+    if (record != NULL) {
+        for (; record->key != 0; ++record) {
+            /* Preserve the retail ori/xori pair for clearing bit 3. */
+            record->flags = (record->flags | 8) ^ 8;
+        }
+    }
+}
