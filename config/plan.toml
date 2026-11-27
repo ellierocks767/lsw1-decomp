@@ -2696,3 +2696,7 @@ reason = "best 97/144 (work/hc/a/h7.c): clamp frac>1.0 folds 9C reuse (target re
 [[parked]]
 function = "fn_80040B4C"
 reason = "best 15/54: mismatch, target computes -align twice (no CSE) with size copied to r8; next: source form that blocks CSE of the two negs (separate block/helper with own params), permuter burst"
+
+[[parked]]
+function = "fn_800A45BC"
+reason = "best 70/100: regalloc/loop-hoist only (count-indexed stbx operand order idx,base; n in r31; lbl_8040B03C/AFBC bases not fully hoisted); structure matches (u32 bitfield for 0x20C bit 24, direct bool store to B03C, if/else AFBC); best body work/fn_800A45BC/best_70.c; next: permuter burst or test index typing/array-of-struct forms"
