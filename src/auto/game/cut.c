@@ -1123,11 +1123,12 @@ void fn_8011EB18(void) {
 s32 NuGCutSceneSysInit(s32 *);
 s32 fn_8003F178(s32 *);
 s32 fn_8003F180(s32 *);
-s32 fn_8003F188(s32 *);
+struct CutSceneCharacters;
+void fn_8003F188(void (*)(struct CutSceneCharacters *));
 s32 fn_8003F190(s32 *);
 s32 fn_8003F198(s32 *);
 s32 fn_8003F1A0(s32 *);
-extern s32 CUT_FindCharacters[];
+void CUT_FindCharacters(struct CutSceneCharacters *);
 extern s32 fn_8011C4B8[];
 extern s32 fn_8011D30C[];
 extern s32 fn_8011EF88[];
@@ -1199,5 +1200,61 @@ void fn_8011E968(void) {
         lbl_8040B25C = -1;
         lbl_8040AFA0 = 0.0f;
         fn_800AFF58(MenuHeader);
+    }
+}
+
+void *fn_8011C3A8(s32, const char *, s32);
+extern s32 lbl_80409414;
+extern s32 str_Assert_CUT_FindCharacters[];
+
+typedef struct CutCharacter {
+    u8 unk0[0x40];
+    const char *name;
+    u8 unk44[0xC];
+    void *instance;
+    union {
+        s32 index;
+        struct CutCharacter *record;
+        u8 bytes[4];
+    } link;
+    u8 unk58[4];
+    u8 flags;
+    u8 unk5D;
+    u8 hasLink;
+    u8 unk5F;
+    u8 linkByte;
+    u8 unk61[3];
+} CutCharacter;
+
+typedef struct CutCharacters {
+    CutCharacter *entries;
+    u16 count;
+} CutCharacters;
+
+typedef struct CutSceneCharacters {
+    u8 unk0[0x18];
+    CutCharacters *characters;
+    CutCharacters *linkedCharacters;
+} CutSceneCharacters;
+
+void CUT_FindCharacters(CutSceneCharacters *scene)
+{
+    s32 i;
+    CutCharacters *characters = scene->characters;
+
+    for (i = 0; i < characters->count; ++i) {
+        CutCharacters *linkedCharacters = scene->linkedCharacters;
+        CutCharacter *character = &characters->entries[i];
+        u8 flags = (character->flags |= 2);
+
+        if ((character->instance = fn_8011C3A8(lbl_80409414, character->name, flags & 2)) == NULL) {
+            fn_80009970(str_SourceFile_Cut, 0x651)(str_Assert_CUT_FindCharacters, character->name);
+        }
+        if (character->hasLink && character->link.index <= 254) {
+            character->linkByte = character->link.bytes[3];
+            character->link.record = &linkedCharacters->entries[character->link.index];
+        } else {
+            character->linkByte = 255;
+        }
     }
 }
