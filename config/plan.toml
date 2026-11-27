@@ -2364,3 +2364,27 @@ reason = "best 26/28: lhzx/sthx base,index operand order swapped (r11,r8 vs r8,r
 [[parked]]
 function = "fn_8006C54C"
 reason = "best 40/68: constants r22/r23 hoist order and stores reordered; next: permuter burst, try storing count before chain"
+
+[[parked]]
+function = "Action_SetSide"
+reason = "best 186/191: retail copies the initial record count from r0 to r3 before the loop, while the best candidate reloads the count at the tail; next: split the count live range across the entry guard and inspect literal addressing"
+
+[[parked]]
+function = "Action_EngageOpponent"
+reason = "best 337/373: visibility and range branches and movement argument temporaries differ; next: match the visibility and range branches before tuning register allocation"
+
+[[parked]]
+function = "Action_GoToDoorTrigger"
+reason = "best 190/200: one pointer move is missing and the post-memset moves are reversed; next: test script-state member types and alias lifetimes"
+
+[[parked]]
+function = "Condition_EitherPlayerUsingForce"
+reason = "best 53/83: duplicate checks and group-pointer load order differ; next: trace shared force predicates and recover the GC branch constants"
+
+[[parked]]
+function = "Action_SnapToSockPosition"
+reason = "best 364/369: output and zero-literal base registers are swapped and three loop setup instructions move; next: isolate the output-vector alias and the lifetime of the loop preheader temporaries"
+
+[[parked]]
+function = "Action_PlaceAheadOfPlayer"
+reason = "best 203/248: float live ranges, path-copy scheduling and loop register selection differ; next: isolate yaw conversion and the path-node copy before tuning the loop"
