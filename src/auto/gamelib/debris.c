@@ -753,7 +753,9 @@ struct deb_transform_slot {
     u8 unk00[0x80];
     struct numtx_s transform80;
     struct numtx_s transformC0;
-    u8 unk100[0x180];
+    u8 unk100[2];
+    s16 definition;
+    u8 unk104[0x17C];
     f32 unk280;
     u8 unk284[0x68];
 };
@@ -815,6 +817,68 @@ void fn_80064730(s32 slot, s16 angleZ, s16 angleY, s16 angleX)
         effects = (struct deb_transform_slot *)lbl_80408404;
         effects[slot].unk280 = lbl_80195738[0];
     }
+}
+
+extern f32 lbl_801956E8[];
+
+struct deb_definition_flags {
+    u8 unk00[0x2EE];
+    u8 flags;
+};
+
+struct deb_scan_hit {
+    s32 slot;
+    s32 flags;
+};
+
+static inline s32 DebSlotIsMissing(s16 id)
+{
+    return ((struct deb_definition_flags **)lbl_804083FC)[id] == NULL;
+}
+
+static inline u8 DebFlagForSlot(s32 i)
+{
+    return ((struct deb_definition_flags **)lbl_804083FC)
+           [((struct deb_transform_slot *)lbl_80408404)[i].definition]->flags;
+}
+
+static inline void DebAppendScan(s32 table, s32 *count, s32 i)
+{
+    s32 index = *count;
+    s32 offset = index * 8;
+    struct deb_scan_hit *hit = (struct deb_scan_hit *)(offset + (s32)table);
+    hit->slot = i;
+    hit->flags = DebFlagForSlot(i);
+    *count = index + 1;
+}
+
+s32 fn_80063A58(void *query, f32 value)
+{
+    s32 i;
+    s32 slot;
+    u16 id;
+    struct deb_transform_slot *slots;
+
+    lbl_8040AEA8 = 0;
+    lbl_8040AEA4 = 0;
+    for (i = 0; i < lbl_804083F0; i++) {
+        slots = (struct deb_transform_slot *)lbl_80408404;
+        id = (u16)slots[i].definition;
+        if ((u16)(id + 1) > 1U) {
+            if (DebSlotIsMissing((s16)id)) {
+                slot = i;
+                fn_8005EB80(&slot);
+            } else {
+                if (fn_80063834(i, query, value, lbl_801956E8[0], 3) != 0) {
+                    DebAppendScan(lbl_8040AE9C, &lbl_8040AEA8, i);
+                }
+                if (NuAnimCurveSetApplyToJointBasic(i, (s32)query, value, lbl_801956E8[0], 3) != 0) {
+                    DebAppendScan(lbl_8040AEA0, &lbl_8040AEA4, i);
+                }
+            }
+        }
+    }
+    return lbl_8040AEA8 + lbl_8040AEA4;
 }
 
 void fn_8005FF74(s32 effect, void *arg1, s32 arg2, s16 angleZ, s16 angleY, void *arg5)
