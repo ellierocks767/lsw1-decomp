@@ -159,7 +159,8 @@ class AtomicToolDownload(unittest.TestCase):
             tool = Path(tmp) / 'tool'
             shutil.copyfile('/bin/sleep', tool)
             tool.chmod(0o755)
-            proc = subprocess.Popen([str(tool), '30'])
+            # argv[0] stays 'sleep': a multicall coreutils (rust-coreutils) picks its tool by name.
+            proc = subprocess.Popen(['sleep', '30'], executable=str(tool))
             try:
                 download_tool.download('https://example.test/tool', io.BytesIO(b'new binary'), tool)
                 self.assertEqual(tool.read_bytes(), b'new binary')
