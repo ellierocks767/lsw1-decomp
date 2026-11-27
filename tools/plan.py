@@ -362,7 +362,8 @@ def claims(state: dict, remote: bool = True, root: Path | None = None, records: 
         cur = out.get(item)
         if cur is None or (mine and not cur["mine"]):
             out[item] = {"by": by, "mine": mine}
-    for rec in records:
+    # Keep finished claims for ownership, but route this checkout to its unfinished claim first.
+    for rec in sorted(records, key=lambda rec: bool(rec.get("finished"))):
         if rec.get("stale"):
             stale.append(rec)
             continue

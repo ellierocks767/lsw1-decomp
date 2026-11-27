@@ -803,13 +803,22 @@ struct socksys_rotation_s {
     u16 y;
 };
 
+struct socksys_segment_s {
+    u8 pad00[0x60];
+    struct nuvec_s start;
+    struct nuvec_s end;
+    u8 pad78[8];
+};
+
 struct socksys_rail_s {
     struct nugspline_s *camera;
-    u8 pad04[0x28];
+    u8 pad04[0x10];
+    struct nugspline_s *midpoint;
+    u8 pad18[0x14];
     u16 segment_count;
     u8 pad2e;
     u8 flag2f;
-    u8 pad30[4];
+    struct socksys_segment_s *segments;
     struct socksys_rotation_s *camera_rotations;
     struct socksys_rotation_s *midpoint_rotations;
     u8 pad3c[0xd8 - 0x3c];
@@ -826,15 +835,19 @@ struct socksys_position_s {
     s8 rail;
     s16 segment;
     f32 fraction;
-    u8 pad08[0x18];
+    struct nuvec_s rail_point;
+    struct nuvec_s camera_point;
     struct socksys_rotation_s camera_rotation;
     struct socksys_rotation_s midpoint_rotation;
     s16 next_segment;
-    u8 pad2a[2];
+    u8 flag2a;
+    u8 flag2b;
     f32 segment_position;
     f32 normalized_position;
+    u32 rail_mask;
 };
 
+extern struct nuvec_s lbl_802C4EDC;
 extern struct nuvec_s lbl_802C4EE8;
 
 static inline s32 socksys_rotation_delta(u16 from, u16 to)
@@ -896,4 +909,165 @@ s32 fn_8009CAEC(const struct socksys_rail_s *rail, s32 index)
         return 1;
     }
     return 0;
+}
+
+static inline void socksys_segment_endpoints(struct socksys_rail_s *rail,
+                                            struct socksys_position_s *position,
+                                            struct nuvec_s **from, struct nuvec_s **to)
+{
+    if (rail->midpoint != NULL) {
+        struct nugspline_s *spline = rail->midpoint;
+        *from = (struct nuvec_s *)(spline->pts + position->segment * spline->ptsize);
+        *to = (struct nuvec_s *)(spline->pts + position->next_segment * spline->ptsize);
+    } else {
+        struct socksys_segment_s *points = &rail->segments[position->segment];
+        *from = &points->start;
+        *to = &points->end;
+    }
+}
+
+void fn_80098B70(struct socksys_rails_s *system, struct socksys_position_s *position,
+                 s32 rail_id, s32 segment, f32 fraction)
+{
+    position->rail = -1;
+    if (system != NULL && (u32)rail_id <= 31) {
+        struct socksys_rail_s *rail = &system->rails[rail_id];
+        struct nuvec_s *out;
+        struct nuvec_s *from;
+        struct nuvec_s *to;
+        s32 limit;
+
+        if (rail->flag2f) {
+            limit = rail->segment_count + 1;
+            if (segment > limit) {
+                segment = 0;
+            }
+        } else {
+            limit = rail->segment_count;
+            if (segment > limit) {
+                segment = limit;
+            }
+        }
+        if (segment < 0) {
+            segment = 0;
+        }
+        if (fraction < 0.0f) {
+            fraction = 0.0f;
+        } else if (fraction > 1.0f) {
+            fraction = 1.0f;
+        }
+        position->fraction = fraction;
+        position->rail = rail_id;
+        position->segment = segment;
+        position->next_segment = segment + 1;
+        if (position->next_segment == limit && rail->flag2f) {
+            position->next_segment = 0;
+        }
+        position->flag2a = 1;
+        position->flag2b = 0;
+        position->rail_mask = 1U << rail_id;
+        fn_8009758C(system, position);
+
+        position->camera_point = lbl_802C4EE8;
+        out = &position->rail_point;
+        socksys_segment_endpoints(rail, position, &from, &to);
+        // This fallback is shared with other retail interpolation paths.
+        if (out == NULL) {
+            out = &lbl_802C4EDC;
+        }
+        out->x = (to->x - from->x) * position->fraction + from->x;
+        out->y = (to->y - from->y) * position->fraction + from->y;
+        out->z = (to->z - from->z) * position->fraction + from->z;
+    }
+}
+
+void MoveSockPosition(struct socksys_rails_s *system, const struct socksys_position_s *source,
+                      f32 distance, struct socksys_position_s *position)
+{
+    *position = *source;
+    if (system != NULL && position->rail != -1 && distance != 0.0f) {
+        s32 direction = 1;
+        s32 limit;
+        struct socksys_rail_s *rail;
+        struct nuvec_s *point;
+
+        if (!(distance > 0.0f)) {
+            direction = 2;
+            distance = -distance;
+        }
+        rail = &system->rails[position->rail];
+        point = &position->rail_point;
+        if (rail->flag2f) {
+            limit = rail->segment_count + 1;
+        } else {
+            limit = rail->segment_count;
+        }
+
+    next_segment:
+        {
+            struct nuvec_s *from;
+            struct nuvec_s *to;
+            struct nuvec_s *target;
+            f32 remaining;
+            position->next_segment = position->segment + 1;
+
+            if (position->next_segment == limit && rail->flag2f) {
+                position->next_segment = 0;
+            }
+
+            socksys_segment_endpoints(rail, position, &from, &to);
+
+            target = from;
+            if (direction == 1) {
+                target = to;
+            }
+            remaining = NuVecDist(point, target, NULL);
+            if (distance > remaining) {
+                distance -= remaining;
+                *point = *target;
+                position->fraction = 0.0f;
+                if (direction == 1) {
+                    if (rail->flag2f) {
+                        position->segment++;
+                        if (position->segment == limit) {
+                            position->segment = 0;
+                        }
+                    } else if (position->segment < limit) {
+                        position->segment++;
+                    } else {
+                        goto finished;
+                    }
+                } else {
+                    if (rail->flag2f) {
+                        position->segment--;
+                        if (position->segment == -1) {
+                            position->segment = rail->segment_count;
+                        }
+                    } else if (position->segment > 0) {
+                        position->segment--;
+                    } else {
+                        goto finished;
+                    }
+                }
+                goto next_segment;
+            }
+
+            if (remaining > 0.0f && distance > 0.0f) {
+                f32 fraction = distance / remaining;
+                f32 from_distance;
+                point->x += (target->x - point->x) * fraction;
+                point->y += (target->y - point->y) * fraction;
+                point->z += (target->z - point->z) * fraction;
+
+                socksys_segment_endpoints(rail, position, &from, &to);
+                from_distance = NuVecDist(from, point, NULL);
+                position->fraction = from_distance / NuVecDist(from, to, NULL);
+            } else {
+                position->fraction = 0.0f;
+            }
+        }
+    finished:
+        fn_8009758C(system, position);
+        position->camera_point = lbl_802C4EE8;
+    }
 }

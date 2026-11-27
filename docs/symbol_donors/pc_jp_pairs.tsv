@@ -17,3 +17,6 @@ gc_addr	pc_jp_addr	evidence
 0x800B4C28	0x00426030	DaveSetSoundFadeDist: same float constants (10, 50, 100, 150, 250, 2, 15) in the same order, calls fn_8006DF68 at the same position
 0x8012F090	0x0043B190	Action_SnapToPosition: 14 of 17 call sites agree in order (NuStrIStr / AIParamToFloat parameter parsing, InitPlayerShadow, SetPlayerOnSurface); same player1/player2 globals
 0x8011EA74	none	__fini_cpp_exceptions: the shape-layout pick 0x41CBE0 loops 8 times over +0x650 entries; GC tests one global for -1 and calls fn_8011E308
+0x800984DC	0x004A78B0	MoveSockPosition: same forward/backward wrapping, three distance calls and final fn_8009758C; PC uses fixed spline point stride
+0x80098858	0x004A7B60	same candidate loop, 0 and 1 projection thresholds, 0x8000 angle wrap and NuVecSub/NuFsqrt/NuVecSub order
+0x80098B70	0x004A7DF0	same rail ID bounds, wrap and fraction clamps, fn_8009758C and camera vector copy; PC tail-calls midpoint interpolation
