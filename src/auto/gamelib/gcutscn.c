@@ -1529,3 +1529,53 @@ void instNuGCutRigidSysEnd(gcut_rigid_view* rigid, f32 frame, gcut_matrix* matri
     }
 }
 #undef GCUT_SAMPLE
+
+typedef struct gcut_lfx_event { char* name; u8 flags; u8 pad5; u16 index; u8 pad8[4]; } gcut_lfx_event;
+typedef struct gcut_lfx_system { u8 pad[4]; gcut_lfx_event* events; u8 pad8; u8 count; } gcut_lfx_system;
+typedef struct gcut_lfx_name { char* name; u8 pad[0x10]; } gcut_lfx_name;
+extern u16 fn_800633A4(char*, s8);
+extern u16 (*lbl_804081E0)(char*);
+extern char str_NuGCutLocatorSysFixUp_CannotFixupLocator[];
+void NuGCutLocatorSysFixUp(s32* scene, s32 arg)
+{
+    u32 i;
+    gcut_lfx_system* system = (gcut_lfx_system*)scene[7];
+    for (i = 0; i < system->count; i++) {
+        gcut_lfx_event* event = &system->events[i];
+        if (event->flags & 1) {
+            event->index = fn_800633A4(event->name, arg);
+        } else if (event->flags & 2) {
+            s32 j = 0;
+            s32 r;
+            char* name = event->name;
+            s32 t = lbl_804081EC;
+            s32 a;
+            s32 b;
+            if (t && *(s32*)t) {
+                a = 0;
+                b = 0;
+                do {
+                    if (strcasecmp(name, *(char**)(b + t)) == 0) {
+                        r = j;
+                        goto store;
+                    }
+                    t = lbl_804081EC;
+                    a += 0x14;
+                    b += 0x14;
+                    j++;
+                } while (*(s32*)(a + t) != 0);
+            }
+            r = -1;
+store:
+            event->index = r;
+        } else if ((event->flags & 4) && lbl_804081E0) {
+            event->index = lbl_804081E0(event->name);
+            if (event->index == 0xFFFF) goto fail;
+            scene[14] |= 0x20000000;
+        }
+        if (event->index == 0xFFFF) {
+fail:
+            fn_80009970(lbl_8019308C, 0xdaf)(str_NuGCutLocatorSysFixUp_CannotFixupLocator, event->name);
+        }
+    }
+}
