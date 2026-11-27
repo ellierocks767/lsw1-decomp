@@ -689,6 +689,63 @@ void HVQM4BufaSetFree(HVQM4AudioQueue* queue, HVQM4AudioNode* node)
     OSRestoreInterrupts(interrupts);
 }
 
+HVQM4AudioNode* HVQM4BufaGetFree(HVQM4AudioQueue* queue)
+{
+    register HVQM4AudioNode* node asm("r30");
+    HVQM4AudioNode* next;
+    s32 interrupts = OSDisableInterrupts();
+
+    node = queue->freeHead;
+    if (node != NULL) {
+        next = node->nextFree;
+        if (next == NULL) {
+            queue->freeTail = next;
+        }
+        queue->freeHead = next;
+        node->nextFree = NULL;
+    }
+    OSRestoreInterrupts(interrupts);
+    return node;
+}
+
+HVQM4AudioNode* HVQM4BufaGetSend(HVQM4AudioQueue* queue)
+{
+    register HVQM4AudioNode* node asm("r30");
+    HVQM4AudioNode* next;
+    s32 interrupts = OSDisableInterrupts();
+
+    node = queue->sendHead;
+    if (node != NULL) {
+        next = node->nextSend;
+        if (next == NULL) {
+            queue->sendTail = next;
+        }
+        queue->sendHead = next;
+        node->nextSend = NULL;
+    }
+    OSRestoreInterrupts(interrupts);
+    return node;
+}
+
+HVQM4VideoNode* HVQM4BufvGetDisp(HVQM4VideoQueue* queue)
+{
+    register HVQM4VideoNode* node asm("r30");
+    HVQM4VideoNode* next;
+    s32 interrupts = OSDisableInterrupts();
+
+    node = queue->displayHead;
+    if (node != NULL) {
+        next = node->nextDisplay;
+        if (next == NULL) {
+            queue->displayTail = next;
+        }
+        queue->displayHead = next;
+        node->nextDisplay = NULL;
+    }
+    OSRestoreInterrupts(interrupts);
+    return node;
+}
+
 s32 fn_8005241C(terrainvec_s *p, f32 r) {
     f32 sum_r;
     f32 r_sq;
