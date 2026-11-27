@@ -989,3 +989,72 @@ void Shop_InitShelfItemPositions(void) {
         }
     }
 }
+
+extern s32 gShopBackPending;
+extern s32 gShopDrawCallbackDepth;
+extern s32 gShopDrawCallbackStack[];
+extern f32 gShopMenuTransitionTimer;
+extern s32 gShopPreviousSelection;
+extern s32 gShopUpdateCallbackDepth;
+extern s32 gShopUpdateCallbackStack[];
+extern f32 lbl_80409BE4;
+extern f32 lbl_80409BE8;
+extern f32 lbl_80409BFC;
+extern f32 lbl_8040A7DC;
+extern f32 lbl_8040A7E0;
+extern f32 lbl_8040B0D4;
+extern s32 Shop_DrawSubMenuTitle();
+
+s32 Shop_UpdateMenu(void) {
+    s32 z;
+    s32 r;
+    s32 d;
+    s32 n;
+    s32 o;
+
+    if (lbl_8040B0D4 < 1.0f) {
+        lbl_8040B0D4 += 2.0f * lbl_80408E9C;
+        if (lbl_8040B0D4 > 1.0f) lbl_8040B0D4 = 1.0f;
+    }
+    lbl_8040A7E0 = lbl_80409BE4;
+    lbl_8040A7DC = lbl_80409BE8;
+    z = gShopUpdateCallback;
+    if (z == 0) {
+        gShopDrawCallbackStack[z] = z;
+        gShopUpdateCallback = (s32)Shop_UpdateMainMenu;
+        gShopPreviousSelection = -1;
+        gShopMenuTransitionTimer = lbl_80409BFC;
+        gShopDrawCallback = Shop_DrawSubMenuTitle;
+        gShopUpdateCallbackStack[z] = z;
+        gShopCurrentCategory = z;
+        gShopUpdateCallbackDepth = z;
+        gShopDrawCallbackDepth = z;
+        gShopBackPending = z;
+    }
+    r = ((s32 (*)())gShopUpdateCallback)();
+    switch (r) {
+    case 5:
+        d = 1;
+        break;
+    case 6:
+        n = gShopUpdateCallbackDepth;
+        o = gShopUpdateCallbackStack[n];
+        gShopUpdateCallbackStack[n] = 0;
+        gShopUpdateCallbackDepth = n - 1;
+        gShopUpdateCallback = o;
+        if (gShopUpdateCallbackDepth < 0) gShopUpdateCallbackDepth = 0;
+        gShopDrawAltCallback = NULL;
+        n = gShopDrawCallbackDepth;
+        o = gShopDrawCallbackStack[n];
+        gShopDrawCallbackStack[n] = 0;
+        gShopDrawCallbackDepth = n - 1;
+        gShopDrawCallback = o;
+        if (gShopDrawCallbackDepth < 0) gShopDrawCallbackDepth = 0;
+    default:
+        d = 0;
+        break;
+    }
+    r = 1;
+    if (d == 0) r = 0;
+    return r;
+}
