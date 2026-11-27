@@ -550,3 +550,27 @@ void HVQM4BufaSetFree(HVQM4AudioQueue* queue, HVQM4AudioNode* node)
     node->nextFree = NULL;
     OSRestoreInterrupts(interrupts);
 }
+
+HVQM4AudioNode* HVQM4BufaGetFree(HVQM4AudioQueue* queue)
+{
+    HVQM4AudioNode* next;
+    HVQM4AudioNode* node;
+    s32 interrupts;
+
+    interrupts = OSDisableInterrupts();
+    node = queue->freeHead;
+
+    if (node != NULL) {
+        next = node->nextFree;
+
+        do {
+            if (next == NULL) {
+                queue->freeTail = next;
+            }
+        } while (0);
+        queue->freeHead = next;
+        node->nextFree = NULL;
+    }
+    OSRestoreInterrupts(interrupts);
+    return node;
+}
