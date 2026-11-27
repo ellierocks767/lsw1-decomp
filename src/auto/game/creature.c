@@ -261,6 +261,34 @@ void GameLoadCharacterModels(s32 arg0, s32 arg1)
     APILoadCharacterModels(arg0, 0, &lbl_80408F7C, &sp8, 1);
 }
 
+s32 fn_8006F8B0();
+void fn_80071A70(s32, s32);
+void fn_80071B78(s32, f32, f32);
+void fn_80071C04(s32, f32 *, s32);
+extern struct NUGAMEOBJECT_s *gPlayer1Pointer[];
+extern f32 lbl_802DA01C[];
+
+void fn_800A474C(void)
+{
+    s32 i;
+    s32 id;
+
+    for (i = 0; i < 2; i++) {
+        if (gPlayer1Pointer[i] != NULL) {
+            *(s32 *)((char *)gPlayer1Pointer[i]->playerPacket + 0x820) = fn_8006F8B0();
+            id = *(s32 *)((char *)gPlayer1Pointer[i]->playerPacket + 0x820);
+            if (id != -1) {
+                lbl_802DA01C[0] = (u32)((u8 *)gPlayer1Pointer[i]->characterData->config)[0xC5] / 255.0f;
+                lbl_802DA01C[1] = (u32)((u8 *)gPlayer1Pointer[i]->characterData->config)[0xC6] / 255.0f;
+                lbl_802DA01C[2] = (u32)((u8 *)gPlayer1Pointer[i]->characterData->config)[0xC7] / 255.0f;
+                fn_80071A70(id, 2);
+                fn_80071C04(id, lbl_802DA01C, 0);
+                fn_80071B78(id, 0.0f, 1.25f);
+            }
+        }
+    }
+}
+
 u64 __lshrdi3();
 void fn_800868B4(void *, void *);
 s32 fn_8008F180(void *, u8, f32, f32, f32);
