@@ -727,7 +727,9 @@ struct gameaiscript_f24_s {
     u32 buttonMash : 1; /* Action_AttackButtonMash */
     u32 unk6 : 2;
     u32 canAttack : 1; /* Action_CanAttack */
-    u32 unk9 : 14;
+    u32 unk9 : 11;
+    u32 predictive : 1;
+    u32 unk15 : 2;
     u32 respawn : 1;
     u32 respawnAtOrigin : 1;
     u32 unk19 : 3;
@@ -2255,7 +2257,7 @@ s32 Action_DeflectPlayersPart(void *sys, void *process, struct gameaiscript_pack
     return 1;
 }
 
-extern void AIMoveInstruction(void *, s32, void *, s32, f32, f32);
+extern void AIMoveInstruction(void *, void *, f32, void *, s32, f32);
 extern s32 (*lbl_80408D2C)(char *, void *);
 extern f32 lbl_801AEBAC[];
 
@@ -2276,7 +2278,7 @@ s32 Action_GoToCollectable(void *sys, void *process, struct gameaiscript_packet_
     }
     if ((target = *(s32 *)(object + 0x660)) != 0) {
         if (*(s32 *)(object + 0x664) == 0)
-            AIMoveInstruction(packet, target, object + 0x66c, 1, lbl_801AEBAC[0], lbl_801AEBAC[0]);
+            AIMoveInstruction(packet, (void *)target, lbl_801AEBAC[0], object + 0x66c, 1, lbl_801AEBAC[0]);
         else
             *(s32 *)(object + 0x660) = 0;
     }
@@ -3003,7 +3005,7 @@ s32 Action_ForceFreeze(void *sys, void *process, struct gameaiscript_packet_s *p
         }
         if (*(u8 **)(*(u8 **)(object + 0xeec) + 0x650) != 0) {
             target = *(u8 **)(*(u8 **)(object + 0xeec) + 0x650);
-            AIMoveInstruction(packet, (s32)(target + 0x3c4), target + 0x3ac, 2, *(f32 *)(target + 0x33c), 0.75f);
+            AIMoveInstruction(packet, target + 0x3c4, *(f32 *)(target + 0x33c), target + 0x3ac, 2, 0.75f);
             *(u8 **)((u8 *)packet + 0x19c) = target + 0x6c;
         }
         return 0;
@@ -3300,7 +3302,7 @@ s32 Action_GoToLevelPath(void *sys, void *process, struct gameaiscript_packet_s 
                     (void *)(*(s32 *)(*(u8 **)(pk + 0x10c) + 0x7c) + *(u16 *)(node + 0x2c) * 0x28), 0);
             return 1;
         }
-        AIMoveInstruction(pk, (s32)(node + 4), pk + 0xcc, 1, 0.0f, *(f32 *)(pk + 0x134));
+        AIMoveInstruction(pk, node + 4, 0.0f, pk + 0xcc, 1, *(f32 *)(pk + 0x134));
     }
     return 0;
 }
@@ -3428,7 +3430,7 @@ s32 Action_FollowSock(void *sys, void *process, struct gameaiscript_packet_s *pa
     } else
         v.x = v.y = v.z = 0.0f;
     NuVecAdd(&v, &v, &info.pos);
-    AIMoveInstruction(packet, (s32)&v, 0, 1, 0.0f, 0.0f);
+    AIMoveInstruction(packet, &v, 0.0f, 0, 1, 0.0f);
     return 0;
 }
 
@@ -4739,14 +4741,14 @@ s32 Action_FollowSpline(void *sys, void *process, struct gameaiscript_packet_s *
                     v.y = 0.0f;
                     NuVecRotateY(&v, &v, -*(u16 *)(obj + 0x27e));
                     NuVecAdd(&v, (struct gameaiscript_vec_s *)(obj + 0x6c), &v);
-                    AIMoveInstruction(packet, (s32)&v, 0, 1, 0.0f, 0.0f);
+                    AIMoveInstruction(packet, &v, 0.0f, 0, 1, 0.0f);
                 }
                 if (pk[0xb3] != 0)
                     memset(obj + 0x69c, 0, 0x1c);
             } else {
                 tmp = *(struct gameaiscript_splinepos_s *)(obj + 0x69c);
                 MoveSplinePosition(&tmp, lbl_804099F4 * speed);
-                AIMoveInstruction(packet, (s32)&tmp.pos, 0, 1, 0.0f, 0.0f);
+                AIMoveInstruction(packet, &tmp.pos, 0.0f, 0, 1, 0.0f);
             }
             goto moved;
         }
@@ -4807,7 +4809,7 @@ s32 Action_ZamMovement(void *sys, void *process, struct gameaiscript_packet_s *p
             *(f32 *)(obj + 0xf04) = 0.8f;
     } else
         *(f32 *)(obj + 0xf04) = 1.0f;
-    AIMoveInstruction(packet, (s32)&info.pos, 0, 1, 0.0f, 0.0f);
+    AIMoveInstruction(packet, &info.pos, 0.0f, 0, 1, 0.0f);
     return 0;
 }
 
@@ -4861,7 +4863,7 @@ s32 Action_RaceOpponent(void *sys, void *process, struct gameaiscript_packet_s *
         *(f32 *)(obj + 0xf04) = 1.0f;
         out = info.pos;
     }
-    AIMoveInstruction(packet, (s32)&out, 0, 1, 0.0f, 0.0f);
+    AIMoveInstruction(packet, &out, 0.0f, 0, 1, 0.0f);
     return 0;
 }
 
@@ -6001,7 +6003,7 @@ s32 Action_GoToOriginalPath(void *sys, void *process, struct gameaiscript_packet
                         NuVecRotateY(&diff, &diff, -cnx->rot);
                         *(f32 *)(pk + 0xdc) = diff.z / (*(struct gameaiscript_gtop_cnx_s **)(pk + 0xd0))->len;
                         *(f32 *)(pk + 0xe0) = diff.x;
-                        AIMoveInstruction(pk, (s32)&node->pos, (s32)(pk + 0xcc), 1, 0.0f, *(f32 *)(pk + 0x134));
+                        AIMoveInstruction(pk, &node->pos, 0.0f, pk + 0xcc, 1, *(f32 *)(pk + 0x134));
                         return 0;
                     }
                 }
@@ -6016,7 +6018,7 @@ s32 Action_GoToOriginalPath(void *sys, void *process, struct gameaiscript_packet
                     AISysCharacterSetPathCnx(pk, (u8 *)packet->owner + 0x6c, *(void **)(pk + 0x188), 0);
                     return 1;
                 }
-                AIMoveInstruction(pk, (s32)&node->pos, (s32)(pk + 0xcc), 1, 0.0f, *(f32 *)(pk + 0x134));
+                AIMoveInstruction(pk, &node->pos, 0.0f, pk + 0xcc, 1, *(f32 *)(pk + 0x134));
             }
         }
     }
@@ -6050,3 +6052,478 @@ s32 Action_SetRespawnLocator(void *sys, void *process, struct gameaiscript_packe
     return 1;
 }
 #undef AIPathFindLocator
+
+extern f32 fn_8000CD08(void *, void *, void *);
+
+s32 Action_AttackOpponent(void *sys, void *process, struct gameaiscript_packet_s *packet,
+    char **params, s32 count, s32 firstTime, f32 time)
+{
+    struct gameaiscript_vec_s delta;
+    u8 *object;
+    u8 *pk = (u8 *)packet;
+    u8 *opponent;
+    u8 *opponentObject;
+    f32 distanceSquared;
+    f32 range;
+    s32 enabled;
+
+    if (packet == 0 || packet->owner == 0 || (object = packet->owner->object) == 0)
+        return 1;
+    if (firstTime != 0)
+        *(f32 *)(pk + 0xb8) = 0.2f;
+    opponent = *(u8 **)(pk + 0x64);
+    if (opponent != 0 && (opponentObject = *(u8 **)(opponent + 4)) != 0) {
+        AIMoveInstruction(
+            packet, opponentObject + 0x124, *(f32 *)(opponentObject + 0x9c),
+            opponentObject + 0x10c, 1, *(f32 *)(pk + 0x134));
+        enabled = lbl_804091F8;
+        *(u32 *)(object + 0xf24) |= 0x08000000;
+        if (enabled != 0 && fn_800CC284((struct gameaiscript_owner_s *)object, 0) == 0 &&
+            fn_800CC284((struct gameaiscript_owner_s *)object, 1) == 0 && (s8)object[0x284] != -1) {
+            *(f32 *)((u8 *)process + 0x40) -= lbl_80408E9C;
+            if (*(f32 *)((u8 *)process + 0x40) < 0.0f) {
+                *(f32 *)((u8 *)process + 0x40) = 0.5f;
+                *(u32 *)(*(u8 **)(*(u8 **)(object + 0xeec) + 0x61c) + 8) |= 0x100;
+            }
+        } else {
+            if (*(f32 *)(pk + 0xb8) > 0.0f) {
+                distanceSquared = fn_8000CD08(*(u8 **)(pk + 0x64) + 0x6c, (u8 *)packet->owner + 0x6c, &delta);
+                range = *(f32 *)(pk + 0xb8) + *(f32 *)(*(u8 **)(*(u8 **)(pk + 0x64) + 4) + 0x9c) +
+                    *(f32 *)(object + 0x33c);
+                if (!(distanceSquared < range * range))
+                    goto done;
+            } else {
+                *(u32 *)(*(u8 **)(*(u8 **)(object + 0xeec) + 0x61c) + 0x58) |= 0x4000;
+            }
+            *(u32 *)(*(u8 **)(*(u8 **)(object + 0xeec) + 0x61c) + 8) |= 0x40;
+        }
+    }
+done:
+    return 0;
+}
+
+extern s32 NuSpecialFindMulti(void *, void *, char *, s32, s32);
+extern f32 lbl_804099E8;
+extern char str_ScriptParam_FireInterval[];
+extern char str_ScriptTarget_Nearest[];
+extern char str_ScriptBehavior_Predictive[];
+
+s32 Action_EngageObject(void *sys, void *process, struct gameaiscript_packet_s *packet,
+    char **params, s32 count, s32 firstTime, f32 time)
+{
+    struct gameaiscript_vec_s delta;
+    struct gameaiscript_special_s specials[50];
+    struct gameaiscript_special_s special;
+    u8 *pk = (u8 *)packet;
+    u8 *object;
+    s32 nearest = 0;
+    char *name = 0;
+    s32 i;
+    s32 index;
+    char *value;
+    f32 bestDistance;
+    f32 distance;
+    s32 found;
+    struct gameaiscript_vec_s *position;
+    f32 interval;
+    f32 random;
+    struct gameaiscript_vec_s *target;
+
+    if (packet == 0 || packet->owner == 0 || (object = packet->owner->object) == 0)
+        return 1;
+    if (firstTime != 0) {
+        f32 range = lbl_804099E8;
+        f32 initialInterval = lbl_804099EC;
+        *(f32 *)(pk + 0x134) = range;
+        *(f32 *)(pk + 0xbc) = initialInterval;
+        for (i = 0; i < count; i++) {
+            if ((value = NuStrIStr(params[i], str_ScriptParam_Name)) != 0)
+                name = value + 5;
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_FireInterval)) != 0)
+                *(f32 *)(pk + 0xbc) = AIParamToFloat(packet, value + 13);
+            else if (NuStrIStr(params[i], str_ScriptTarget_Nearest) != 0)
+                nearest = 1;
+            else if (NuStrIStr(params[i], str_ScriptBehavior_Predictive) != 0)
+                pk[0xb2] = 1;
+        }
+        *(f32 *)((u8 *)process + 0x40) = *(f32 *)(pk + 0xbc) * fn_8000C038();
+        if (name != 0) {
+            if (nearest != 0) {
+                found = NuSpecialFindMulti(*(void **)((u8 *)lbl_80409410 + 0x1c0), specials, name, 50, 0);
+                if (found != 0) {
+                    bestDistance = 3.4028235e38f;
+                    for (index = 0; index < found; index++) {
+                        position = fn_80013380(&specials[index]);
+                        distance = fn_8000CD08((u8 *)packet->owner + 0x6c, position, &delta);
+                        if (distance < bestDistance) {
+                            *(struct gameaiscript_vec_s **)(pk + 0xb4) = position;
+                            bestDistance = distance;
+                        }
+                    }
+                }
+            } else if (NuSpecialFind(*(void **)((u8 *)lbl_80409410 + 0x1c0), &special, name, 1) != 0) {
+                *(void **)(pk + 0xb4) = fn_80013380(&special);
+            }
+        }
+        if (*(void **)(pk + 0xb4) == 0)
+            return 0;
+        *(u32 *)(object + 0xf24) |= 0x1000;
+        *(f32 *)(*(u8 **)(object + 0xeec) + 0x6e0) = fn_8000C038() * *(f32 *)(pk + 0xbc);
+    }
+    target = *(struct gameaiscript_vec_s **)(pk + 0xb4);
+    if (target != 0) {
+        *(struct gameaiscript_vec_s **)(pk + 0x19c) = target;
+        *(f32 *)((u8 *)process + 0x40) -= time;
+        *(struct gameaiscript_vec_s *)(object + 0x684) = **(struct gameaiscript_vec_s **)(pk + 0xb4);
+        *(u32 *)(object + 0xf24) |= 0x2000;
+        *(u32 *)(object + 0xf24) |= 0x08000000;
+        if (*(f32 *)((u8 *)process + 0x40) <= 0.0f) {
+            ((struct gameaiscript_f24_s *)(object + 0xf24))->predictive = pk[0xb2];
+            random = fn_8000C038();
+            interval = *(f32 *)(pk + 0xbc);
+            *(f32 *)((u8 *)process + 0x40) = interval * 0.5f + interval * random;
+            *(u32 *)(*(u8 **)(*(u8 **)(object + 0xeec) + 0x61c) + 8) |= 0x40;
+        }
+    }
+    return 0;
+}
+
+extern char str_ScriptParam_RotY[];
+
+s32 Action_SnapToPosition(void *sys, void *process, struct gameaiscript_packet_s *packet,
+    char **params, s32 count, s32 firstTime, f32 time)
+{
+    struct gameaiscript_vec_s position = {0};
+    s32 checkTerrain = 1;
+    s32 rotation = 0;
+    u8 *object = 0;
+    s32 i;
+    char *value;
+
+    if (firstTime != 0) {
+        if (packet != 0 && packet->owner != 0 && packet->owner->object != 0)
+            object = packet->owner->object;
+        for (i = 0; i < count; i++) {
+            if (NuStrIStr(params[i], str_PlayerID_Player1) != 0 ||
+                NuStrIStr(params[i], str_Entity_Player) != 0)
+                object = lbl_80409004;
+            else if (NuStrIStr(params[i], str_PlayerID_Player2) != 0)
+                object = lbl_80409008;
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_RotY)) != 0) {
+                rotation = (s32)AIParamToFloat(packet, value + 5);
+                rotation = (s32)((f32)rotation * 182.04444885253906f);
+            } else if ((value = NuStrIStr(params[i], str_ScriptParam_X)) != 0)
+                position.x = AIParamToFloat(packet, value + 2);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_Y)) != 0)
+                position.y = AIParamToFloat(packet, value + 2);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_Z)) != 0)
+                position.z = AIParamToFloat(packet, value + 2);
+            else if (NuStrIStr(params[i], str_ScriptFlag_DontCheckTerrain) != 0)
+                checkTerrain = 0;
+        }
+        if (object != 0) {
+            *(struct gameaiscript_vec_s *)(object + 0x6c) = position;
+            *(u16 *)(object + 0x1068) = *(u16 *)(object + 0x1066) = *(u16 *)(object + 0x27e) = rotation;
+            *(struct gameaiscript_vec_s *)(object + 0x9c) = lbl_803E04C4
+                = *(struct gameaiscript_vec_s *)(object + 0x90) = *(struct gameaiscript_vec_s *)(object + 0xa8)
+                = *(struct gameaiscript_vec_s *)(object + 0x6c);
+            *(struct gameaiscript_vec_s *)(object + 0x1c4) = *(struct gameaiscript_vec_s *)(object + 0x1dc)
+                = *(struct gameaiscript_vec_s *)(object + 0x6c);
+            *(struct gameaiscript_vec_s *)(object + 0x78) = lbl_801D5964;
+            InitPlayerShadow(object);
+            if (checkTerrain != 0)
+                SetPlayerOnSurface(object, 0);
+        }
+    }
+    return 1;
+}
+
+extern char str_ScriptParam_Random[];
+
+s32 Action_SetLocator_Level(void *sys, void *process, struct gameaiscript_packet_s *packet,
+    char **params, s32 count, s32 firstTime, f32 time)
+{
+    char name[64];
+    struct gameaiscript_vec_s delta;
+    f32 bestDistance = 3.4028235e38f;
+    s32 personal = 0;
+    s32 indexed = 0;
+    s32 nearest = 0;
+    s32 random = 0;
+    char *base = 0;
+    u8 *object = 0;
+    u8 *locator = 0;
+    u8 *bestLocator = 0;
+    char *p;
+    s32 i;
+
+    if (firstTime != 0) {
+        if (packet != 0 && packet->owner != 0 && packet->owner->object != 0)
+            object = packet->owner->object;
+        if (count != 0) {
+            for (i = 0; i < count; i++) {
+                if ((p = NuStrIStr(params[i], str_ScriptParam_NameEq)) != 0)
+                    base = p + 5;
+                else if (NuStrICmp(params[i], str_ScriptScope_Personal) == 0)
+                    personal = 1;
+                else if (NuStrICmp(params[i], str_ScriptScope_Indexed) == 0)
+                    indexed = 1;
+                else if (NuStrICmp(params[i], str_ScriptTarget_Nearest) == 0)
+                    nearest = 1;
+                else if ((p = NuStrIStr(params[i], str_ScriptParam_Random)) != 0)
+                    random = AIParamToFloat(packet, p + 7);
+                else if ((p = NuStrIStr(params[i], str_ScriptParam_Character)) != 0)
+                    object = (u8 *)GetNamedGameObject(sys, p + 10, 0);
+            }
+            if (base != 0) {
+                if (nearest != 0) {
+                    i = 0;
+                    do {
+                        f32 distance;
+
+                        sprintf(name, str_Format_StringInt, base, i);
+                        i++;
+                        locator = (u8 *)((s32 (*)(void *, char *))AIPathFindLocator)(sys, name);
+                        if (locator != 0) {
+                            distance = fn_8000CD08((u8 *)packet + 0x100, locator + 0x10, &delta);
+                            if (distance < bestDistance) {
+                                bestDistance = distance;
+                                bestLocator = locator;
+                            }
+                        }
+                    } while (locator != 0);
+                    locator = bestLocator;
+                } else {
+                    s8 index;
+                    u8 *personalData;
+                    if (indexed != 0 && (index = (s8)((u8 *)packet->owner)[0x284]) != -1)
+                        sprintf(name, str_Format_StringInt, base, index);
+                    else if (personal != 0 && (personalData = *(u8 **)((u8 *)packet->owner + 0x64)) != 0)
+                        sprintf(name, str_Format_StringString, base, *(char **)(personalData + 0xc));
+                    else if (random != 0)
+                        sprintf(name, str_Format_StringInt, base, NuRand(0) % random);
+                    else
+                        sprintf(name, base);
+                    locator = (u8 *)((s32 (*)(void *, char *))AIPathFindLocator)(sys, name);
+                }
+            }
+            if (object != 0)
+                *(u8 **)(object + 0x39c) = locator;
+        }
+    }
+    return 1;
+}
+
+s32 Action_SnapToLocator(void *sys, void *process, struct gameaiscript_packet_s *packet,
+    char **params, s32 count, s32 firstTime, f32 time)
+{
+    char locatorName[64];
+    s32 personal = 0;
+    s32 indexed = 0;
+    s32 random = 0;
+    s32 checkTerrain = 1;
+    char *name = 0;
+    u8 *object = 0;
+    u8 *locator;
+    char *value;
+    s32 i;
+
+    if (firstTime != 0) {
+        if (packet != 0 && packet->owner != 0 && packet->owner->object != 0)
+            object = packet->owner->object;
+        for (i = 0; i < count; i++) {
+            if ((value = NuStrIStr(params[i], str_ScriptParam_Name)) != 0)
+                name = value + 5;
+            else if (NuStrIStr(params[i], str_ScriptScope_Personal) != 0)
+                personal = 1;
+            else if (NuStrIStr(params[i], str_ScriptScope_Indexed) != 0)
+                indexed = 1;
+            else if ((value = NuStrIStr(params[i], str_ScriptTarget_Random)) != 0)
+                random = AIParamToFloat(packet, value + 9);
+            else if ((value = NuStrIStr(params[i], str_ScriptCategory_Character)) != 0)
+                object = (u8 *)GetNamedGameObject(sys, value + 10, 0);
+            else if (NuStrIStr(params[i], str_ScriptFlag_DontCheckTerrain) != 0)
+                checkTerrain = 0;
+        }
+        if (object == 0) {
+            if (packet == 0 || packet->owner == 0 || packet->owner->object == 0)
+                return 1;
+            object = packet->owner->object;
+        }
+        locator = *(u8 **)(object + 0x39c);
+        if (name != 0) {
+            s8 index;
+            u8 *personalData;
+            if (indexed != 0 && object != 0 && (index = (s8)object[0x284]) != -1)
+                sprintf(locatorName, str_Format_StringInt, name, index);
+            else if (personal != 0 && object != 0 && (personalData = *(u8 **)(object + 0x64)) != 0)
+                sprintf(locatorName, str_Format_StringString, name, *(char **)(personalData + 0xc));
+            else if (random != 0)
+                sprintf(locatorName, str_Format_StringInt, name, NuRand(0) % random);
+            else
+                sprintf(locatorName, name);
+            locator = (u8 *)((s32 (*)(void *, char *))AIPathFindLocator)(sys, locatorName);
+        }
+        if (locator != 0) {
+            *(struct gameaiscript_vec_s *)(*(u8 **)(object + 0x2f0) + 0x6c) =
+                *(struct gameaiscript_vec_s *)(locator + 0x10);
+            *(u16 *)(object + 0x27e) = *(u16 *)(locator + 0x1e);
+            *(u16 *)(object + 0x1066) = *(u16 *)(locator + 0x1e);
+            *(u16 *)(object + 0x1068) = *(u16 *)(locator + 0x1e);
+            *(struct gameaiscript_pathstate_s *)(object + 0x3ac) =
+                *(struct gameaiscript_pathstate_s *)(locator + 0x20);
+            *(struct gameaiscript_vec_s *)(object + 0x9c) = lbl_803E04C4
+                = *(struct gameaiscript_vec_s *)(object + 0x90) = *(struct gameaiscript_vec_s *)(object + 0xa8)
+                = *(struct gameaiscript_vec_s *)(*(u8 **)(object + 0x2f0) + 0x6c);
+            *(struct gameaiscript_vec_s *)(object + 0x1c4) = *(struct gameaiscript_vec_s *)(object + 0x1dc)
+                = *(struct gameaiscript_vec_s *)(object + 0x6c);
+            *(struct gameaiscript_vec_s *)(object + 0x78) = lbl_801D5964;
+            InitPlayerShadow(object);
+            if (checkTerrain != 0)
+                SetPlayerOnSurface(object, 0);
+        }
+    }
+    return 1;
+}
+s32 Action_BigJumpToLocator(void *sys, void *process, struct gameaiscript_packet_s *packet,
+    char **params, s32 count, s32 firstTime, f32 time)
+{
+    char locatorName[64];
+    f32 factor = 1.0f;
+    s32 personal = 0;
+    s32 indexed = 0;
+    s32 random = 0;
+    char *name = 0;
+    s32 i = 0;
+    u8 *object;
+    u8 *locator = 0;
+    char *value;
+
+    if (packet == 0 || packet->owner == 0 || (object = packet->owner->object) == 0)
+        return 1;
+    if (firstTime != 0) {
+        *(u8 **)((u8 *)packet + 0xb4) = *(u8 **)((u8 *)packet + 0xfc);
+        for (; i < count; i++) {
+            if ((value = NuStrIStr(params[i], str_ScriptParam_Name)) != 0)
+                name = value + 5;
+            else if (NuStrIStr(params[i], str_ScriptScope_Personal) != 0)
+                personal = 1;
+            else if (NuStrIStr(params[i], str_ScriptScope_Indexed) != 0)
+                indexed = 1;
+            else if ((value = NuStrIStr(params[i], str_ScriptTarget_Random)) != 0)
+                random = AIParamToFloat(packet, value + 9);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_JumpFactor)) != 0) {
+                factor = AIParamToFloat(packet, value + 12);
+                if (factor < 0.0f)
+                    factor = 0.0f;
+            }
+        }
+        if (name != 0) {
+            s8 index;
+            u8 *personalData;
+            if (indexed != 0 && object != 0 && (index = (s8)object[0x284]) != -1)
+                sprintf(locatorName, str_Format_StringInt, name, index);
+            else if (personal != 0 && object != 0 && (personalData = *(u8 **)(object + 0x64)) != 0)
+                sprintf(locatorName, str_Format_StringString, name, *(char **)(personalData + 0xc));
+            else if (random != 0)
+                sprintf(locatorName, str_Format_StringInt, name, NuRand(0) % random);
+            else
+                sprintf(locatorName, name);
+            *(u8 **)((u8 *)packet + 0xb4) = (u8 *)((s32 (*)(void *, char *))AIPathFindLocator)(sys, locatorName);
+        }
+        locator = *(u8 **)((u8 *)packet + 0xb4);
+        if (locator != 0) {
+            struct gameaiscript_vec_s *position = (struct gameaiscript_vec_s *)(locator + 0x10);
+            NuMtxToQuat(object, position, 0, factor);
+            *(struct gameaiscript_pathstate_s *)(object + 0x3ac) =
+                *(struct gameaiscript_pathstate_s *)(locator + 0x20);
+            *(struct gameaiscript_vec_s *)(object + 0x3c4) = *position;
+        }
+    }
+    {
+        s32 result = 1;
+        if ((*(u8 **)(object + 0xeec))[0x7df] == 0x24)
+            result = 0;
+        return result;
+    }
+}
+
+extern u8 lbl_803E0198[];
+
+s32 Action_PlaceOnSock(void *sys, void *process, struct gameaiscript_packet_s *packet,
+    char **params, s32 count, s32 firstTime, f32 time)
+{
+    f32 minDX = 3.4028235e38f;
+    f32 maxDX = minDX;
+    f32 minDY = minDX;
+    f32 maxDY = minDY;
+    f32 distance = 0.0f;
+    u8 *object;
+    struct gameaiscript_sockpos_s *sock;
+    struct gameaiscript_vec_s *position;
+    char *value;
+    s32 i;
+    f32 random;
+    s32 angle;
+
+    if (packet != 0 && packet->owner != 0 && (object = packet->owner->object) != 0 && firstTime != 0) {
+        *(f32 *)(object + 0xf18) = distance;
+        *(f32 *)(object + 0xf1c) = distance;
+        *(u32 *)(object + 0xf24) &= ~0x10000;
+        for (i = 0; i < count; i++) {
+            if ((value = NuStrIStr(params[i], str_ScriptParam_Distance)) != 0)
+                distance = AIParamToFloat(packet, value + 9);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_MinDX)) != 0)
+                minDX = AIParamToFloat(packet, value + 6);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_MaxDX)) != 0)
+                maxDX = AIParamToFloat(packet, value + 6);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_MinDY)) != 0)
+                minDY = AIParamToFloat(packet, value + 6);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_MaxDY)) != 0)
+                maxDY = AIParamToFloat(packet, value + 6);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_DX)) != 0)
+                *(f32 *)(object + 0xf18) = AIParamToFloat(packet, value + 3);
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_DY)) != 0)
+                *(f32 *)(object + 0xf1c) = AIParamToFloat(packet, value + 3);
+            else if (NuStrIStr(params[i], str_ScriptDir_Backwards) != 0)
+                *(u32 *)(object + 0xf24) |= 0x10000;
+        }
+        sock = (struct gameaiscript_sockpos_s *)(object + 0x600);
+        position = (struct gameaiscript_vec_s *)(object + 0x6c);
+        if (minDX != 3.4028235e38f && maxDX != 3.4028235e38f) {
+            /* The two terms use separate random samples. */
+            random = fn_8000C038();
+            random = maxDX * random + minDX * (1.0f - fn_8000C038());
+            *(f32 *)(object + 0xf18) = random;
+        }
+        if (minDY != 3.4028235e38f && maxDY != 3.4028235e38f) {
+            random = fn_8000C038();
+            random = maxDY * random + minDY * (1.0f - fn_8000C038());
+            *(f32 *)(object + 0xf1c) = random;
+        }
+        MoveSockPosition(*(s32 *)((u8 *)lbl_80409410 + 0x2dc), lbl_803E0198, distance, sock);
+        if (*(f32 *)(object + 0xf18) != 0.0f || *(f32 *)(object + 0xf1c) != 0.0f) {
+            *(f32 *)(object + 0x6c) = *(f32 *)(object + 0xf18);
+            *(f32 *)(object + 0x70) = *(f32 *)(object + 0xf1c);
+            *(f32 *)(object + 0x74) = 0.0f;
+            NuVecRotateX(position, position, *(u16 *)(object + 0x624));
+            if (*(u32 *)(object + 0xf24) & 0x10000)
+                NuVecRotateY(position, position, *(u16 *)(object + 0x626));
+            else
+                NuVecRotateY(position, position, NuAngAdd(*(u16 *)(object + 0x626), 0x8000));
+        } else {
+            *(f32 *)(object + 0x6c) = *(f32 *)(object + 0x70) = *(f32 *)(object + 0x74) = 0.0f;
+        }
+        NuVecAdd(position, position, (struct gameaiscript_vec_s *)(object + 0x608));
+        angle = *(u16 *)(object + 0x626);
+        *(u16 *)(object + 0x27e) = angle;
+        if (*(u32 *)(object + 0xf24) & 0x10000)
+            *(u16 *)(object + 0x27e) = NuAngAdd(angle & 0xffff, 0x8000);
+        *(u16 *)(object + 0x1068) = *(u16 *)(object + 0x1066) = *(u16 *)(object + 0x27e);
+        *(struct gameaiscript_vec_s *)(object + 0x9c) = lbl_803E04C4
+            = *(struct gameaiscript_vec_s *)(object + 0x90) = *(struct gameaiscript_vec_s *)(object + 0xa8)
+            = *(struct gameaiscript_vec_s *)(object + 0x6c);
+        *(struct gameaiscript_vec_s *)(object + 0x78) = lbl_801D5964;
+    }
+    return 1;
+}

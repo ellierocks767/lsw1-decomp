@@ -34,9 +34,13 @@ struct AIREFSCRIPT_s {
 };
 
 struct AISCRIPT_s {
-    u8 unk0[0x10];
+    u8 unk0[0xC];
+    char *script; /* 0x0C */
     struct AILIST_s states; /* 0x10 */
     struct AIPARAM_s params[4]; /* 0x18 */
+    u8 unk38[4];
+    u32 flags; /* 0x3C */
+    struct AILIST_s ref_scripts; /* 0x40 */
 };
 
 void (*fn_80009948(char *file, s32 line))();
@@ -276,4 +280,187 @@ void ScriptKeyword_STATE(struct nufpar_s *parser)
             lbl_80408CD4 = NULL;
         }
     }
+}
+
+#define AISCRIPT_UTF8_CONT(c) ((u8)((c) + 0x80) <= 0x3F)
+#define AISCRIPT_IS_BREAK(c, p) \
+    (((c) == ' ' && (p)[1] != '!' && (p)[1] != '?') || ((c) == '.' && (p)[1] != '.') || \
+     (u32)((c) - ',') <= 1)
+
+s32 fn_8007B0C4(u8 *s, s32 pos)
+{
+    s32 fwd;
+    s32 back;
+    s32 len;
+    s32 last;
+    s32 i;
+    u8 *pf;
+    u8 *pb;
+    u8 c;
+
+    while (AISCRIPT_UTF8_CONT(s[pos])) {
+        pos--;
+    }
+    back = fwd = pos;
+    len = NuStrLen((char *)s);
+    pb = s + pos;
+    last = len - 1;
+    i = 0;
+    pf = pb;
+    do {
+        if (fwd < len) {
+            c = pf[0];
+            if (AISCRIPT_IS_BREAK(c, pf)) {
+                goto found_fwd;
+            }
+        }
+        if (fwd < last) {
+            pf++;
+            fwd++;
+        }
+        while (AISCRIPT_UTF8_CONT(*pf)) {
+            pf++;
+            fwd++;
+        }
+        if (back >= 0) {
+            c = pb[0];
+            if (AISCRIPT_IS_BREAK(c, pb)) {
+                goto found_back;
+            }
+            if (back > 0) {
+                pb--;
+                back--;
+            }
+        }
+        while (AISCRIPT_UTF8_CONT(*pb)) {
+            pb--;
+            back--;
+        }
+    } while (++i <= 10);
+    if (s[pos] == '~') {
+        if (pos > 0 && s[pos - 1] == '~') {
+            pos--;
+        }
+    } else if (pos > 0 && s[pos - 1] == '~' && pos > 1 && s[pos - 2] != '~') {
+        pos--;
+    }
+    return pos;
+found_fwd:
+    return fwd;
+found_back:
+    return back;
+}
+
+void fn_8007CC34(struct nufpar_s *parser)
+{
+    s32 done = 0;
+    char *str;
+
+    if (lbl_80408CC0 != NULL && lbl_80408CC0->script == NULL) {
+        lbl_80408CC0->flags &= ~0x20000000;
+        while (!done && fn_80006398(parser) != 0) {
+            while (!done && NuFParGetWord(parser) != 0) {
+                if (NuStrICmp((char *)parser->word.b, str_ScriptToken_CloseBrace) == 0) {
+                    done = 1;
+                } else if ((str = NuStrIStr((char *)parser->word.b, str_ScriptSource_Script)) != NULL) {
+                    str += 7;
+                    lbl_80408CC0->script = AIScriptCopyString(str, lbl_80408CB8, lbl_80408CBC);
+                } else if (NuStrIStr((char *)parser->word.b, str_ScriptSource_Source) != NULL) {
+                    if (NuStrIStr((char *)parser->word.b, str_ScriptSource_Global) != NULL) {
+                        lbl_80408CC0->flags &= ~0x20000000;
+                    } else if (NuStrIStr((char *)parser->word.b, str_ScriptSource_Level) != NULL) {
+                        lbl_80408CC0->flags |= 0x20000000;
+                    }
+                }
+            }
+        }
+        if (lbl_80408CC0->script != NULL) {
+            lbl_80408CC0->flags |= 0x40000000;
+        }
+    }
+}
+
+struct AISTATEREF_s {
+    u8 unk0[0x1C];
+    char *state_name; /* 0x1C */
+    struct AISTATE_s *state; /* 0x20 */
+};
+
+void NuMemAllocFn(struct nufpar_s *parser); /* NuFParDestroy (symbol misnamed) */
+void *fn_800076C4(struct AILIST_s *list); /* NuLinkedListGetHead */
+void *fn_800076CC(struct AILIST_s *list, void *node); /* NuLinkedListGetNext */
+int sprintf(char *s, const char *format, ...);
+extern char str_ScriptExt_Scp[];
+extern char str_ScriptPath_SubdirFormat[];
+extern struct nufpcom_s lbl_801BC068[];
+
+static inline struct AISTATE_s *AIScriptFindState(struct AILIST_s *states, char *name)
+{
+    struct AISTATE_s *state = fn_800076C4(states);
+    if (name == NULL) {
+        return NULL;
+    }
+    {
+        while (state != NULL) {
+            if (NuStrICmp(name, state->name) == 0) {
+                return state;
+            }
+            state = fn_800076CC(states, state);
+        }
+    }
+    return NULL;
+}
+
+struct AISCRIPT_s *AIScriptLoadScp(char *name, char *path, u32 *buf, u32 *buf_end)
+{
+    char base[0x40];
+    char filename[0x80];
+    struct AISCRIPT_s *script = NULL;
+    struct nufpar_s *parser;
+    struct AISCRIPT_s *sc;
+    struct AILIST_s *states;
+    struct AISTATE_s *state;
+    struct AISTATEREF_s *ref;
+    char *ext;
+
+    NuStrCpy(base, name);
+    ext = NuStrIStr(base, str_ScriptExt_Scp);
+    if (ext != NULL) {
+        *ext = 0;
+        sprintf(filename, str_ScriptPath_SubdirFormat, path, name);
+        parser = NuFParCreate(filename);
+        if (parser != NULL) {
+            sc = AIScriptBufferAlloc(buf, buf_end, sizeof(struct AISCRIPT_s));
+            script = sc;
+            if (script != NULL) {
+                memset(script, 0, sizeof(struct AISCRIPT_s));
+                *(char **)&sc->unk0[8] = AIScriptCopyString(base, buf, buf_end);
+                lbl_80408CB8 = buf;
+                lbl_80408CBC = buf_end;
+                lbl_80408CC0 = sc;
+                NuFParPushCom(parser, lbl_801BC068);
+                states = &sc->states;
+                goto next_line;
+            line:
+                NuFParGetWord(parser);
+                lbl_80408CD0 = &sc->ref_scripts;
+                NuWaterRender(parser);
+            next_line:
+                if (fn_80006398(parser) != 0) {
+                    goto line;
+                }
+                lbl_80408CB8 = NULL;
+                lbl_80408CBC = NULL;
+                lbl_80408CC0 = NULL;
+                lbl_80408CD0 = NULL;
+                for (state = fn_800076C4(states); state != NULL; state = fn_800076CC(states, state)) {
+                    for (ref = fn_800076C4(&state->conditions); ref != NULL; ref = fn_800076CC(&state->conditions, ref)) {
+                        ref->state = AIScriptFindState(states, ref->state_name);
+                    }
+                }
+            }
+            NuMemAllocFn(parser);
+        }
+    }
+    return script;
 }

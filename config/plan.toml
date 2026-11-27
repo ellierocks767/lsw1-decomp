@@ -2366,6 +2366,30 @@ function = "fn_8006C54C"
 reason = "best 40/68: constants r22/r23 hoist order and stores reordered; next: permuter burst, try storing count before chain"
 
 [[parked]]
+function = "Action_SetSide"
+reason = "best 186/191: retail copies the initial record count from r0 to r3 before the loop, while the best candidate reloads the count at the tail; next: split the count live range across the entry guard and inspect literal addressing"
+
+[[parked]]
+function = "Action_EngageOpponent"
+reason = "best 337/373: visibility and range branches and movement argument temporaries differ; next: match the visibility and range branches before tuning register allocation"
+
+[[parked]]
+function = "Action_GoToDoorTrigger"
+reason = "best 190/200: one pointer move is missing and the post-memset moves are reversed; next: test script-state member types and alias lifetimes"
+
+[[parked]]
+function = "Condition_EitherPlayerUsingForce"
+reason = "best 53/83: duplicate checks and group-pointer load order differ; next: trace shared force predicates and recover the GC branch constants"
+
+[[parked]]
+function = "Action_SnapToSockPosition"
+reason = "best 364/369: output and zero-literal base registers are swapped and three loop setup instructions move; next: isolate the output-vector alias and the lifetime of the loop preheader temporaries"
+
+[[parked]]
+function = "Action_PlaceAheadOfPlayer"
+reason = "best 203/248: float live ranges, path-copy scheduling and loop register selection differ; next: isolate yaw conversion and the path-node copy before tuning the loop"
+
+[[parked]]
 function = "fn_8012741C"
 reason = "best 57/63: scan index and result count swap r27/r30; next: compare the loop induction variable and accumulator's allocation priorities in the ProDG RTL dumps"
 
@@ -2392,3 +2416,19 @@ reason = "best 190/198: ProDG anchors the candidate induction pointer at rail_po
 [[parked]]
 function = "fn_8006E3E0"
 reason = "best 418/472 (472/472 insns, 0xe0 frame): loop-invariant @ha hoisting picks 0.015625f over 0.5f/lbl_80198758, shifting freqX f11->f10 and 0.0f f13->f11 across loops 2-5; next: match GCC loop-hoist priority for lbl_80198758/0.25f/0.5f over 0.015625f (e.g. avoid CSE collapsing 0.5f uses or permuter burst)"
+
+[[parked]]
+function = "fn_8009CC00"
+reason = "best 77/83: tail lfs lbl_8019E5B8 scheduled above stfs E98/EA0 (target keeps source order); next: permuter or a different tail shape (5B8 is a 0x50 table)"
+
+[[parked]]
+function = "fn_80098190"
+reason = "best 191/211: memset arg lbl_8019E17C (4-byte rodata ptr) target emits lis/addi/lwz 0 but ProDG folds to lwz @l, which shifts the prologue schedule and entry-pointer setup; next: find the declaration shape that keeps addi (only such access in the binary), then permuter"
+
+[[parked]]
+function = "fn_8007B0C4"
+reason = "best 74/117: fwd/back callee-saved regs swapped, hoisted pb[0] load gets extra clrlwi, found_* returns placed after else-branch; next: permuter"
+
+[[parked]]
+function = "AIScriptLoadScp"
+reason = "best 193/194: addi r28,r29,0x10 (states=&sc->states) scheduled before bl NuFParPushCom instead of after; goto loop + store order CB8,CBC,CC0,CD0 fixed the rest; next: permuter burst on placement of states/PushCom"
