@@ -514,6 +514,44 @@ check:
 
 extern f32 lbl_80195744[];
 
+extern s32 rand(void);
+extern const f32 lbl_8019576C[];
+extern const f32 lbl_80195770[];
+extern const f32 lbl_80195780[];
+extern const f32 lbl_80195784[];
+
+struct deb_lifetime_params {
+    u8 unk00[0xA4];
+    f32 lifetime;
+};
+
+struct deb_particle_motion {
+    struct nuvec_s position;
+    f32 unk0C;
+    struct nuvec_s momentum;
+    f32 inverseLifetime;
+};
+
+void GenDebMomAdjFromPosRevTree(void *key, struct deb_lifetime_params *effect,
+                               struct deb_particle_motion *particle)
+{
+    f32 x;
+    f32 z;
+    f32 distance;
+    f32 random;
+    f32 lifetime;
+
+    x = particle->position.x;
+    particle->momentum.x += x * lbl_8019576C[0];
+    z = particle->position.z;
+    particle->momentum.z += z * lbl_8019576C[0];
+    distance = NuFsqrt(x * x + z * z);
+    particle->position.y -= distance * lbl_80195770[0];
+    random = (f32)rand();
+    lifetime = effect->lifetime;
+    particle->inverseLifetime = lbl_80195784[0] / (lifetime + lifetime * random / lbl_80195780[0]);
+}
+
 f32 fn_80064A58(struct nuvec_s *arg0) {
     f32 d;
 
