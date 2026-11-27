@@ -936,7 +936,14 @@ typedef struct debriscmd_s {
     s32 unk08;
     s32 unk0c;
     struct debriscmd_s *next;
-    u8 pad14[0x18];
+    s32 unk14;
+    f32 unk18;
+    u16 unk1c;
+    s16 unk1e;
+    s16 unk20;
+    u8 pad22[2];
+    f32 unk24;
+    f32 unk28;
 } debriscmd_s;
 
 typedef struct debristrash2_s {
@@ -1166,7 +1173,11 @@ typedef struct debinst_s {
     struct nuvec_s vel_off;
     u8 pad134[0x10];
     void (*cb)(struct debinst_s *, void *, debparticle_s *);
-    u8 pad148[0x198];
+    u8 pad148[0x116];
+    s16 unk25e;
+    f32 unk260;
+    f32 unk264;
+    u8 pad268[0x78];
     f32 start_time;
     f32 last_time;
     u8 pad2e8[4];
@@ -1183,7 +1194,8 @@ typedef struct debdef_s {
     f32 unk58;
     f32 unk5c;
     f32 unk60;
-    u8 pad64[0x40];
+    u8 pad64[0x3c];
+    f32 gravity;
     f32 life;
     u8 pada8[0x200];
     s32 unk2a8;
@@ -1354,6 +1366,91 @@ debparticle_s *fn_8005B9DC(debinst_s *inst, debdef_s *def, f32 time) {
         *p2 = *p;
         p2->time += (f32)(i + 1) * def->repeat_dt;
     }
+
+    if (def->unk2a8 == 0) {
+        fn_8006E3E0(def);
+    }
+    return p;
+}
+
+debparticle_s *fn_8005C29C(debinst_s *inst, debdef_s *def, f32 time) {
+    struct nuvec_s v;
+    struct nuvec_s dir = {1.0f, 0.0f, 0.0f};
+    struct nuvec_s plane_pt;
+    struct nuvec_s end_pos;
+    struct nuvec_s d0;
+    struct nuvec_s d1;
+    debchunk_s *chunk;
+    debparticle_s *p;
+    f32 dot0, dot1;
+
+    if (inst->unk10a >= inst->unk106) {
+        inst->unk10a = 0;
+    }
+    if (def->unk2e == 7) {
+        return NULL;
+    }
+    chunk = inst->chunks[inst->unk10a / 32];
+    p = &chunk->particles[(s16)(inst->unk10a % 32)];
+    p->time = time;
+    inst->last_time = time;
+    p->inv_life = 64.0f / def->life;
+
+    v.x = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk58 - def->unk58;
+    v.y = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk5c - def->unk5c;
+    v.z = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk60 - def->unk60;
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->pos.x = v.x;
+    p->pos.y = v.y;
+    p->pos.z = v.z;
+
+    v.x = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk4c - def->unk4c;
+    v.y = (2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk50 - def->unk50) + def->unk48;
+    v.z = 2.0f * NuRandIntSeeded(&lbl_80408410) * def->unk54 - def->unk54;
+    NuVecMtxTransform(&v, &v, &inst->mtx);
+    p->vel.x = v.x;
+    p->vel.y = v.y;
+    p->vel.z = v.z;
+
+    NuVecRotateY(&dir, &dir, inst->unk25e);
+    NuVecScale(&plane_pt, &dir, inst->unk260);
+    end_pos.x = p->pos.x + def->life * p->vel.x;
+    end_pos.y = 0.0f;
+    end_pos.z = p->pos.z + def->life * p->vel.z;
+    NuVecSub(&d0, &plane_pt, &p->pos);
+    NuVecSub(&d1, &plane_pt, &end_pos);
+    dot0 = d0.x * dir.x + d0.z * dir.z;
+    dot1 = d1.x * dir.x + d1.z * dir.z;
+    if ((dot0 < 0.0f && dot1 > 0.0f) || (dot0 > 0.0f && dot1 < 0.0f)) {
+        f32 t = def->life * ((0.0f - dot0) / (dot1 - dot0));
+        if (lbl_8040AE74 < lbl_804083CC + lbl_804083D0) {
+            lbl_8040AE78[lbl_8040AE74]->obj = chunk;
+            lbl_8040AE78[lbl_8040AE74]->unk04 = (s32)(t * 60.0f);
+            lbl_8040AE78[lbl_8040AE74]->unk08 = 6;
+            lbl_8040AE78[lbl_8040AE74]->unk0c = 0;
+            lbl_8040AE78[lbl_8040AE74]->unk1c = inst->unk102;
+            lbl_8040AE78[lbl_8040AE74]->unk20 = inst->unk25e;
+            lbl_8040AE78[lbl_8040AE74]->unk1e = 0;
+            lbl_8040AE78[lbl_8040AE74]->unk24 = inst->unk260;
+            lbl_8040AE78[lbl_8040AE74]->unk28 = inst->unk264;
+            lbl_8040AE78[lbl_8040AE74]->unk14 = (s16)(inst->unk10a % 32);
+            lbl_8040AE78[lbl_8040AE74]->unk18 = t;
+            AddChunkControlToStack(lbl_8040AE78[lbl_8040AE74], (void **)&lbl_8038E5D8[0][lbl_8040AE7C[0]]);
+            lbl_8040AE74++;
+        }
+    }
+
+    if (inst->cb != NULL) {
+        inst->cb(inst, def, p);
+    }
+    inst->unk10a++;
+
+    p->pos.x += inst->pos_off.x;
+    p->pos.y += inst->pos_off.y;
+    p->pos.z += inst->pos_off.z;
+    p->vel.x += inst->vel_off.x;
+    p->vel.y += inst->vel_off.y;
+    p->vel.z += inst->vel_off.z;
 
     if (def->unk2a8 == 0) {
         fn_8006E3E0(def);
