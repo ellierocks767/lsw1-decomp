@@ -2692,3 +2692,19 @@ reason = "retried: best 96/99 (work/hc/b464_best.c): loads emit last-source-firs
 [[parked]]
 function = "fn_8010A0D8"
 reason = "best 97/144 (work/hc/a/h7.c): clamp frac>1.0 folds 9C reuse (target reloads lbl_801AA09C after b stores), float reg alloc and a/b stack slots/f30-f31 swapped; next: decl-order search over a/b/c and f32 locals, then timeout 180 permuter burst"
+
+[[parked]]
+function = "fn_800A9794"
+reason = "best 542/633: f31 (1.0f) hoisted out of draw_pass loop + 3 minor switch/doMul schedule diffs; next: avoid f31 hoist in goto draw_pass and reorder reflModels[2]"
+
+[[parked]]
+function = "fn_800A8DAC"
+reason = "best 127/146: missing hoisted li r29, 0 (5 vs 4 callee-saved regs causes 8B stack alignment shift) + lbl_801DCB24 lhzx vs add/lhz; next: force r29=0 and struct ptr for lbl_801DCB24"
+
+[[parked]]
+function = "fn_800AB2B0"
+reason = "best 59/94: r4/r5 preferred for a/b instead of r7/r8 with mr r11 copies into inlined creatureHasCharacter; next: check inline param / reg-pressure pattern"
+
+[[parked]]
+function = "fn_800A76AC"
+reason = "best 0/1472: large 5888B function not attempted; next: split into sub-blocks after smaller creature.c functions"
