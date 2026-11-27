@@ -2443,7 +2443,7 @@ reason = "best 18/19: final stw uses r9 (cur) not r10 (prev), copy-propagated; n
 
 [[parked]]
 function = "fn_8003A878"
-reason = "best 133/135: li r10,0 + stb after stw c4/c8 vs li r0 before; next: permuter with focus markers on prelude stores"
+reason = "retried: best 133/135: li r10,0 + stb xdf after c4/c8 vs li r0; 2nd pass tried inline init helper, shared zero local across uses, bitfield/volatile/s8 xdf, xdf via result/base (all same codegen); next: r10 implies r0/r9/r11 conflict at alloc - try a different first-if shape that makes scene[0]/0x88 pseudos live earlier, or permuter with focus markers"
 
 [[parked]]
 function = "NuAnimDataFixPtrs"
