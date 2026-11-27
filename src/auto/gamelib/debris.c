@@ -2231,3 +2231,80 @@ void fn_80065820(f32 minDist)
         }
     }
 }
+
+struct DebTexDesc {
+    s32 type;
+    s32 width;
+    s32 height;
+    s32 pad0C[3];
+};
+
+struct DebMtl {
+    u8 pad0[0xB8];
+    u8 alphaMode;
+    u8 unkB9;
+    u8 unkBA;
+    u8 unkBB;
+    u8 unkBC;
+    u8 unkBD;
+    u8 unkBE;
+    u8 unkBF;
+    u8 unkC0;
+    u8 padC1[0xD0 - 0xC1];
+    f32 diffuse[3];
+    u8 padDC[0xF0 - 0xDC];
+    f32 unkF0;
+    s32 unkF4;
+};
+
+s32 NuPower2(s32);
+struct DebMtl *fn_80024BF0(s32);
+void fn_80024CD4(struct DebMtl *);
+s32 fn_80024F10(struct DebTexDesc *);
+extern const f32 lbl_801956F8[];
+extern const f32 lbl_801956FC[];
+extern s32 lbl_80408408;
+extern struct DebMtl *lbl_80408424;
+extern f32 lbl_8040A60C;
+extern f32 lbl_8040A610;
+extern s32 lbl_8040AD4C;
+extern s32 lbl_8040AD50;
+
+void fn_80063BCC(void)
+{
+    struct DebTexDesc tex;
+    struct DebMtl *mtl;
+    f32 width;
+    f32 height;
+
+    if (lbl_80408428 != 0) {
+        return;
+    }
+    if (lbl_80408408 == 0) {
+        tex.type = 0xF;
+        tex.width = lbl_8040AD4C;
+        tex.height = lbl_8040AD50;
+        lbl_80408408 = fn_80024F10(&tex);
+    }
+    width = NuPower2(lbl_8040AD4C);
+    lbl_8040A60C = ((f32)lbl_8040AD4C - lbl_801956F8[0]) / width;
+    height = NuPower2(lbl_8040AD50);
+    lbl_8040A610 = ((f32)lbl_8040AD50 - lbl_801956F8[0]) / height;
+    if (lbl_80408424 == NULL) {
+        mtl = fn_80024BF0(1);
+        lbl_80408424 = mtl;
+        mtl->unkBB = 1;
+        mtl->diffuse[2] = mtl->diffuse[1] = mtl->diffuse[0] = lbl_801956F8[0];
+        lbl_80408424->unkBC = 1;
+        lbl_80408424->unkBD = 2;
+        lbl_80408424->unkBE = 3;
+        lbl_80408424->unkB9 = 0;
+        lbl_80408424->unkBF = 2;
+        lbl_80408424->unkC0 = 1;
+        lbl_80408424->unkF0 = lbl_801956FC[0];
+        lbl_80408424->alphaMode = 0;
+        lbl_80408424->unkF4 = -1;
+        fn_80024CD4(lbl_80408424);
+    }
+    lbl_80408428 = 1;
+}
