@@ -2376,3 +2376,11 @@ reason = "best 345/431: early float zero uses a GPR and changes saved register a
 [[parked]]
 function = "edforLoadPage"
 reason = "best 279/531: loop condition registers and packed flag temporaries differ; next: separate the versioned record scan from its index offset calculations"
+
+[[parked]]
+function = "fn_8012BF24"
+reason = "best 165/169: active list and shift seed swap r28/r29; next: compare the loop-pass creation of each pseudo against its global allocation priority"
+
+[[parked]]
+function = "fn_8012A8C8"
+reason = "best 298/308: outer state register and hatch state stores differ; next: trace the switch constant reused in the transition store and the join of the two completion paths"
