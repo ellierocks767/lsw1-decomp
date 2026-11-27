@@ -3903,14 +3903,15 @@ struct aiwdcnx_s {
     u8 nodes[2];
     u8 pad2[2];
     s32 blocked[2];
-    u8 padc[0xa];
+    u8 padc[8];
+    s16 rotation;
     u16 routemask;
 };
 struct aiwdnode_s {
     u8 pad0[4];
     struct aiwdvec_s position;
-    u8 pad10[4];
-    f32 radius;
+    f32 approachRadius;
+    f32 radiusSquared;
     u8 pad18[0x10];
     u8 count;
     u8 pad29[7];
@@ -4032,7 +4033,7 @@ void fn_8008E650(void *system, struct aimvpacket_s *packetArg, struct aimvobject
     } else {
         index = packet->cnx->nodes[packet->direction == 0];
         node = &packet->path->nodes[index];
-        if (fn_8000CDFC(&object->position, &node->position, &diff) < node->radius) {
+        if (fn_8000CDFC(&object->position, &node->position, &diff) < node->radiusSquared) {
             AISysCharacterSetPathCnx((struct aiscxpacket_s *)packet, (f32 *)&object->position, (struct aiscxcnx_s *)packet->cnx, packet->direction == 0);
             index = packet->cnx->nodes[packet->direction == 0];
             node = &packet->path->nodes[index];
@@ -5294,4 +5295,276 @@ done:
         return cnx;
     }
     goto no_connection;
+}
+
+struct airow_s {
+    struct aiwdpath_s *path;
+    struct aiwdcnx_s *connection;
+    u8 direction;
+    u8 pad9[0xf];
+    struct aiffvec_s position;
+    s32 rotation;
+    struct aiwdcnx_s *next;
+    u8 nextDirection;
+    u8 pad2d[3];
+    u32 flags;
+};
+
+struct airowpacket_s {
+    u8 pad0[0x16a];
+    u8 route;
+};
+
+struct airowobject_s {
+    void *object;
+    struct airowpacket_s *packet;
+    u8 pad8[0x64];
+    struct aiffvec_s position;
+    u8 pad78[0x194];
+    u32 flags;
+    u8 pad210[0x7f];
+    u8 field28f;
+};
+
+struct airowgroup_s {
+    struct airowobject_s *leader;
+    s16 rotationSpeed;
+    u8 rowCount;
+    u8 memberCount;
+    u8 pad8[4];
+    struct airowobject_s *members[17];
+    union {
+        u32 word;
+        struct {
+            u32 pad0 : 2;
+            u32 reversed : 1;
+            u32 pad3 : 29;
+        } bits;
+    } flags;
+    struct airow_s rows[4];
+    f32 radius;
+};
+
+extern f32 fn_8000BDD0(void *, void *, void *);
+
+s32 fn_8008C13C(struct airowgroup_s *group, struct airow_s *row,
+                struct airow_s *previous, struct airowobject_s *leader)
+{
+    struct aiffvec_s rotated;
+    struct aiffvec_s offset;
+    struct aiffvec_s centre;
+    struct aiffvec_s *position;
+    struct aiwdcnx_s *current;
+    struct aiwdcnx_s *next;
+    struct aiwdnode_s *node;
+    struct aiwdnode_s *nodes;
+    struct aiwdcnx_s *candidate;
+    struct aiwdcnx_s *replacement;
+    s32 count;
+    struct airowobject_s *member, *reverse;
+    s32 nodeIndex;
+    s32 offsetIndex, sourceNodeIndex, nextNodeIndex;
+    struct aiwdcnx_s *turnConnection, *turnNext;
+    struct aiwdcnx_s *currentNext, *begin;
+    struct aiwdcnx_s *postNext;
+    struct aiwdnode_s *other;
+    struct aiwdcnx_s *initialNext;
+    s32 first;
+    s32 direction;
+    s32 currentAngle;
+    s32 angle;
+    s32 step;
+    s32 i;
+    u8 route;
+    f32 distance;
+
+    if (!row->connection) {
+        return 0;
+    }
+    current = row->connection;
+    nodeIndex = current->nodes[row->direction == 0];
+    node = &row->path->nodes[nodeIndex];
+    initialNext = row->next;
+    if (!initialNext) {
+        if (previous) {
+            replacement = previous->connection;
+            if (current == replacement) {
+                replacement = previous->next;
+            }
+        } else {
+            first = NuRandInt() % node->count;
+            for (i = 0; i < node->count; i++) {
+                candidate = node->connections[(i + first) % node->count];
+                row->next = candidate;
+                if (candidate != row->connection) {
+                    route = leader->packet->route;
+                    if (route == 0xff || ((s32)((u64)candidate->routemask >> route) & 1) ||
+                        ((s32)((u64)node->boundarymask >> route) & 1)) {
+                        next = row->next;
+                        direction = 1;
+                        if (next->nodes[0] == nodeIndex) {
+                            direction = 0;
+                        }
+                        other = &row->path->nodes[next->nodes[direction ^ 1]];
+                        if (other->approachRadius > group->radius && !next->blocked[direction]) {
+                            break;
+                        }
+                    }
+                }
+                row->next = 0;
+            }
+            if (row->next) {
+                goto nextReady;
+            }
+            replacement = row->connection;
+        }
+        /* Keep the store separate from the following null check. */
+        *(struct aiwdcnx_s *volatile *)&row->next = replacement;
+        if (!row->next) {
+            return 0;
+        }
+    nextReady:
+        direction = 1;
+        postNext = row->next;
+        if (postNext->nodes[0] == nodeIndex) {
+            direction = 0;
+        }
+        if (postNext->blocked[direction] == 0) {
+            if (row->direction) {
+                currentAngle = NuAngAdd(0x8000, row->connection->rotation);
+            } else {
+                currentAngle = row->connection->rotation;
+            }
+            offsetIndex = row->direction;
+            turnConnection = row->connection;
+            turnNext = row->next;
+            sourceNodeIndex = turnConnection->nodes[offsetIndex == 0];
+            nextNodeIndex = turnNext->nodes[0];
+            if (sourceNodeIndex == nextNodeIndex) {
+                row->nextDirection = 0;
+                angle = turnNext->rotation;
+            } else {
+                row->nextDirection = 1;
+                angle = NuAngAdd(0x8000, turnNext->rotation);
+            }
+            if (NuAngSub(angle, currentAngle) < 0) {
+                row->flags |= 0x80000000;
+            } else {
+                row->flags &= ~0x80000000;
+            }
+        }
+        if (!row->next) {
+            return 0;
+        }
+    }
+    offset.y = 0.0f;
+    offset.z = 0.0f;
+    if (row->flags & 0x80000000) {
+        offset.x = -group->radius;
+    } else {
+        offset.x = group->radius;
+    }
+    NuVecRotateY(&rotated, &offset, row->rotation);
+    NuVecAdd(&centre, &rotated, &row->position);
+
+    if (!(row->flags & 0x40000000)) {
+        begin = row->connection;
+        currentNext = row->next;
+        if (begin == currentNext) {
+            node = &row->path->nodes[currentNext->nodes[row->direction == 0]];
+            distance = fn_8000CDFC(&row->position, &node->position, &rotated);
+            if (distance < node->radiusSquared) {
+                i = 0;
+                if (i < group->rowCount) {
+                    do {
+                        group->rows[i].next = 0;
+                        group->rows[i].rotation = NuAngAdd(group->rows[i].rotation, 0x8000);
+                        group->rows[i].direction = !group->rows[i].direction;
+                    } while (++i < group->rowCount);
+                }
+                group->leader = 0;
+                group->flags.bits.reversed = !group->flags.bits.reversed;
+                if (group->flags.bits.reversed) {
+                    i = group->memberCount - 1;
+                    if (i >= 0) {
+                        do {
+                            reverse = group->members[i];
+                            if (reverse && (reverse->flags & 0x80080000) == 0x80080000 &&
+                                !reverse->field28f) {
+                                group->leader = reverse;
+                                goto reversed;
+                            }
+                        } while (--i >= 0);
+                    }
+                } else {
+                    count = group->memberCount;
+                    i = 0;
+                    if (i < count) {
+                        do {
+                            member = group->members[i];
+                            if (member->object && (member->flags & 0x80080000) == 0x80080000 &&
+                                !member->field28f) {
+                                group->leader = member;
+                                goto reversed;
+                            }
+                        } while (++i < group->memberCount);
+                    }
+                }
+            reversed:
+                return 1;
+            }
+        } else {
+            nodes = row->path->nodes;
+            other = &nodes[currentNext->nodes[0]];
+            distance = fn_8000BDD0(&other->position, &nodes[currentNext->nodes[1]].position, &centre);
+            if (distance <= group->radius * group->radius) {
+                row->flags |= 0x40000000;
+            }
+        }
+    }
+    if (row->flags & 0x40000000) {
+        angle = row->next->rotation;
+        if (row->nextDirection) {
+            angle = NuAngAdd(angle, 0x8000);
+        }
+        angle = NuAngSub(angle, row->rotation);
+        step = group->rotationSpeed;
+        if (angle > step) {
+            angle = step;
+        } else if (angle < -step) {
+            angle = -step;
+        } else {
+            row->flags &= ~0x40000000;
+            row->connection = row->next;
+            row->direction = row->nextDirection;
+            row->next = 0;
+        }
+        row->rotation = NuAngAdd(angle, row->rotation);
+        NuVecRotateY(&rotated, &offset, row->rotation);
+        NuVecSub(&row->position, &centre, &rotated);
+    } else if (!(group->flags.word & 0x08000000)) {
+        position = &row->position;
+        angle = row->connection->rotation;
+        if (row->direction) {
+            angle = NuAngAdd(angle, 0x8000);
+        }
+        angle = NuAngSub(angle, row->rotation);
+        step = group->rotationSpeed;
+        if (angle > step) {
+            angle = step;
+        } else if (angle < -step) {
+            angle = -step;
+        }
+        row->rotation = NuAngAdd(angle, row->rotation);
+        rotated.x = 0.0f;
+        rotated.y = 0.0f;
+        rotated.z = 0.0f;
+        if (lbl_80408D38) {
+            rotated.z = ((f32 (*)(struct airowobject_s *))lbl_80408D38)(leader);
+        }
+        NuVecRotateY(&rotated, &rotated, row->rotation);
+        NuVecAdd(position, position, &rotated);
+        row->position.y = leader->position.y;
+    }
+    return 0;
 }
