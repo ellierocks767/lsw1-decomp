@@ -2452,3 +2452,7 @@ reason = "best 212/250: preamble reg alloc + mr r10,r9 copy of lbl_8040AE5C + ad
 [[parked]]
 function = "fn_80059C44"
 reason = "best 101/152: matched frame, grouped switch and three-word copies, but allocation setup and copied-vector scheduling diverge; next: compare direct scratch-global lvalues with scoped local aliases before retuning field stores"
+
+[[parked]]
+function = "fn_80059EA4"
+reason = "best 106/175: initial capacity checks and 56-byte copy loop shape recovered; lookup register lifetimes, shared failure block, and destination copy registers differ; next: recover typed range-copy lvalue and use a single early-exit path with scoped search locals"
