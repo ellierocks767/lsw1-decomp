@@ -360,13 +360,13 @@ void fn_80141D20(struct lbl_80409410_s *level)
 
 void fn_80141CD8(struct lbl_80409410_s *level)
 {
-    struct nugscn_s *scene = level->unk208;
+    struct nugscn_s *scene = level->miniKit.scene;
 
     if (scene != NULL) {
         fn_8002A3A8(scene);
-        level->unk208 = NULL;
-        level->unk20C = 0;
-        level->unk210 = 0;
+        level->miniKit.scene = NULL;
+        level->miniKit.objects = NULL;
+        level->miniKit.count = 0;
     }
 }
 
@@ -413,7 +413,10 @@ s32 LookupRippleEffectIndex(char *name)
 }
 
 struct CHRISPROGRESSCONFIG_s {
-    u8 pad0[0x33];
+    u8 pad0[0x10];
+    char *directory;
+    char *file;
+    u8 pad18[0x33 - 0x18];
     u8 unk33;
     u8 pad34[0x68 - 0x34];
 };
@@ -718,5 +721,38 @@ void fn_80146018(struct lbl_80409410_s *level)
     default:
         level->unk1980 = 0;
         break;
+    }
+}
+
+s32 NuStrCpy(char *dest, char *source);
+void NuStrCat(char *dest, char *source);
+s32 fn_8002A4B0(u32 *buf, u32 *bufend, char *name);
+extern char str_Path_LevelsDir[];
+extern char lbl_801AF0DC[];
+extern char str_Extension_Gsc[];
+
+void LoadMiniKit(struct CHRISMINIKIT_s *kit, s32 level, u32 *cursor, u32 *limit)
+{
+    char path[0x100];
+    u32 limitCopy;
+
+    kit->scene = NULL;
+    kit->objects = NULL;
+    kit->count = 0;
+    kit->level = -1;
+    if (level != -1 && lbl_801DC074[level].file != NULL) {
+        NuStrCpy(path, str_Path_LevelsDir);
+        NuStrCat(path, lbl_801DC074[level].directory);
+        NuStrCat(path, lbl_801AF0DC);
+        NuStrCat(path, lbl_801DC074[level].file);
+        NuStrCat(path, lbl_801AF0DC);
+        NuStrCat(path, lbl_801DC074[level].file);
+        NuStrCat(path, str_Extension_Gsc);
+        *cursor = (*cursor + 0x3f) & ~0x3f;
+        limitCopy = *limit;
+        kit->scene = (struct nugscn_s *)fn_8002A4B0(cursor, &limitCopy, path);
+        if (kit->scene != NULL) {
+            kit->level = level;
+        }
     }
 }
