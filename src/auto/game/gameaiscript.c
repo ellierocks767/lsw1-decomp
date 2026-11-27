@@ -6237,3 +6237,79 @@ s32 Action_SnapToPosition(void *sys, void *process, struct gameaiscript_packet_s
     }
     return 1;
 }
+
+extern char str_ScriptParam_Random[];
+
+s32 Action_SetLocator_Level(void *sys, void *process, struct gameaiscript_packet_s *packet,
+    char **params, s32 count, s32 firstTime, f32 time)
+{
+    char name[64];
+    struct gameaiscript_vec_s delta;
+    f32 bestDistance = 3.4028235e38f;
+    s32 personal = 0;
+    s32 indexed = 0;
+    s32 nearest = 0;
+    s32 random = 0;
+    char *base = 0;
+    u8 *object = 0;
+    u8 *locator = 0;
+    u8 *bestLocator = 0;
+    char *p;
+    s32 i;
+
+    if (firstTime != 0) {
+        if (packet != 0 && packet->owner != 0 && packet->owner->object != 0)
+            object = packet->owner->object;
+        if (count != 0) {
+            for (i = 0; i < count; i++) {
+                if ((p = NuStrIStr(params[i], str_ScriptParam_NameEq)) != 0)
+                    base = p + 5;
+                else if (NuStrICmp(params[i], str_ScriptScope_Personal) == 0)
+                    personal = 1;
+                else if (NuStrICmp(params[i], str_ScriptScope_Indexed) == 0)
+                    indexed = 1;
+                else if (NuStrICmp(params[i], str_ScriptTarget_Nearest) == 0)
+                    nearest = 1;
+                else if ((p = NuStrIStr(params[i], str_ScriptParam_Random)) != 0)
+                    random = AIParamToFloat(packet, p + 7);
+                else if ((p = NuStrIStr(params[i], str_ScriptParam_Character)) != 0)
+                    object = (u8 *)GetNamedGameObject(sys, p + 10, 0);
+            }
+            if (base != 0) {
+                if (nearest != 0) {
+                    i = 0;
+                    do {
+                        f32 distance;
+
+                        sprintf(name, str_Format_StringInt, base, i);
+                        i++;
+                        locator = (u8 *)((s32 (*)(void *, char *))AIPathFindLocator)(sys, name);
+                        if (locator != 0) {
+                            distance = fn_8000CD08((u8 *)packet + 0x100, locator + 0x10, &delta);
+                            if (distance < bestDistance) {
+                                bestDistance = distance;
+                                bestLocator = locator;
+                            }
+                        }
+                    } while (locator != 0);
+                    locator = bestLocator;
+                } else {
+                    s8 index;
+                    u8 *personalData;
+                    if (indexed != 0 && (index = (s8)((u8 *)packet->owner)[0x284]) != -1)
+                        sprintf(name, str_Format_StringInt, base, index);
+                    else if (personal != 0 && (personalData = *(u8 **)((u8 *)packet->owner + 0x64)) != 0)
+                        sprintf(name, str_Format_StringString, base, *(char **)(personalData + 0xc));
+                    else if (random != 0)
+                        sprintf(name, str_Format_StringInt, base, NuRand(0) % random);
+                    else
+                        sprintf(name, base);
+                    locator = (u8 *)((s32 (*)(void *, char *))AIPathFindLocator)(sys, name);
+                }
+            }
+            if (object != 0)
+                *(u8 **)(object + 0x39c) = locator;
+        }
+    }
+    return 1;
+}
