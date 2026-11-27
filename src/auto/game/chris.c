@@ -329,3 +329,16 @@ void ProcessWing(struct CHRISWING_s *wing, struct CHRISBUFFER_s *buffer)
         NuVecAddPS(&wing->nextPosition, &wing->position, stepVec);
     }
 }
+
+void fn_8002A3A8(struct nugscn_s *scene);
+
+void fn_80141D20(struct lbl_80409410_s *level)
+{
+    struct nugscn_s *scene = level->unk214;
+
+    if (scene != NULL) {
+        fn_8002A3A8(scene);
+        level->unk214 = NULL;
+        level->unk218 = 0;
+    }
+}

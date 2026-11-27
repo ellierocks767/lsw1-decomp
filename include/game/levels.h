@@ -36,6 +36,8 @@ struct NULEVELINFO_s {
     s16 unk46;                    /* fn_8010CCA0 stores a level table index */
 };
 
+struct nugscn_s;
+
 /* Object behind the lbl_80409410 pointer (also read by pickups, obstacle and turret). */
 struct lbl_80409410_s {
     u8 pad0[0x184];
@@ -52,7 +54,10 @@ struct lbl_80409410_s {
     s32 unk1B8;                   /* first argument of fn_800958F8 (Maul_A) */
     s32 unk1BC;                   /* first argument of fn_8010B780 (Maul_A) */
     s32 unk1C0;                   /* scene handle: first argument of NuSpecialFind */
-    u8 pad1C4[0x240 - 0x1C4];
+    u8 pad1C4[0x214 - 0x1C4];
+    struct nugscn_s *unk214;      /* fn_80141D20 passes this to fn_8002A3A8 */
+    u32 unk218;                   /* fn_80141D20 clears this alongside unk214 */
+    u8 pad21C[0x240 - 0x21C];
     struct lbl_80409410_240_s *unk240;
     s32 unk244;
     u8 pad248[0x2DC - 0x248];
