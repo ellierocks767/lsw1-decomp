@@ -553,6 +553,127 @@ struct PickupHeartActor {
     u8 total;
     s8 held;
 };
+struct PickupEffectOwner { char unk0[8]; struct PickupEffectSub *sub8; };
+struct PickupEffectSub { char unk0[0x474]; s32 sound474; };
+struct PickupLoopPool { char unk0[0x1b8]; void *effect1B8; char unk1BC[0x554]; s32 state710; };
+extern f32 lbl_801AED60[], lbl_801AED64[], lbl_801AED68[];
+extern const f32 lbl_801AED6C[], lbl_801AED74[], lbl_801AED78[];
+extern f32 lbl_801AED70[], lbl_801AED88[], lbl_801AED8C[];
+extern u8 lbl_801D59D6[];
+extern f32 lbl_803E04B0[];
+extern u8 lbl_803EAF84[];
+extern s32 NuRndrHackWaterLevel[];
+extern s32 gCameraState[];
+extern f32 lbl_80408F00;
+extern f32 lbl_80409A30;
+extern s16 lbl_80409A34;
+extern f32 lbl_80409A38;
+extern char str_Pickup_MKLoop[];
+extern f32 NuFmod(f32, f32);
+extern f32 NuSinApprox(s32);
+extern f32 fn_8000CD08(void *, s32 *, s32);
+extern s32 fn_80063E40(s32, void *, s32, s32, s32);
+extern s32 fn_800957E0(f32, f32);
+extern void fn_80095A44(void *, s32, struct NUPICKUP_s *, s32, struct PickupVec *);
+void fn_8013E4DC(struct PickupLoopPool *pool, struct NUPICKUP_s *first, s32 count)
+{
+    struct PickupVec v;
+    f32 vol = lbl_801AED60[0];
+    struct NUPICKUP_s *nearest = NULL;
+    struct NUPICKUP_s *p;
+    s32 i;
+    s32 sound;
+    s32 flag;
+    f32 best;
+    f32 dist;
+    f32 t;
+    f32 nt;
+    f32 zero;
+    u8 fl2;
+    s32 ownerSound;
+    u8 kind;
+    u8 fl;
+    if (pool->state710 == 0) {
+        best = lbl_801AED64[0];
+        p = first;
+        if (p != NULL) {
+            ownerSound = ((struct PickupEffectOwner *)pool->effect1B8)->sub8->sound474;
+            if (lbl_80408F00 != lbl_801AED68[0] || p->kind3E != 5 || lbl_801D59D6[0] == 0
+                || (flag = 1, !(NuFmod(lbl_803E04B0[0], lbl_801AED6C[0]) < lbl_801AED70[0])))
+                flag = 0;
+            for (i = 0; i < count; i++) {
+                if (p->active39 != 0) {
+                    if (flag != 0) {
+                        v.x = ((struct PickupVec *)p)->x;
+                        v.y = p->y + lbl_801AED6C[0];
+                        v.z = ((struct PickupVec *)p)->z;
+                        fn_8013F050((s32)&v);
+                    }
+                    kind = p->kind3E;
+                    if (!(lbl_801E15E8[(s8)kind].flags & 1) || p->kind36 == -1 || lbl_803EAF84[p->kind36] != 0) {
+                        if (kind == 2) {
+                            sound = ownerSound;
+                            vol = lbl_80409A30 * lbl_801AED74[0];
+                        } else {
+                            sound = -1;
+                        }
+                        fl = p->flags38;
+                        if (fl & 2) {
+                            t = p->value28;
+                            if (t <= lbl_801AED78[0]) {
+                                if (t <= lbl_801AED60[0]) {
+                                    p->active39 = 0;
+                                } else {
+                                    if ((u32)NuRndrHackWaterLevel[3] % 6 <= 2)
+                                        p->flags38 = fl | 4;
+                                    else
+                                        p->flags38 = fl & 0xfb;
+                                    if (sound != -1)
+                                        vol *= lbl_801AED74[0];
+                                }
+                            }
+                            p->value28 = p->value28 - lbl_80408E9C;
+                        }
+                        if (p->enabled3C != 0) {
+                            fl2 = p->flags38;
+                            if ((fl2 & 0x10) && (fl2 & 1))
+                                p->y = NuSinApprox(p->angle30 + i * (((lbl_80409A34 + i) << 16) / 360)) * lbl_80409A38 + p->previousY;
+                            if (p->flags38 & 8)
+                                p->angle30 = (s32)(lbl_80408E9C * lbl_801AED88[0] + (f32)(s32)p->angle30);
+                            if ((lbl_801E15E8[p->kind3E].flags & 0x20) && (p->flags38 & 1))
+                                fn_80095A44(pool->effect1B8, 0x10, p, fn_800957E0(lbl_801AED8C[0], lbl_80408E9C), 0);
+                            if (sound != -1) {
+                                s32 n = fn_800957E0(vol, lbl_80408E9C);
+                                if (n > 0)
+                                    fn_80063E40(sound, p, n, 0, 0);
+                            }
+                        }
+                        if (p->active39 != 0 && p->kind3E == 5) {
+                            dist = fn_8000CD08(p, gCameraState, 0);
+                            if (dist < best) {
+                                best = dist;
+                                nearest = p;
+                            }
+                        }
+                    }
+                } else {
+                    t = p->value2C;
+                    zero = lbl_801AED60[0];
+                    if (t > zero) {
+                        nt = t - lbl_80408E9C;
+                        p->value2C = nt;
+                        if (nt <= zero)
+                            p->active39 = 1;
+                    }
+                }
+                p++;
+            }
+            if (nearest != NULL)
+                fn_8006DCD4(str_Pickup_MKLoop, (struct PickupVec *)nearest);
+        }
+    }
+}
+
 extern f32 NuVecDot(struct PickupVec *, struct PickupVec *);
 extern void NuVecRotateX(struct PickupVec *, struct PickupVec *, u16);
 extern void NuVecRotateY(struct PickupVec *, struct PickupVec *, u16);
