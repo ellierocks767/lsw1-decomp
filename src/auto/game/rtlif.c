@@ -13,6 +13,27 @@ extern void *lbl_80409410;
 extern f32 lbl_80409A30;
 
 struct RtlV { f32 x, y, z; };
+void NuMtxTranslate(void *, struct RtlV *);
+void fn_8000DDD0(void *, u16);
+void fn_8000EFE0(void *, void *, s32 *);
+extern f32 lbl_801AEE18[];
+extern s32 lbl_803E0158[];
+
+void fn_8013F304(void *arg0) {
+    struct RtlV v;
+    s32 a;
+    s32 b;
+    v = *(struct RtlV *)((s8 *)arg0 + 0x30);
+    b = *(u16 *)((s8 *)arg0 + 0x11E);
+    a = lbl_80408E9C * lbl_801AEE18[0] + (f32)b;
+    *(u16 *)((s8 *)arg0 + 0x11E) = a;
+    fn_8000DDD0(arg0, (u16)a);
+    if (*(s32 *)((s8 *)lbl_80409410 + 0x19C) == 0xD) {
+        fn_8000EFE0(arg0, arg0, lbl_803E0158);
+    }
+    NuMtxTranslate(arg0, &v);
+}
+
 f32 NuSinApprox(s32);
 void NuVecAdd(struct RtlV *, void *, void *);
 extern f32 lbl_801AEE1C[];
