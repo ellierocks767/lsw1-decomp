@@ -1244,11 +1244,12 @@ struct AudioStreamState {
     s16 timer;
     s16 prevTrack;
     s16 pendingFlag;
-    s16 unkE;
+    s16 waitTimer;
     s16 lastChan;
     u8 pending[2];
     f32 fadeIn;
     f32 fade;
+    u8 *obj;
 };
 
 void fn_8006C9E0(s16 arg0)
@@ -1539,4 +1540,96 @@ void fn_8006C748(u32 *arg0, u32 *arg1, char *arg2)
         }
     }
     fn_8000759C(lbl_803D45B8, (s32)lbl_803D461C, 0x64);
+}
+
+void fn_8006D69C(f32 dt)
+{
+    if (dt != 0.0f) {
+        switch (((struct AudioStreamState *)lbl_801BB44C)->state) {
+        case 8:
+        case 10:
+            if (fn_80044C78(((struct AudioStreamState *)lbl_801BB44C)->chan) != 2) {
+                ((struct AudioStreamState *)lbl_801BB44C)->state = 7;
+            }
+            break;
+
+        case 5:
+        case 6:
+        case 7:
+        case 9:
+            if (((struct AudioStreamState *)lbl_801BB44C)->state == 9 ||
+                ((struct AudioStreamState *)lbl_801BB44C)->state == 6) {
+                ((struct AudioStreamState *)lbl_801BB44C)->fade += 2.0f * dt;
+            } else {
+                ((struct AudioStreamState *)lbl_801BB44C)->fade += dt * 0.2f;
+            }
+            if (((struct AudioStreamState *)lbl_801BB44C)->fade >= 1.0f) {
+                ((struct AudioStreamState *)lbl_801BB44C)->fade = 1.0f;
+                if ((u32)((u16)((struct AudioStreamState *)lbl_801BB44C)->state - 5) > 1) {
+                    fn_80044B7C(1 - ((struct AudioStreamState *)lbl_801BB44C)->chan);
+                } else {
+                    fn_80044BF4(1 - ((struct AudioStreamState *)lbl_801BB44C)->chan);
+                }
+                ((struct AudioStreamState *)lbl_801BB44C)->state = 4;
+                ((struct AudioStreamState *)lbl_801BB44C)->timer = 0;
+            }
+            {
+                s32 vol0 = (s32)(((struct AudioStreamState *)lbl_801BB44C)->fade *
+                                 (f32)((struct AudioTrackEntry *)lbl_804086DC)[((struct AudioStreamState *)lbl_801BB44C)->curTrack].fields[2] *
+                                 lbl_804086FC);
+                s32 vol1 = (s32)((1.0f - ((struct AudioStreamState *)lbl_801BB44C)->fade) *
+                                 (f32)((struct AudioTrackEntry *)lbl_804086DC)[((struct AudioStreamState *)lbl_801BB44C)->prevTrack].fields[2] *
+                                 lbl_804086FC);
+                fn_80044C30(((struct AudioStreamState *)lbl_801BB44C)->chan, vol0);
+                fn_80044C30(1 - ((struct AudioStreamState *)lbl_801BB44C)->chan, vol1);
+            }
+            break;
+
+        case 11:
+        case 12:
+        case 13:
+            if (*(u32 *)(((struct AudioStreamState *)lbl_801BB44C)->obj + 0x88) & 0x40000000) {
+                ((struct AudioStreamState *)lbl_801BB44C)->waitTimer = 0;
+            } else if (((struct AudioStreamState *)lbl_801BB44C)->waitTimer <= 63) {
+                ((struct AudioStreamState *)lbl_801BB44C)->waitTimer++;
+            }
+            if (((struct AudioStreamState *)lbl_801BB44C)->waitTimer > 8 &&
+                ((struct AudioStreamState *)lbl_801BB44C)->curTrack != -1 &&
+                ((struct AudioStreamState *)lbl_801BB44C)->state != 13 &&
+                fn_80044C78(((struct AudioStreamState *)lbl_801BB44C)->chan) != 2 &&
+                ((struct AudioStreamState *)lbl_801BB44C)->pendingFlag == 0) {
+                ((struct AudioStreamState *)lbl_801BB44C)->state = 4;
+                ((struct AudioStreamState *)lbl_801BB44C)->fade = 1.0f;
+                fn_80044B7C(1 - ((struct AudioStreamState *)lbl_801BB44C)->chan);
+                fn_80044BB8(((struct AudioStreamState *)lbl_801BB44C)->chan);
+                fn_80044C30(((struct AudioStreamState *)lbl_801BB44C)->chan,
+                            (s32)((f32)((struct AudioTrackEntry *)lbl_804086DC)[((struct AudioStreamState *)lbl_801BB44C)->curTrack].fields[2] * lbl_804086FC));
+                fn_80044D4C();
+                ((struct AudioStreamState *)lbl_801BB44C)->timer = 0;
+                ((struct AudioStreamState *)lbl_801BB44C)->unk2 = -1;
+            }
+            if (fn_80044C78(((struct AudioStreamState *)lbl_801BB44C)->lastChan) != 2) {
+                if (((struct AudioStreamState *)lbl_801BB44C)->timer <= 127) {
+                    ((struct AudioStreamState *)lbl_801BB44C)->timer++;
+                }
+                if (((struct AudioStreamState *)lbl_801BB44C)->timer > 64 &&
+                    ((struct AudioStreamState *)lbl_801BB44C)->pendingFlag != 0) {
+                    fn_8006C9E0(((struct AudioStreamState *)lbl_801BB44C)->unk2);
+                }
+            }
+            break;
+
+        case 4:
+            if (fn_80044C78(((struct AudioStreamState *)lbl_801BB44C)->lastChan) != 2) {
+                if (((struct AudioStreamState *)lbl_801BB44C)->timer <= 127) {
+                    ((struct AudioStreamState *)lbl_801BB44C)->timer++;
+                }
+                if (((struct AudioStreamState *)lbl_801BB44C)->timer > 64 &&
+                    ((struct AudioStreamState *)lbl_801BB44C)->pendingFlag != 0) {
+                    fn_8006C9E0(((struct AudioStreamState *)lbl_801BB44C)->unk2);
+                }
+            }
+            break;
+        }
+    }
 }
