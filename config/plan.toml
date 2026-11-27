@@ -2472,6 +2472,7 @@ reason = "best 170/176: 0 length diffs, only align/lbl_804083CC schedule at @40 
 [[parked]]
 function = "fn_8005BE2C"
 reason = "best 249/284 (284 vs 284 insns, permuter 1530): f28/f29 swap in quadratic roots + r6/r7 swap + unk18 max_t scheduling; next: inspect SolveQuadratic inline / focused permuter on quadratic+cmd block"
+
 [[parked]]
 function = "fn_80059C44"
 reason = "best 101/152: matched frame, grouped switch and three-word copies, but allocation setup and copied-vector scheduling diverge; next: compare direct scratch-global lvalues with scoped local aliases before retuning field stores"
