@@ -356,11 +356,15 @@ void fn_80141CD8(struct lbl_80409410_s *level)
 }
 
 struct CHRISSAVEPROGRESS_s {
-    u8 pad0[0x110];
+    u8 pad0[0x10];
+    s16 unk10[0x7F];
+    u8 pad10E[2];
     struct {
         u8 pad0[2];
         u8 superkit;
-        u8 pad3[5];
+        u8 unk3;
+        u8 unk4;
+        u8 pad5[3];
     } levels[22];
 };
 
@@ -391,4 +395,27 @@ s32 LookupRippleEffectIndex(char *name)
         }
     }
     return -1;
+}
+
+struct CHRISPROGRESSCONFIG_s {
+    u8 pad0[0x33];
+    u8 unk33;
+    u8 pad34[0x68 - 0x34];
+};
+
+extern struct CHRISPROGRESSCONFIG_s lbl_801DC074[];
+
+void DebugMenu_HandleEntry4(void)
+{
+    s32 i;
+    struct CHRISPROGRESSCONFIG_s *config = lbl_801DC074;
+
+    for (i = 0; i < 22; i++) {
+        lbl_803E0298.levels[i].unk4 = config->unk33;
+        lbl_803E0298.levels[i].unk3 = 1;
+        config++;
+    }
+    for (i = 0x7E; i >= 0; i--) {
+        lbl_803E0298.unk10[i] = -1;
+    }
 }
