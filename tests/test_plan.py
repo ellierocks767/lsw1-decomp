@@ -261,6 +261,20 @@ class ClaimTests(unittest.TestCase):
         old = now + (plan.FINISHED_HOURS + 1) * 3600
         self.assertIn("finished", plan.read_records(self.root, {"t3/work"}, now=old)[0]["stale"])
 
+    def test_local_targets_prefer_fresh_claim_after_finishing_an_item(self):
+        plan.claim("core", root=self.root)
+        plan.finish_claims(self.root)
+        plan.claim("hub", root=self.root)
+
+        cl = plan.claims(self.state, remote=False, root=self.root, branches={}, sprints=set())
+        self.assertEqual(plan.next_item(self.state, cl)["item"]["id"], "hub")
+
+        other = Path(self.tmp.name) / "other"
+        self.git("worktree", "add", "-q", "-b", "t3/other", str(other))
+        cl = plan.claims(self.state, remote=False, root=other, branches={}, sprints=set())
+        self.assertTrue(plan.taken(cl, "core"))
+        self.assertTrue(plan.taken(cl, "hub"))
+
     def test_plan_branches_and_legacy_sprints_claim(self):
         cl = plan.claims(self.state, root=self.root, records=[], branches={"core": "branch or PR"},
                          sprints={"c"})
