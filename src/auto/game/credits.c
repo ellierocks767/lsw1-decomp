@@ -257,3 +257,17 @@ void LoadPARTFile(void *arg0) {
         (*(s32 *)((s8 *)(arg0) + (0x1BC))) = fn_80109550(arg0 + 0x184, arg0 + 0x188, 0x40, 6, lbl_801DEB0C, (*(s32 *)((s8 *)(arg0) + (0x5E4))));
     }
 }
+
+s32 NewRumble(s32, f32);
+s32 fn_8006DCD4(s32 *, void *);
+s32 fn_8009595C(s32, s32, f32, f32, f32);
+s32 fn_800AC058(s32, s32);
+extern s32 lbl_801AA118[];
+extern f32 lbl_801AA144[];
+
+void AddWaterSplash(void *arg0, void *arg1) {
+    fn_8009595C((*(s32 *)((s8 *)(lbl_80409410) + (0x1B8))), 0xB, (*(f32 *)((s8 *)(arg1) + (0))), (*(f32 *)((s8 *)(arg0) + (0x224))), (*(f32 *)((s8 *)(arg1) + (8))));
+    fn_8006DCD4(lbl_801AA118, arg0 + 0x90);
+    NewRumble(*(s32 *)(*(s32 **)((s8 *)((*(void **)((s8 *)(arg0) + (0xEEC)))) + (0x61C))), lbl_801AA144[0]);
+    fn_800AC058(*(s32 *)(*(s32 **)((s8 *)((*(void **)((s8 *)(arg0) + (0xEEC)))) + (0x61C))), 1);
+}
