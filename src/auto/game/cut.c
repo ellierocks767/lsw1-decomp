@@ -1516,3 +1516,24 @@ void fn_8011C05C(f32 value)
     controller->value28 = magnitude;
     controller->flags |= 0x800;
 }
+
+typedef struct gcut_instance_view gcut_instance_view;
+void fn_8003AD00(gcut_instance_view *);
+
+typedef struct CutSceneInstanceSlot {
+    gcut_instance_view *instance;
+    u8 pad04[0x14];
+} CutSceneInstanceSlot;
+
+void fn_8011EC3C(u8 *scene) {
+    CutSceneInstanceSlot *slot = (CutSceneInstanceSlot *)(scene + 0x650);
+    s32 remaining = 8;
+
+    do {
+        gcut_instance_view *instance = slot->instance;
+        slot++;
+        if (instance != NULL) {
+            fn_8003AD00(instance);
+        }
+    } while (--remaining != 0);
+}
