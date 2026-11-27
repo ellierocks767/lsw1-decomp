@@ -73,8 +73,11 @@ struct lbl_80409410_s {
     struct NUTURRET_s *turrets;
     u8 pad57C[0x1974 - 0x57C];
     struct nugspline_s *unk1974;  /* fn_800CCDE4 family */
-    u8 pad1978[0xC];
+    u8 pad1978[8];
+    s32 unk1980; /* fn_80146018 selects space-level state */
     struct CHRISLEVELDATA_s *unk1984; /* fn_80145F18 and ProcessSpaceLevel */
+    u8 pad1988[4];
+    void *unk198C; /* fn_80146018 allocates space-level state */
 };
 
 extern struct lbl_80409410_s *lbl_80409410;

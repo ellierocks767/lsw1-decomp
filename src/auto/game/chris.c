@@ -109,6 +109,7 @@ struct CHRISLEVELDATA_s {
     f32 field63728;
     f32 target;
     f32 current;
+    s32 field63734;
 };
 
 
@@ -672,4 +673,50 @@ void fn_801435B8(struct CHRISFIGHTER_s *fighter, struct nuvec_s *direction,
         bank *= 2.0f - weight;
     }
     fn_8000E608(&fighter->transform, -(s16)bank);
+}
+
+extern char str_SourceFile_Chris[];
+extern char str_Assert_ChrisSLevel_OutOfMem[];
+extern void (*fn_80009948(char *, s32))(char *, ...);
+
+static __inline__ void *AllocSpaceState(void **cursor, void **end, u32 size)
+{
+    u32 start = ((u32)*cursor + 15) & ~15u;
+    *cursor = (void *)(start + size);
+    if ((u32)*cursor > (u32)*end) {
+        fn_80009948(str_SourceFile_Chris, 0x122B)(str_Assert_ChrisSLevel_OutOfMem);
+    }
+    return (void *)start;
+}
+
+void fn_80146018(struct lbl_80409410_s *level)
+{
+    struct CHRISLEVELDATA_s *data;
+    f32 entry;
+
+    level->unk1980 = 1;
+    switch (level->unk198) {
+    case 0x56:
+        data = AllocSpaceState(&level->creditBuffer, &level->creditBufferEnd, 0x63F40);
+        level->unk1984 = data;
+        data->buffer.entries = (u8 *)data + 0x5D6D0;
+        data->buffer.capacity = 0x100;
+        level->unk1984->field63728 = 1.0f;
+        if (level->unk198 == 0x56) {
+            entry = level->unk2DC[0]->field6C;
+            if (entry != 0.0f) {
+                level->unk1984->field63728 = entry / 11.0f;
+            }
+        }
+        level->unk1984->field63734 = 0;
+        break;
+    case 0x1B:
+    case 0x1C:
+    case 0x1D:
+        level->unk198C = AllocSpaceState(&level->creditBuffer, &level->creditBufferEnd, 0xB020);
+        break;
+    default:
+        level->unk1980 = 0;
+        break;
+    }
 }
