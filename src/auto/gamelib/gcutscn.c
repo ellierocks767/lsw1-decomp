@@ -1629,3 +1629,61 @@ void fn_8003E0B4(gcut_instance_view* instance, f32 frame, s32 skip)
         }
     }
 }
+
+extern char* NuStrCpy(char*, char*);
+extern char* NuStrStr(char*, char*);
+extern s32 fn_8003A244(char*, s32*, s32*, s32);
+extern char lbl_801931F4[];
+extern char lbl_801931F8[];
+extern char lbl_80193224[];
+extern char lbl_80193248[];
+extern char lbl_80193268[];
+extern s32 lbl_804081F8;
+void fn_8003B5F8(void)
+{
+    char name[256];
+    char suffix[8];
+    s32 data;
+    s32 end;
+    s32 value;
+    char* p;
+    u8* inst;
+    s32 tens;
+    s32 ones;
+    if (lbl_804081A8 && !(value = lbl_804081F8)) {
+        NuStrCpy(name, (char*)((s32*)((gcut_instance_view*)lbl_804081A8)->scene)[11]);
+        p = NuStrStr(name, lbl_801931F4);
+        NuStrCpy(suffix, p);
+        tens = (*((volatile u8*)lbl_804081A8 + 0xdf) + 1) / 10;
+        ones = (*((volatile u8*)lbl_804081A8 + 0xdf) + 1) % 10;
+        if (tens) {
+            *p = tens + '0';
+            p++;
+        }
+        *p = ones + '0';
+        NuStrCpy(p + 1, suffix);
+        inst = (u8*)lbl_804081A8;
+        data = *(s32*)(inst + 0xe4);
+        *(s32*)(inst + 0xe4) = value;
+        if (!data) {
+            fn_80009984(lbl_8019308C, 0x84a)(lbl_804081B4, lbl_801931F8, name);
+            return;
+        }
+        inst[0x8c] |= 1;
+        end = data + ((s32*)((gcut_instance_view*)lbl_804081A8)->scene)[15];
+        fn_80009970(lbl_8019308C, 0x855)(lbl_80193224, name, data);
+        fn_80009984(lbl_8019308C, 0x857)(lbl_804081B4, lbl_80193248, name);
+        fn_8003A244(name, &data, &end, 1);
+        fn_80009984(lbl_8019308C, 0x859)(lbl_804081B4, lbl_80193268, name);
+        *((u8*)lbl_804081A8 + 0x8b) |= 0x10;
+        if (*((u8*)lbl_804081A8 + 0xdf) == 0 && (((s32*)((gcut_instance_view*)lbl_804081A8)->scene)[14] & 0x10000000)) {
+            fn_80040974((gcut_instance_view*)lbl_804081A8, 1);
+            copyAnims((s32*)((gcut_instance_view*)lbl_804081A8)->scene, (s32*)((s32*)((volatile gcut_instance_view*)lbl_804081A8)->scene)[13]);
+            ((s32*)((gcut_instance_view*)lbl_804081A8)->scene)[14] &= ~0x10000000;
+            *((u8*)lbl_804081A8 + 0x8b) &= ~0x10;
+            *((u8*)lbl_804081A8 + 0xdf) = 1;
+        }
+        *((u8*)lbl_804081A8 + 0x8c) &= ~1;
+        lbl_804081A8 = 0;
+    }
+}
