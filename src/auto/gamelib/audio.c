@@ -139,7 +139,17 @@ void fn_8006E094(void)
 }
 
 /* 0x40-byte sound table entry: `next` chains a name-hash bucket (PauseMenu_HandleEntry1). */
-struct AudioNameEntry { const char* name; u8 pad4[0xc]; s16 next; u8 pad12[2]; s16 linked; u8 rest[0x2a]; };
+struct AudioNameEntry {
+    const char *name;
+    signed int bankBit : 15;
+    unsigned int flag16 : 1;
+    unsigned int : 16;
+    u8 pad8[8];
+    s16 next;
+    u8 pad12[2];
+    s16 linked;
+    u8 rest[0x2a];
+};
 extern struct AudioNameEntry lbl_803B6E04[];
 extern char lbl_8019854C[], lbl_8019857C[];
 extern void (*fn_80009970(char*, s32))();
@@ -655,4 +665,11 @@ void fn_8006C65C(char *name)
     if (!lbl_804086E8)
         NuSoundSetRequestTable((s32)mask, 0x32);
     fn_80044D4C();
+}
+
+s32 fn_8006DEB8(s32 id)
+{
+    if (id != -1)
+        return lbl_803B6E04[id].flag16;
+    return -1;
 }
