@@ -501,6 +501,53 @@ void fn_80066328(void)
     }
 }
 
+void fn_800663F0(s32 index)
+{
+    s32 i;
+
+    if (lbl_80399D40[index] != 0)
+        lbl_80399D40[index] = 0;
+    for (i = 0; i < 64; i++) {
+        if (lbl_8038E840[i].group == index) {
+            lbl_8038E840[i].id = -1;
+            lbl_8040846C--;
+        }
+    }
+    lbl_80399D8C[index] = 0;
+    lbl_80399D60[index] = 0;
+}
+
+struct AudioInstEntry {
+    u8 pad0[0xb4];
+    const char *name;
+    u8 padB8[0xd0 - 0xb8];
+};
+
+struct AudioInstList {
+    u8 pad0[0x6c];
+    s32 count;
+    struct AudioInstEntry *entries;
+};
+
+struct AudioInstOwner {
+    u8 pad0[0x1a0];
+    struct AudioInstList *list;
+};
+
+s32 fn_80066498(const char *name, struct AudioInstOwner *owner)
+{
+    s32 i;
+    char pad[16];
+
+    if (owner != NULL) {
+        for (i = 0; i < owner->list->count; i++) {
+            if (fn_800076E4(owner->list->entries[i].name, name, 0x13) == 0)
+                return i;
+        }
+    }
+    return -1;
+}
+
 extern char *strcpy(char *, const char *);
 
 void fn_80068CB8(s32 index, s32 i)
