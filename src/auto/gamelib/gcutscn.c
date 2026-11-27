@@ -2191,3 +2191,142 @@ void NuAnimDataFixPtrs(gcut_instance_view* instance)
         }
     }
 }
+
+extern s32 NuFileLoadBuffer(char* name, s32 buf, s32 size);
+extern s32 NuStrLen(char*);
+extern char lbl_801930BC[];
+extern char lbl_801930E4[];
+extern s32 lbl_80408178;
+s32 fn_8003A244(char* name, s32* bufp, s32* endp, s32 noAlloc)
+{
+    s32 buf;
+    s32 size;
+    s32* scene;
+    s32 animDelta;
+    s32 base;
+    s32 str;
+    s32 end;
+
+    buf = *bufp;
+    end = *endp;
+    *bufp = (buf + 15) & ~15;
+    size = NuFileLoadBuffer(name, *bufp, end - buf);
+    if (size == 0) {
+        return 0;
+    }
+    scene = (s32*)*bufp;
+    if (scene[0] == 10) {
+        scene[1] = (s32)scene - scene[1];
+        animDelta = scene[10] = (s32)scene - scene[10];
+        if (!(scene[14] & 0x10000000)) {
+            scene[3] = scene[3] ? scene[3] + scene[1] : 0;
+            if (scene[4]) NuGCutCamsSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[7]) NuGCutLocatorSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[5]) NuGCutRigidSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[6]) NuGCutCharSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[9]) NuGCutTriggerSysFixPtrs(scene, scene[1]);
+            scene[8] = scene[8] ? scene[8] + scene[1] : 0;
+            if (scene[14] < 0 && noAlloc == 0) {
+                base = *bufp + scene[19];
+                scene[12] = (base + 15) & ~15;
+                { s32 t = scene[12] + 0x400; base = t + scene[15]; }
+                if (lbl_80408178 == 0) {
+                    scene[13] = (base + 15) & ~15;
+                    { s32 t = scene[13] + 0x400; base = t + scene[15]; }
+                }
+                *bufp = base;
+                size = NuStrLen(name);
+                str = *bufp;
+                {
+                    s32 t = str + 4;
+                    *bufp = t + size;
+                }
+                NuStrCpy((char*)str, name);
+                scene[11] = str;
+            } else {
+                *bufp += size;
+            }
+        } else {
+            scene[3] = scene[3] ? scene[3] + scene[1] : 0;
+            if (scene[4]) NuGCutCamsSysFixPtrs(scene, scene[1], 0);
+            if (scene[7]) NuGCutLocatorSysFixPtrs(scene, scene[1], 0);
+            if (scene[5]) NuGCutRigidSysFixPtrs(scene, scene[1], 0);
+            if (scene[6]) NuGCutCharSysFixPtrs(scene, scene[1], 0);
+            if (scene[9]) NuGCutTriggerSysFixPtrs(scene, scene[1]);
+            scene[8] = scene[8] ? scene[8] + scene[1] : 0;
+            *bufp += size;
+        }
+        if ((u32)*bufp > (u32)*endp) {
+            fn_80009948(lbl_8019308C, 0x41c)(lbl_801930BC, name, *bufp - *endp);
+            return (s32)scene;
+        }
+    } else {
+        if (scene[0] > 2) {
+            fn_80009948(lbl_8019308C, 0x428)(lbl_801930E4, name, scene[0]);
+        }
+        scene[1] = (s32)scene - scene[1];
+        if (scene[0] > 1) {
+            animDelta = scene[10] = (s32)scene - scene[10];
+        } else {
+            animDelta = scene[1];
+        }
+        if (scene[0] <= 1 || !(scene[14] & 0x10000000)) {
+            scene[3] = scene[3] ? scene[3] + scene[1] : 0;
+            if (scene[4]) NuGCutCamsSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[7]) NuGCutLocatorSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[5]) NuGCutRigidSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[6]) NuGCutCharSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[9]) NuGCutTriggerSysFixPtrs(scene, scene[1]);
+            scene[8] = scene[8] ? scene[8] + scene[1] : 0;
+            if (scene[0] > 1 && scene[14] < 0 && noAlloc == 0) {
+                base = 0;
+                if (scene[4] && ((s32*)scene[4])[2]) {
+                    base = ((s32*)scene[4])[2];
+                } else if (scene[5] && (*(s32**)scene[5])[19]) {
+                    base = (*(s32**)scene[5])[19];
+                } else if (scene[6]) {
+                    s32* chr = *(s32**)scene[6];
+                    if (chr[17]) {
+                        base = chr[17];
+                    } else if (chr[18]) {
+                        base = chr[18];
+                    }
+                }
+                if (scene[19]) {
+                    base = *bufp + scene[19];
+                }
+                scene[12] = (base + 15) & ~15;
+                { s32 t = scene[12] + 0x400; base = t + scene[15]; }
+                if (lbl_80408178 == 0) {
+                    scene[13] = (base + 15) & ~15;
+                    { s32 t = scene[13] + 0x400; base = t + scene[15]; }
+                }
+                *bufp = base;
+                size = NuStrLen(name);
+                str = *bufp;
+                {
+                    s32 t = str + 4;
+                    *bufp = t + size;
+                }
+                NuStrCpy((char*)str, name);
+                scene[11] = str;
+            } else {
+                *bufp += size;
+            }
+        } else {
+            scene[3] = scene[3] ? scene[3] + scene[1] : 0;
+            if (scene[4]) NuGCutCamsSysFixPtrs(scene, scene[1], 0);
+            if (scene[7]) NuGCutLocatorSysFixPtrs(scene, scene[1], 0);
+            if (scene[5]) NuGCutRigidSysFixPtrs(scene, scene[1], 0);
+            if (scene[6]) NuGCutCharSysFixPtrs(scene, scene[1], 0);
+            if (scene[9]) NuGCutTriggerSysFixPtrs(scene, scene[1]);
+            scene[8] = scene[8] ? scene[8] + scene[1] : 0;
+            *bufp += size;
+        }
+        if ((u32)*bufp > (u32)*endp) {
+            fn_80009948(lbl_8019308C, 0x47f)(lbl_801930BC, name, *bufp - *endp);
+            return (s32)scene;
+        }
+    }
+    return (s32)scene;
+}
