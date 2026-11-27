@@ -2712,3 +2712,19 @@ reason = "best 118/126: loop-bound lwz order, 0x20c store vs lwz sched, 454/mull
 [[parked]]
 function = "fn_800A5A3C"
 reason = "best 104/138: 0xFFFF const CSE'd/buf base kept in reg, cr save, extsh/lha on s16 compare, frame +8; next: restructure sel loop (goto loop form), permuter on best.c"
+
+[[parked]]
+function = "ProcessSpaceLevel"
+reason = "best 100/174: extra floating-point save and different fighter-slot traversal; next: isolate zero comparison load and keep indexed enabled-field and base-fighter cursors independent"
+
+[[parked]]
+function = "fn_801451A4"
+reason = "best 136/163: threshold branches and fighter initialization schedule differ; next: recover scale constant lifetimes and isolate the indexed wing and counted inner loops"
+
+[[parked]]
+function = "fn_8014165C"
+reason = "best 71/97: the 12-byte position copy and byte progress increment still differ in scheduling; next: recover why both stack vectors stay addressable across construction and reproduce the indexed progress store as an 8-bit update"
+
+[[parked]]
+function = "fn_801417E0"
+reason = "best 90/94: both scale coefficients load directly into f4 instead of their separate retail temporaries; next: find the source expression or call argument lifetime that keeps each input coefficient separate from the computed scale"

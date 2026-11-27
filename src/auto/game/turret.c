@@ -8,7 +8,6 @@ extern char str_Assert_Turret_OutOfMemory[];
 s32 fn_800716B0(s32);
 s32 fn_80071720(s32, s32, s32, s32, s32, f32);
 extern f32 lbl_801AEF54[];
-extern void *lbl_80409410;
 void fn_8002D9E8(void*, void*, void*, void*, void*, void*);
 void fn_8002DAD0(void*);
 void fn_8002DB1C(f32*);
@@ -151,7 +150,7 @@ void fn_80140504(s32 a, char *self, s32 b, s32 idx) {
     }
 }
 
-struct NUTURRET_s* CreateTurretSys(char** cursor, char** end, u32 value)
+struct NUTURRET_s* CreateTurretSys(char** cursor, char** end, struct nugscn_s* scene)
 {
     struct NUTURRET_s* turret;
     *cursor = (char*)(((u32)*cursor + 3) & ~3);
@@ -163,7 +162,7 @@ struct NUTURRET_s* CreateTurretSys(char** cursor, char** end, u32 value)
     *cursor += sizeof(*turret);
     if (turret != NULL) {
         memset(turret, 0, sizeof(*turret));
-        turret->valueF04 = value;
+        turret->scene = scene;
     }
     return turret;
 }
