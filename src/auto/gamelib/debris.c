@@ -590,6 +590,43 @@ void fn_80063E64(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     }
 }
 
+extern const f32 lbl_80195724[];
+
+struct deb_effect_kind {
+    u8 unk00[0x2E];
+    s8 kind;
+};
+
+void fn_8006436C(s32 effect, s32 arg1, s32 arg2, s32 arg3, s32 arg4, f32 value)
+{
+    struct nuvec_s offset;
+    struct nuvec_s *offsetPtr = &offset;
+    struct deb_effect_kind *definition;
+    s32 amount;
+
+    offset.z = lbl_80195724[0];
+    offset.y = lbl_80195724[0];
+    offset.x = lbl_80195724[0];
+    if (effect >= 0 && (definition = ((struct deb_effect_kind **)lbl_804083FC)[effect]) != NULL) {
+        switch (definition->kind) {
+        case 2:
+            amount = 50000;
+            break;
+        case 3:
+            amount = 40000;
+            break;
+        case 7:
+            amount = 20000;
+            break;
+        case 0:
+        default:
+            amount = 30000;
+            break;
+        }
+        fn_8005F254(effect, arg1, (s32)offsetPtr, arg2, arg3, arg4, amount, 0, value);
+    }
+}
+
 s32 fn_8005DA6C(void *);
 
 void fn_80064424(s8 *arg0, s32 arg1) {
