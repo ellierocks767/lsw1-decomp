@@ -621,3 +621,48 @@ s32 fn_80056A38(u8 *flags)
     }
     return 1;
 }
+
+extern void (*fn_80009948(char *file, s32 line))(char *, ...);
+extern char lbl_80194C94[];
+extern char lbl_80194D84[];
+extern u8 *lbl_804083A0;
+extern u8 *lbl_804083A4;
+extern u8 *lbl_8040A5F0;
+extern u8 *lbl_8040A5B4;
+
+void fn_8005A338(u8 **cursor, u8 **limit)
+{
+    u8 *end = *limit;
+    u8 *secondStart;
+    u8 *thirdStart;
+    u8 *regionEnd;
+    u8 *fourthStart;
+    u8 *previous;
+
+    if (lbl_804083A0 == NULL) {
+        lbl_804083A0 = *cursor;
+    }
+    previous = lbl_804083A4;
+    secondStart = *cursor + 0xC800;
+    *cursor = secondStart;
+    if (previous == NULL) {
+        lbl_804083A4 = secondStart;
+    }
+    previous = lbl_8040A5F0;
+    thirdStart = secondStart + 0xC800;
+    *cursor = thirdStart;
+    if (previous == NULL) {
+        lbl_8040A5F0 = thirdStart;
+    }
+    previous = lbl_8040A5B4;
+    fourthStart = thirdStart + 0x2000;
+    *cursor = fourthStart;
+    if (previous == NULL) {
+        lbl_8040A5B4 = fourthStart;
+    }
+    regionEnd = fourthStart + 0x600;
+    *cursor = regionEnd;
+    if (regionEnd > end) {
+        fn_80009948(lbl_80194C94, 0x665)(lbl_80194D84);
+    }
+}
