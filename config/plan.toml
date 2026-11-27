@@ -2700,3 +2700,15 @@ reason = "best 15/54: mismatch, target computes -align twice (no CSE) with size 
 [[parked]]
 function = "fn_800A45BC"
 reason = "best 70/100: regalloc/loop-hoist only (count-indexed stbx operand order idx,base; n in r31; lbl_8040B03C/AFBC bases not fully hoisted); structure matches (u32 bitfield for 0x20C bit 24, direct bool store to B03C, if/else AFBC); best body work/fn_800A45BC/best_70.c; next: permuter burst or test index typing/array-of-struct forms"
+
+[[parked]]
+function = "InitPlayerShadow"
+reason = "best 99/104: stfs f1 0x220 sched after lis, FB2C lfs/li order in else, tail FB34 reload; next: permuter on best.c"
+
+[[parked]]
+function = "ResetAICreatures"
+reason = "best 118/126: loop-bound lwz order, 0x20c store vs lwz sched, 454/mulli order; next: permuter on best.c"
+
+[[parked]]
+function = "fn_800A5A3C"
+reason = "best 104/138: 0xFFFF const CSE'd/buf base kept in reg, cr save, extsh/lha on s16 compare, frame +8; next: restructure sel loop (goto loop form), permuter on best.c"
