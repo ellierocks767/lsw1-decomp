@@ -2608,3 +2608,15 @@ reason = "draft 79/208 not hand-attempted (time limit spent on fn_8013EA90); nex
 [[parked]]
 function = "fn_8013C620"
 reason = "code 51/51 but MATCH (unverified references): 0.0f literal is address-taken (lis/addi r30, lfs 0(r30)) so strict check cannot compare it to lbl_801AEC5C; extern lbl_801AEC5C[] form scores 30/51; next: a const/static rodata form that keeps the address hoist and names the symbol"
+
+[[parked]]
+function = "fn_8004A6A4"
+reason = "best 235/290: arg regs r26/r24/r25/r28/r27 vs target r25/r27/r24/r26/r28, work/samples temps copy (mr r4,r3), arg-move scheduling around 0x3b8 store; next: permuter run with struct-field layout variants"
+
+[[parked]]
+function = "fn_8004F6B8"
+reason = "best 158/306: arg float reg order (f27/f26 swap) and li r0,1 placement after fcmpu in the 14 side tests; next: model as inline helper/macro per axis case or permuter run"
+
+[[parked]]
+function = "fn_8004D600"
+reason = "best 184/359 (sweep; raw draft 116/359): large m2c draft needs struct-typed rewrite of three float-bounds blocks and the remap loop, frame size 0x50 vs 0x40 mismatch; next: rewrite with terrainhdr_s/TerrainIndexedEntry fields, then permuter"
