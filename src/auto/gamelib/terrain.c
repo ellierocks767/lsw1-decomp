@@ -659,3 +659,31 @@ HVQM4VideoNode* HVQM4BufvGetFree(HVQM4VideoQueue* queue)
     OSRestoreInterrupts(interrupts);
     return result;
 }
+
+s32 fn_8004BC1C(HVQM4DvdStream* stream)
+{
+    s32 status;
+    void (*onStatusChange)(s32, s32, s32);
+    /* The first poll uses the incoming argument register. Reload it on repeat polls. */
+    register const void* commandBlock asm("r3") = stream->fileInfo;
+
+    for (;;) {
+        status = DVDGetCommandBlockStatus(commandBlock);
+        if (status != stream->driveStatus) {
+            onStatusChange = stream->onStatusChange;
+            stream->driveStatus = status;
+            if (onStatusChange != NULL) {
+                onStatusChange(stream->callbackArg0, stream->callbackArg1, status);
+            }
+        }
+        if (stream->result != 0) {
+            break;
+        }
+        commandBlock = stream->fileInfo;
+    }
+
+    DVDClose(stream->fileInfo);
+    fn_80049A10(stream->buffer);
+    fn_80049A10(stream);
+    return lbl_80408388 == 0;
+}
