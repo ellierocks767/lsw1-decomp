@@ -1144,3 +1144,23 @@ void Shop_InitExtras(void) {
         NuSpecialFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), &lbl_804021DC[i], buf, 1);
     }
 }
+
+typedef struct SplineKnots { u8 pad[0x400]; s32 n; u8 pad2[0xc]; f32 len; f32 knots[1]; } SplineKnots;
+s32 CalcSplinePoint(void *, f32);
+void fn_80146B8C(SplineKnots *s, f32 t) {
+    s32 i;
+    f32 lo;
+    if (t >= s->len) {
+        t = 1.0f;
+    } else {
+        for (i = 0; i < s->n; i++) {
+            if (t < s->knots[i]) {
+                if (i == 0) lo = 0.0f; else lo = s->knots[i - 1];
+                t = (t - lo) / (s->knots[i] - lo);
+                t = ((f32)i + t) / (f32)s->n;
+                break;
+            }
+        }
+    }
+    CalcSplinePoint(s, t);
+}
