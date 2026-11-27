@@ -2537,6 +2537,3 @@ reason = "best 178/294: six &dir/&col local addresses CSE'd into r20-r24 (target
 function = "fn_8013D7E0"
 reason = "best 113/135: loop-invariant hoist set differs (target hoists D8,15FC,&sp18,&sp1C,DC,E0,8034 not D4); next: force D4 unhoisted / permuter"
 
-[[parked]]
-function = "fn_8013E4DC"
-reason = "best 258/263: kind3E copy order (lbz r9; mr r11,r9; extsb vs lbz r11; extsb r9,r11) and flags38 reg r10 copy; next: permuter burst"

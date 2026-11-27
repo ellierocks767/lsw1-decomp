@@ -592,7 +592,7 @@ void fn_8013E4DC(struct PickupLoopPool *pool, struct NUPICKUP_s *first, s32 coun
     u8 fl2;
     s32 ownerSound;
     u8 kind;
-    u8 fl;
+    u32 fl;
     if (pool->state710 == 0) {
         best = lbl_801AED64[0];
         p = first;
@@ -609,8 +609,8 @@ void fn_8013E4DC(struct PickupLoopPool *pool, struct NUPICKUP_s *first, s32 coun
                         v.z = ((struct PickupVec *)p)->z;
                         fn_8013F050((s32)&v);
                     }
-                    kind = p->kind3E;
-                    if (!(lbl_801E15E8[(s8)kind].flags & 1) || p->kind36 == -1 || lbl_803EAF84[p->kind36] != 0) {
+                    if (!(lbl_801E15E8[p->kind3E].flags & 1) || p->kind36 == -1 || lbl_803EAF84[p->kind36] != 0) {
+                        kind = p->kind3E;
                         if (kind == 2) {
                             sound = ownerSound;
                             vol = lbl_80409A30 * lbl_801AED74[0];
