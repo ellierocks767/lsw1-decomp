@@ -1027,11 +1027,13 @@ s32 fn_8013EDCC(void)
     {
         s32 t;
         s32 gd = gDifficulty[0];
-        if ((u32)gd > 5U)
-            t = a + 9;
-        else
+        if ((u32)gd <= 5U) {
             t = a + 8;
-        a = t - gd;
+            a = t - gd;
+        } else {
+            t = a + 9;
+            a = t - gd;
+        }
     }
     if (a > b)
         a = b;
@@ -1043,10 +1045,7 @@ s32 fn_8013EDCC(void)
         a *= 3;
     if (b != 0) {
         s32 r = fn_800B9ED4();
-        if (lbl_8040AFB8 != 0) {
-            if (r < (a << 14) / b)
-                return 1;
-        } else if (r < (a << 16) / b)
+        if (lbl_8040AFB8 != 0 ? r < (a << 14) / b : r < (a << 16) / b)
             return 1;
     }
     return 0;

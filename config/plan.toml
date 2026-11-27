@@ -2514,9 +2514,6 @@ reason = "best 523/1224: scratch copies and triangle normal aggregate writebacks
 function = "fn_8013C620"
 reason = "best 41/51: target keeps i in r11 and hoists lfs of value into the j-loop preheader; moving value/v into the if added a saved register; next: permuter run"
 
-[[parked]]
-function = "fn_8013EDCC"
-reason = "best 77/91: remaining diff is the gDifficulty add/subf (target: lbz r9; addi r0,r31,8|9; subf r31,r9,r0) and register assignment; next: permuter run"
 
 [[parked]]
 function = "fn_8013C8E8"
