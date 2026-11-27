@@ -555,7 +555,7 @@ void fn_8009D23C(void) {
 
 void OSSendMessage(void *, void *, s32);
 void OSWaitSemaphore(void *);
-void memcpy();
+void *memcpy();
 extern s32 lbl_802D5D94[];
 extern s32 lbl_80408E7C;
 extern s32 lbl_80408E80;
@@ -1384,4 +1384,45 @@ s32 fn_8009ED84(s32 arg0)
         }
     }
     return res;
+}
+
+struct main_load_req_s {
+    s32 *arg1;
+    s32 val;
+    char path[0x200];
+};
+
+static inline void *main_enqueue_msg(s32 arg0, s32 arg1, void *src, s32 len)
+{
+    NetMsg *m;
+    void *tok;
+
+    OSWaitSemaphore(lbl_802D5D48);
+    m = &((NetMsg *)lbl_802D5D94)[lbl_80408E7C];
+    tok = (void *)lbl_802D5D54[lbl_80408E7C];
+    lbl_80408E80++;
+    if (++lbl_80408E7C > 15) {
+        lbl_80408E7C = 0;
+    }
+    m->a = arg0;
+    m->b = arg1;
+    m->flags &= 0x3FFFFFFF;
+    if (src != NULL && len != 0) {
+        memcpy(m->data, src, len);
+    }
+    OSSendMessage(lbl_802D5D28, tok, 0);
+    return tok;
+}
+
+s32 fn_8009D320(char *arg0, s32 *arg1, s32 *arg2)
+{
+    struct main_load_req_s req;
+    s32 val = *arg2;
+
+    NuStrCpy(req.path, arg0);
+    req.arg1 = arg1;
+    req.val = val;
+    lbl_80408E84++;
+    main_enqueue_msg((s32)fn_8009D504, (s32)fn_8009D540, &req, sizeof(req));
+    return *arg1;
 }
