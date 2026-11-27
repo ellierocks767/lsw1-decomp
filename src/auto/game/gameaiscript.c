@@ -727,7 +727,9 @@ struct gameaiscript_f24_s {
     u32 buttonMash : 1; /* Action_AttackButtonMash */
     u32 unk6 : 2;
     u32 canAttack : 1; /* Action_CanAttack */
-    u32 unk9 : 14;
+    u32 unk9 : 11;
+    u32 predictive : 1;
+    u32 unk15 : 2;
     u32 respawn : 1;
     u32 respawnAtOrigin : 1;
     u32 unk19 : 3;
@@ -6097,5 +6099,91 @@ s32 Action_AttackOpponent(void *sys, void *process, struct gameaiscript_packet_s
         }
     }
 done:
+    return 0;
+}
+
+extern s32 NuSpecialFindMulti(void *, void *, char *, s32, s32);
+extern f32 lbl_804099E8;
+extern char str_ScriptParam_FireInterval[];
+extern char str_ScriptTarget_Nearest[];
+extern char str_ScriptBehavior_Predictive[];
+
+s32 Action_EngageObject(void *sys, void *process, struct gameaiscript_packet_s *packet,
+    char **params, s32 count, s32 firstTime, f32 time)
+{
+    struct gameaiscript_vec_s delta;
+    struct gameaiscript_special_s specials[50];
+    struct gameaiscript_special_s special;
+    u8 *pk = (u8 *)packet;
+    u8 *object;
+    s32 nearest = 0;
+    char *name = 0;
+    s32 i;
+    s32 index;
+    char *value;
+    f32 bestDistance;
+    f32 distance;
+    s32 found;
+    struct gameaiscript_vec_s *position;
+    f32 interval;
+    f32 random;
+    struct gameaiscript_vec_s *target;
+
+    if (packet == 0 || packet->owner == 0 || (object = packet->owner->object) == 0)
+        return 1;
+    if (firstTime != 0) {
+        f32 range = lbl_804099E8;
+        f32 initialInterval = lbl_804099EC;
+        *(f32 *)(pk + 0x134) = range;
+        *(f32 *)(pk + 0xbc) = initialInterval;
+        for (i = 0; i < count; i++) {
+            if ((value = NuStrIStr(params[i], str_ScriptParam_Name)) != 0)
+                name = value + 5;
+            else if ((value = NuStrIStr(params[i], str_ScriptParam_FireInterval)) != 0)
+                *(f32 *)(pk + 0xbc) = AIParamToFloat(packet, value + 13);
+            else if (NuStrIStr(params[i], str_ScriptTarget_Nearest) != 0)
+                nearest = 1;
+            else if (NuStrIStr(params[i], str_ScriptBehavior_Predictive) != 0)
+                pk[0xb2] = 1;
+        }
+        *(f32 *)((u8 *)process + 0x40) = *(f32 *)(pk + 0xbc) * fn_8000C038();
+        if (name != 0) {
+            if (nearest != 0) {
+                found = NuSpecialFindMulti(*(void **)((u8 *)lbl_80409410 + 0x1c0), specials, name, 50, 0);
+                if (found != 0) {
+                    bestDistance = 3.4028235e38f;
+                    for (index = 0; index < found; index++) {
+                        position = fn_80013380(&specials[index]);
+                        distance = fn_8000CD08((u8 *)packet->owner + 0x6c, position, &delta);
+                        if (distance < bestDistance) {
+                            *(struct gameaiscript_vec_s **)(pk + 0xb4) = position;
+                            bestDistance = distance;
+                        }
+                    }
+                }
+            } else if (NuSpecialFind(*(void **)((u8 *)lbl_80409410 + 0x1c0), &special, name, 1) != 0) {
+                *(void **)(pk + 0xb4) = fn_80013380(&special);
+            }
+        }
+        if (*(void **)(pk + 0xb4) == 0)
+            return 0;
+        *(u32 *)(object + 0xf24) |= 0x1000;
+        *(f32 *)(*(u8 **)(object + 0xeec) + 0x6e0) = fn_8000C038() * *(f32 *)(pk + 0xbc);
+    }
+    target = *(struct gameaiscript_vec_s **)(pk + 0xb4);
+    if (target != 0) {
+        *(struct gameaiscript_vec_s **)(pk + 0x19c) = target;
+        *(f32 *)((u8 *)process + 0x40) -= time;
+        *(struct gameaiscript_vec_s *)(object + 0x684) = **(struct gameaiscript_vec_s **)(pk + 0xb4);
+        *(u32 *)(object + 0xf24) |= 0x2000;
+        *(u32 *)(object + 0xf24) |= 0x08000000;
+        if (*(f32 *)((u8 *)process + 0x40) <= 0.0f) {
+            ((struct gameaiscript_f24_s *)(object + 0xf24))->predictive = pk[0xb2];
+            random = fn_8000C038();
+            interval = *(f32 *)(pk + 0xbc);
+            *(f32 *)((u8 *)process + 0x40) = interval * 0.5f + interval * random;
+            *(u32 *)(*(u8 **)(*(u8 **)(object + 0xeec) + 0x61c) + 8) |= 0x40;
+        }
+    }
     return 0;
 }
