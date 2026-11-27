@@ -753,7 +753,9 @@ struct gameai_path_bits_s {
 };
 
 struct gameai_update_node_s {
-    u8 unk0[0x3C];
+    u32 unk0;
+    struct gaiv3 position;
+    u8 unk10[0x2C];
     struct gameai_special_s special;
     u8 unk48[0x10];
 };
@@ -905,4 +907,80 @@ void fn_8012CF28(const struct gaiv3 *position, s32 angle, s32 model, s32 adjust)
             }
         }
     }
+}
+
+struct gameai_position_state_s {
+    u8 unk0[0x6C];
+    struct gaiv3 position;
+};
+
+struct gameai_position_object_s {
+    u8 unk0[0x78];
+    struct gaiv3 unk78;
+    u8 unk84[0xC];
+    struct gaiv3 position;
+    struct gaiv3 unk9C;
+    struct gaiv3 unkA8;
+    u8 unkB4[0x13C];
+    f32 radius;
+    u8 unk1F4[0x14];
+    u32 motionFlags;
+    u8 unk20C[0x80];
+    u8 drawResult;
+    u8 unk28D[0x63];
+    struct gameai_position_state_s *state;
+    u8 unk2F4[0x53];
+    u8 unk347;
+    u8 unk348[0xBA4];
+    void *playerPacket;
+    u8 unkEF0[0x34];
+    u32 flagsF24;
+    u8 unkF28[0xC];
+    f32 unkF34;
+    u8 unkF38[0x152];
+    u8 unk108A;
+    u8 unk108B;
+    f32 unk108C;
+};
+
+struct numtx_s;
+s32 NuCameraClipTestBoundingSphere(struct gaiv3 *, struct numtx_s *, f32);
+void InitPlayerShadow(void *);
+s32 SetPlayerOnSurface(void *, s32);
+s32 fn_800ABA78(void *);
+void ResetPlayerContexts(void *);
+extern struct gaiv3 lbl_803E04C4;
+extern struct numtx_s lbl_801B0F08;
+extern f32 lbl_804099AC;
+extern f32 lbl_804099B0;
+extern const f32 lbl_801ACF0C[];
+
+s32 fn_8012A718(struct gameai_position_object_s *object, struct gameai_update_node_s *node)
+{
+    u32 blocked = object->motionFlags & 0x400;
+
+    if (!blocked &&
+        (object->unkF34 >= lbl_804099AC ||
+         (object->drawResult == 0 && !(object->flagsF24 & 8) && lbl_804099B0 > lbl_801ACF0C[0]))) {
+        struct gaiv3 center = node->position;
+        center.y += object->radius;
+        if (NuCameraClipTestBoundingSphere(&center, &lbl_801B0F08, object->radius)) {
+            object->state->position = node->position;
+            object->unk9C = lbl_803E04C4 = object->position = object->unkA8 = object->state->position;
+            object->unk78 = lbl_801D5964;
+            InitPlayerShadow(object);
+            SetPlayerOnSurface(object, 0);
+            {
+                f32 value = lbl_801ACF0C[0];
+                object->unk108A = blocked;
+                object->unk108B = blocked;
+                object->unk347 = blocked;
+                object->unk108C = value;
+            }
+            fn_800ABA78(object);
+            ResetPlayerContexts(object->playerPacket);
+            return 1;
+        }
+    }
+    return 0;
 }
