@@ -204,3 +204,20 @@ class ClaimTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ParkFunctionsTest(unittest.TestCase):
+    def test_appends_and_skips_existing(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "plan.toml"
+            path.write_text('[[parked]]\nfunction = "old"\nreason = "x"\n')
+            done = plan.park_functions(["new=best 45/81: lhax; next: base var", "old=again"], path)
+            self.assertEqual(done, ["new"])
+            import tomllib
+            rows = tomllib.loads(path.read_text())["parked"]
+            self.assertEqual([r["function"] for r in rows], ["old", "new"])
+            self.assertIn("lhax", rows[1]["reason"])
+
+    def test_needs_reason(self):
+        with self.assertRaises(plan.PlanError):
+            plan.park_functions(["bare"], Path("/nonexistent"))

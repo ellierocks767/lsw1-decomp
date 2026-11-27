@@ -196,6 +196,20 @@ context. Familiar mismatches are searchable in the C matching guide (`grep -n` o
 instruction or pattern) and in the "Failure modes" bullets of the
 [batch history](phase3_batches.md).
 
+### Work order and stop rule
+
+`kickoff.py --start --item ID` prints the item's functions cheapest first (sweep closeness,
+then size) and a `HARD ITEM` line when nothing is under 0x180 bytes or at 90%. Work in that
+order, not address order: the 2026-11-26 `apimenu-1` run spent its budget on three mid-size
+functions at 17–52 exact instructions and never touched the 84% one the sweep listed first.
+
+Stop rule: at 30 minutes without a strict match, stop starting new large functions. Park
+every function you tried with its best score, mismatch and next hypothesis in
+`config/plan.toml` (`python3 tools/plan.py --park "FN=best 45/81: mismatch; next: idea"`),
+and commit that. A run that matches nothing still ships the plateau notes as a small docs PR,
+so the next run starts from them instead of retrying the same shapes. Only `--status no-change`
+without that commit throws the work away.
+
 ## Queue accounting
 
 `sprint_finish.py` rejects queue entries that are neither matched, parked nor deferred.

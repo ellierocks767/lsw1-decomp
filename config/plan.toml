@@ -2333,3 +2333,15 @@ reason = "Best 132/137 (nuportal pass 2, 185 distinct compiled candidates). Firs
 [[parked]]
 function = "NuPortalWhichRoom"
 reason = "Best 204/207 (nuportal pass 2, 62 distinct compiled candidates). Zero-constant address and final boolean initialization are scheduled differently; next: split containment return from the caller to recover constant lifetimes."
+
+[[parked]]
+function = "fn_80074A1C"
+reason = "best 52/89 (apimenu): target keeps points in r23 and copies to r29 in the loop; mine uses another register, or hoists the copy when a base local is added. Next: copy points to a local inside the outer loop body; try a for loop over the point index"
+
+[[parked]]
+function = "fn_800746F8"
+reason = "best 45/81 (apimenu, byte-offset form): target does add then lha 0x10(r9) from a plain lbl_803D5680 base and stwx/stfsx off per-field addi bases; mine folds +0x10 into the symbol (lhax). m2c draft form scores 25/81. Next: read the type word through a PartType * local; keep field bases as separate &e->field pointers"
+
+[[parked]]
+function = "fn_80074D14"
+reason = "best 17/50 (apimenu): same lbl_803D5680+0x10 fold and lbl_803D8280+0x34 fold as fn_800746F8; target keeps type in r10 (mr r10,r3). Next: solve fn_800746F8 first, then reuse its base shape"

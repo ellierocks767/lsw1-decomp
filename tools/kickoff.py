@@ -579,6 +579,25 @@ def plan_gate(lane: str, item_id: str | None, args) -> tuple[str | None, dict | 
     return None, state
 
 
+HARD_SIZE = 0x180  # bytes: a function this big rarely matches in one 20-minute pass
+
+
+def item_profile(rows: list[dict] | None, functions: list[str], sizes: dict[str, int]) -> list[str]:
+    """Cheapest-first order for an item plus a "hard item" warning when nothing in it looks
+    quick: every function is large and none has a sweep near miss. Lines to print."""
+    best = {r.get("name"): r.get("closeness") for r in rows or []}
+    sizes = {**{r.get("name"): int(r.get("size") or 0) for r in rows or []}, **sizes}
+    order = sorted(functions, key=lambda f: (-(best.get(f) or 0), sizes.get(f, 0)))
+    lines = ["work order, cheapest first (sweep ratio, bytes): " + ", ".join(
+        f"{f} ({(best.get(f) or 0):.0%}, {sizes.get(f, 0):#x})" for f in order)]
+    quick = [f for f in functions if sizes.get(f, 0) < HARD_SIZE or (best.get(f) or 0) >= NEAR]
+    if functions and not quick:
+        lines.append(f"HARD ITEM: no function under {HARD_SIZE:#x} bytes or at {NEAR:.0%} in the sweep. "
+                     "Expect plateaus. Stop rule: at 30 min without a strict match, park what you "
+                     "tried with `tools/plan.py --park`, commit that, and finish no-change.")
+    return lines
+
+
 def start(lane: str, unit: str | None, names: list[str], args, item_id: str | None = None) -> int:
     error, state = plan_gate(lane, item_id, args)
     if error:
@@ -633,6 +652,9 @@ def start(lane: str, unit: str | None, names: list[str], args, item_id: str | No
         if code:
             return code
     if item_id:
+        sizes = {f["name"]: int(f.get("size") or 0) for f in ready_rows}
+        for line in item_profile(rows, scope or [], sizes):
+            print(line)
         print(f"claim: {plan.claim(item_id)}")
     timing = ROOT / "work" / "sprint_timing.json"
     if not timing.exists():

@@ -6,6 +6,8 @@
     python3 tools/plan.py --next          # the next item id, its units and its functions left
     python3 tools/plan.py --item hubs     # one item's functions left
     python3 tools/plan.py --release hubs  # drop this checkout's claim record for an item
+    python3 tools/plan.py --park "fn_X=best 45/81: mismatch; next: idea" [--park ...]
+                                          # append [[parked]] rows to config/plan.toml
     python3 tools/plan.py --no-remote     # skip the GitHub open-PR query
 
 A function is matched when its `fuzzy_match_percent` in build/GL5E4F/report.json is 100; it
@@ -517,6 +519,33 @@ def jsonable(state: dict) -> dict:
     return out
 
 
+def park_functions(rows: list[str], path: Path | None = None) -> list[str]:
+    """Append `[[parked]]` rows ("FN=reason") to the plan; skip names already parked. Returns the
+    names written. A run that matches nothing still leaves its plateau here, so the next run
+    does not retry the same functions blind (the item closes once all its functions are parked)."""
+    path = path or PLAN
+    for row in rows:
+        fn, sep, reason = row.partition("=")
+        if not sep or not fn.strip() or not reason.strip():
+            raise PlanError(f"--park needs FN=reason (best score, mismatch, next hypothesis): {row!r}")
+    text = path.read_text()
+    have = {p["function"] for p in tomllib.loads(text).get("parked", []) if p.get("function")}
+    out, written = [], []
+    for row in rows:
+        fn, sep, reason = row.partition("=")
+        fn, reason = fn.strip(), reason.strip()
+        if not sep or not fn or not reason:
+            raise PlanError(f"--park needs FN=reason (best score, mismatch, next hypothesis): {row!r}")
+        if fn in have:
+            continue
+        have.add(fn)
+        written.append(fn)
+        out.append(f'[[parked]]\nfunction = "{fn}"\nreason = {json.dumps(reason)}\n')
+    if out:
+        path.write_text(text.rstrip("\n") + "\n\n" + "\n".join(out))
+    return written
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--json", action="store_true")
@@ -525,8 +554,18 @@ def main(argv=None) -> int:
     ap.add_argument("--batch", type=int, metavar="N",
                     help="list N distinct free items, one per child, with their claim commands")
     ap.add_argument("--release", metavar="ID", help="remove the claim record for ID")
+    ap.add_argument("--park", action="append", default=[], metavar="FN=REASON",
+                    help="record a plateau as a [[parked]] row in config/plan.toml")
     ap.add_argument("--no-remote", action="store_true", help="do not ask GitHub for open t3/plan-* PRs")
     args = ap.parse_args(argv)
+    if args.park:
+        try:
+            done = park_functions(args.park)
+        except PlanError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        print(f"parked {len(done)} in config/plan.toml: {' '.join(done) or '(all already parked)'}")
+        return 0
     if args.release:
         print(f"released {args.release}" if release(args.release) else f"no claim record for {args.release}")
         return 0

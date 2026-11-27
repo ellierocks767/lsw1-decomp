@@ -324,3 +324,17 @@ class FinishHelperTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ItemProfileTest(unittest.TestCase):
+    def test_hard_item_warns_and_orders_cheapest_first(self):
+        from tools import kickoff
+        rows = [{"name": "big", "size": 3000, "closeness": 0.5}, {"name": "mid", "size": 800, "closeness": 0.6}]
+        lines = kickoff.item_profile(rows, ["big", "mid"], {})
+        self.assertTrue(any("HARD ITEM" in l for l in lines))
+        self.assertLess(lines[0].index("mid"), lines[0].index("big"))
+
+    def test_small_function_is_not_hard(self):
+        from tools import kickoff
+        lines = kickoff.item_profile([{"name": "s", "size": 64, "closeness": 0.1}], ["s"], {})
+        self.assertFalse(any("HARD ITEM" in l for l in lines))
