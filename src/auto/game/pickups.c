@@ -670,3 +670,36 @@ s32 fn_8013D550(struct NUPICKUPPOOL_s *arg0) {
     return 1;
 }
 #undef PICKUP_LOAD_RECORD
+
+#define NuCosApprox ((s32 (*)(s32))NuCosApprox)
+#define fn_8000CB50 ((f32 (*)(s32))fn_8000CB50)
+#define fn_8006DD1C ((s32 (*)(s32 *, void *))fn_8006DD1C)
+extern s32 lbl_80408FE0;
+extern f32 lbl_80409A2C;
+extern s32 str_Pickup_CoinDropG[];
+extern s32 str_Pickup_CoinDropS[];
+
+void PartImpact_Coin(void *arg0) {
+    f32 temp_f31;
+    f32 var_f1;
+
+    if (((s32) lbl_8040AFB8 == 0) && (temp_f31 = 0.0f, ((lbl_80409A2C <= temp_f31))) && (var_f1 = fn_8000CB50(arg0 + 0x80), ((var_f1 > temp_f31) != 0))) {
+        if (var_f1 > 1.5f) {
+            var_f1 = 1.5f;
+        }
+        NuCosApprox((s32) (((1.5f - var_f1) / 1.5f) * 16384.0f));
+        if ((s32) lbl_80408FE0 != 0) {
+            fn_8006DD1C(str_Pickup_Coin, arg0 + 0x30);
+            lbl_80409A2C = 0.1f;
+            return;
+        }
+        if ((s16) (*(s16 *)((s8 *)(arg0) + (0x122))) == 0xDC) {
+            fn_8006DD1C(str_Pickup_CoinDropS, arg0 + 0x30);
+            return;
+        }
+        fn_8006DD1C(str_Pickup_CoinDropG, arg0 + 0x30);
+    }
+}
+#undef NuCosApprox
+#undef fn_8000CB50
+#undef fn_8006DD1C
