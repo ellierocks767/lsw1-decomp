@@ -575,3 +575,84 @@ void fn_8006E288(s32 value, s32 mode)
     else
         lbl_801BB44C[0] = mode;
 }
+
+extern s16 lbl_801BB458[];
+
+s32 fn_8006E2CC(void)
+{
+    if (lbl_801BB458[0] != 0)
+        return 1;
+    if (fn_80044C78(0) == 2 || fn_80044C78(1) == 2)
+        return 1;
+    return 0;
+}
+
+struct AudioVoice {
+    u8 pad0[0x10];
+    s32 id;
+    u8 pad14[0x40];
+};
+
+extern struct AudioVoice lbl_803AC5B8[512];
+extern s32 lbl_8038E820[8];
+extern s32 lbl_803B6DD8[8];
+extern s32 lbl_804085E4;
+
+void fn_8006B1E0(void)
+{
+    s32 i;
+
+    for (i = 511; i >= 0; i--)
+        lbl_803AC5B8[i].id = -1;
+
+    for (i = 0; i < 8; i++) {
+        lbl_8038E820[i] = 0;
+        lbl_803B6DD8[i] = 0;
+    }
+    lbl_804085E4 = 0;
+}
+
+#include "nucore/nufpar.h"
+
+struct AudioRequestEntry {
+    s32 fields[5];
+};
+struct numem_req_s;
+
+extern s32 fn_80006398(struct nufpar_s *);
+extern s32 NuWaterRender(struct nufpar_s *);
+extern void NuMemAllocFn(struct numem_req_s *);
+extern s32 NuRndrWaterRip(struct AudioRequestEntry *);
+extern void NuSoundSetRequestTable(s32, s32);
+extern void fn_80044D4C(void);
+extern struct nufpcom_s lbl_801BB42C[];
+extern struct AudioRequestEntry lbl_803D0724[];
+extern s32 lbl_804086C8;
+
+void fn_8006C65C(char *name)
+{
+    s32 *mask;
+    s32 index;
+    struct nufpar_s *parser = NuFParCreate(name);
+
+    if (parser != NULL) {
+        NuFParPushCom(parser, lbl_801BB42C);
+        while (fn_80006398(parser)) {
+            NuFParGetWord(parser);
+            if (parser->word.b[0] != 0)
+                NuWaterRender(parser);
+        }
+        NuMemAllocFn((struct numem_req_s *)parser);
+    }
+    index = lbl_804086C8;
+    lbl_803D0724[index].fields[2] = 0;
+    lbl_803D0724[index].fields[1] = 0;
+    lbl_803D0724[index].fields[0] = 0;
+    lbl_803D0724[index].fields[3] = -1;
+    NuRndrWaterRip(lbl_803D0724);
+    mask = lbl_803D45B8;
+    ((void *(*)())memset)(mask, 0, 0x64);
+    if (!lbl_804086E8)
+        NuSoundSetRequestTable((s32)mask, 0x32);
+    fn_80044D4C();
+}
