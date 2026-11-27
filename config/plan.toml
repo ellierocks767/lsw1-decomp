@@ -2460,3 +2460,7 @@ reason = "best 106/175: initial capacity checks and 56-byte copy loop shape reco
 [[parked]]
 function = "fn_80058BE0"
 reason = "best 177/201: frame, rotation, normalization and final flag copy agree; one move missing from the initial vector copy, with guard/switch registers and final X load differing; next: trace ProDG aggregate-copy temporaries to recover its separate stack and pointer bases"
+
+[[parked]]
+function = "fn_80056B88"
+reason = "best 97/192: sized the three vector backups and reproduced the stack frame; halfword update loads add truncations and broad scratch/vector scheduling still differs; next: model the packed halfword stream header and compare separate GCC reload lifetimes for both walks"
