@@ -1109,7 +1109,9 @@ struct main_player_sub_s {
 };
 
 struct main_player_s {
-    u8 pad0[0xEEC];
+    u8 pad0[0x20C];
+    s32 f20c;
+    u8 pad210[0xCDC];
     struct main_player_sub_s *sub;
 };
 
@@ -1251,4 +1253,135 @@ void fn_8009E7DC(void)
             fn_80025C38(0, 0, 0x2800, 0xE00, alpha << 24, lbl_8040A638);
         }
     }
+}
+
+struct main_pad_s {
+    u8 pad0[0x5C];
+    s32 f5c;
+    s32 f60;
+    s32 f64;
+    u8 pad68[0x0F];
+    u8 lx;
+    u8 ly;
+    u8 rx;
+    u8 ry;
+};
+
+struct main_input_slot_s {
+    struct main_pad_s *pad;
+    s32 f04;
+    s32 f08;
+    s32 f0c;
+    s32 f10;
+    s32 f14;
+    s32 f18;
+    s32 f1c;
+    s32 f20;
+    u8 f24;
+    u8 pad25[0x37];
+};
+
+struct main_area_info_s {
+    s32 f00;
+    s32 flags;
+};
+
+struct main_world_s {
+    u8 pad0[0x198];
+    s32 f198;
+    s32 f19c;
+    u8 pad1a0[0x08];
+    struct main_area_info_s *f1a8;
+};
+
+s32 fn_800395E8(struct main_pad_s *);
+extern struct main_pad_s *lbl_80408EB8;
+extern s32 lbl_80409128;
+
+s32 fn_8009ED84(s32 arg0)
+{
+    struct main_input_slot_s *slot;
+    struct main_pad_s *pad;
+    s32 mode;
+    s32 res;
+    f32 v;
+
+    slot = &((struct main_input_slot_s *)lbl_803D9A58)[arg0];
+    pad = slot->pad;
+    if (lbl_80409118 != 0 || (lbl_80409410 != NULL && ((struct main_world_s *)lbl_80409410)->f19c == 0x15 && lbl_803E028C[0] == 5)) {
+        mode = 0;
+    } else if (lbl_80408FA0 != 0 || lbl_80409410 == NULL
+               || ((struct main_world_s *)lbl_80409410)->f198 == 0x7C || ((struct main_world_s *)lbl_80409410)->f198 == 0x7E
+               || (((struct main_world_s *)lbl_80409410)->f1a8->flags & 0x4000) || ((struct main_world_s *)lbl_80409410)->f198 == 0x7D) {
+        mode = 1;
+    } else {
+        mode = 0;
+        if (arg0 < lbl_80409128) {
+            struct main_player_s *pl = gPlayer1Pointer[arg0];
+            if (pl != NULL && pl->sub != NULL) {
+                mode = 1;
+                if (!(pl->f20c & 0x01000000)) {
+                    mode = 2;
+                }
+            }
+        }
+    }
+    res = 0;
+    slot->f0c = 0;
+    slot->f10 = 0;
+    slot->f18 = 0;
+    slot->f1c = 0;
+    slot->f04 = 0;
+    slot->f08 = 0;
+    if (pad != NULL && fn_800395E8(pad) != 0 && mode > 0) {
+        if (mode == 2) {
+            res = 2;
+            slot->f08 |= pad->f64 & 0x4000;
+        } else {
+            {
+                f32 thresh = 85.0f;
+                s32 cur;
+                slot->f0c = 0;
+                v = (f32)pad->rx - 127.5f;
+                if (v < -thresh) {
+                    slot->f0c = 4;
+                } else if (v > thresh) {
+                    slot->f0c = 8;
+                }
+                v = (f32)pad->ry - 127.5f;
+                if (v < -thresh) {
+                    slot->f0c |= 1;
+                } else if (v > thresh) {
+                    slot->f0c |= 2;
+                }
+                cur = slot->f0c;
+                slot->f10 = cur & ~slot->f14;
+                slot->f14 = cur;
+                slot->f18 = 0;
+            }
+            {
+                f32 thresh = 85.0f;
+                v = (f32)pad->lx - 127.5f;
+                if (v < -thresh) {
+                    slot->f18 = 4;
+                } else if (v > thresh) {
+                    slot->f18 = 8;
+                }
+                v = (f32)pad->ly - 127.5f;
+                if (v < -thresh) {
+                    slot->f18 |= 1;
+                } else if (v > thresh) {
+                    slot->f18 |= 2;
+                }
+            }
+            slot->f1c = slot->f18 & ~slot->f20;
+            slot->f20 = slot->f18;
+            slot->f24 = 1;
+            res = 1;
+            slot->f04 = pad->f5c;
+            slot->f08 = pad->f64;
+            lbl_80408EB8 = slot->pad;
+        }
+    }
+    return res;
 }

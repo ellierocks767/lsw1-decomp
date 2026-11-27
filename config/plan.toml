@@ -2476,3 +2476,7 @@ reason = "best 249/284 (284 vs 284 insns, permuter 1530): f28/f29 swap in quadra
 [[parked]]
 function = "fn_800A1EE8"
 reason = "best 26/27: mr r3, r0 scheduled before stw r0, lbl_80408F7C before bl memset (permuter 1750 iters stuck); next: check memset declaration or heap-reset macro/inline"
+
+[[parked]]
+function = "fn_8009E8B4"
+reason = "best 173/179: 1 missing mr r9, r0 after lwz r0, lbl_804093B0 before cmpwi r0, 0x7e (inlined fn_800A1CEC matched all 10 stack-copy insns); next: check nested if or local copy of lbl_804093B0"
