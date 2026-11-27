@@ -622,3 +622,40 @@ HVQM4VideoNode* HVQM4BufvGetDisp(HVQM4VideoQueue* queue)
     OSRestoreInterrupts(interrupts);
     return node;
 }
+
+static inline void unlinkFreeVideoNode(HVQM4VideoNode* node)
+{
+    node->prevFree->nextFree = node->nextFree;
+    node->nextFree->prevFree = node->prevFree;
+}
+
+HVQM4VideoNode* HVQM4BufvGetFree(HVQM4VideoQueue* queue)
+{
+    HVQM4VideoNode* result = NULL;
+    s32 interrupts = OSDisableInterrupts();
+    HVQM4VideoNode* node = queue->freeHead;
+
+    if (node != NULL) {
+        do {
+            if (node->busy == 0) {
+                result = node;
+                if (result == queue->freeHead) {
+                    if (result->nextFree == result) {
+                        queue->freeHead = NULL;
+                    } else {
+                        queue->freeHead = result->nextFree;
+                        unlinkFreeVideoNode(result);
+                    }
+                } else {
+                    unlinkFreeVideoNode(result);
+                }
+                node->prevFree = NULL;
+                node->nextFree = NULL;
+                break;
+            }
+            node = node->nextFree;
+        } while (node != queue->freeHead);
+    }
+    OSRestoreInterrupts(interrupts);
+    return result;
+}
