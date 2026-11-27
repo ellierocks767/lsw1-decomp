@@ -2368,3 +2368,11 @@ reason = "best 40/68: constants r22/r23 hoist order and stores reordered; next: 
 [[parked]]
 function = "fn_8012741C"
 reason = "best 57/63: scan index and result count swap r27/r30; next: compare the loop induction variable and accumulator's allocation priorities in the ProDG RTL dumps"
+
+[[parked]]
+function = "AddDynamicCreature"
+reason = "best 345/431: early float zero uses a GPR and changes saved register allocation; next: reproduce the float lifetime and model default initialization before fn_800A3650"
+
+[[parked]]
+function = "edforLoadPage"
+reason = "best 279/531: loop condition registers and packed flag temporaries differ; next: separate the versioned record scan from its index offset calculations"
