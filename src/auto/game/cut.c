@@ -1145,13 +1145,13 @@ void fn_8011E864(void) {
     fn_8003F1A0(fn_8011D30C);
 }
 
-f32 fn_8000ED40();
+f32 fn_8000ED40(f32);
 
-void fn_8011BC1C(void)
+void fn_8011BC1C(f32 value)
 {
   f32 temp_f1;
   s8 *new_var;
-  temp_f1 = fn_8000ED40();
+  temp_f1 = fn_8000ED40(value);
   new_var = (s8 *) lbl_8040A75C;
   *((f32 *) (((s8 *) lbl_8040A75C) + 0xB0)) = temp_f1;
   if ((*((f32 *) (new_var + 0xB4))) < temp_f1)
@@ -1173,12 +1173,10 @@ void fn_8011F124(void) {
     }
 }
 
-f32 fn_8000ED40();
-
-void fn_8011AFEC(void) {
+void fn_8011AFEC(f32 value) {
     f32 temp_f1;
 
-    temp_f1 = fn_8000ED40();
+    temp_f1 = fn_8000ED40(value);
     {
         s8 *lbl_8040A758_p = (s8 *)lbl_8040A758;
         (*(f32 *)(lbl_8040A758_p + (0x30))) = (f32) -temp_f1;
@@ -1481,4 +1479,20 @@ void __fini_cpp_exceptions(void)
         fn_8011E308(index);
         lbl_80409940 = -1;
     }
+}
+
+typedef struct CutSceneController {
+    u8 unk0[0x24];
+    f32 value24;
+    u8 unk28[0x14];
+    u32 flags;
+} CutSceneController;
+
+void fn_8011C028(f32 value)
+{
+    f32 magnitude = fn_8000ED40(value);
+    CutSceneController *controller = (CutSceneController *)lbl_8040A768;
+
+    controller->value24 = magnitude;
+    controller->flags |= 0x800;
 }
