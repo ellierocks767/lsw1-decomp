@@ -322,13 +322,22 @@ void fn_8004BDD0(void *arg0) {
 
 f32 NuCosApprox(s32);
 f32 NuSinApprox(s32);
+typedef struct NUTERRAINFLAGS_s {
+    u8 pad00[0x60];
+    u8 flags[4];
+} TerrainFlags;
+
 typedef struct NUTERRAINMOTION_s {
     u8 pad00[0x1C];
     f32 position[3];
     f32 step[3];
-    u8 pad34[0x54];
+    u8 pad34[0x38];
+    s16 field6C;
+    u8 pad6E[0x1A];
     u8 mode;
-    u8 pad89[0x0F];
+    u8 pad89[7];
+    TerrainFlags *flagSource;
+    u8 pad94[4];
     f32 field98;
     u8 pad9C[4];
     f32 fieldA0;
@@ -665,4 +674,65 @@ void fn_8005A338(u8 **cursor, u8 **limit)
     if (regionEnd > end) {
         fn_80009948(lbl_80194C94, 0x665)(lbl_80194D84);
     }
+}
+
+extern u8 lbl_802B1504[];
+extern u8 lbl_802B1565[];
+extern u8 lbl_802B1566[];
+extern u8 lbl_802B1567[];
+extern u8 *lbl_8040A594;
+extern s32 lbl_8040A5A0;
+
+void fn_8005592C(void)
+{
+    s32 mode = lbl_8040AE5C->mode;
+    TerrainFlags *source;
+    s32 index;
+    u8 flag;
+
+    switch (mode) {
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            break;
+
+        case 17:
+        case 18:
+        case 19:
+        case 20:
+            break;
+
+        case 0:
+            return;
+
+        default:
+            return;
+    }
+    if (lbl_8040AE5C->field6C == -1) {
+        return;
+    }
+
+    source = lbl_8040AE5C->flagSource;
+    if (source != NULL) {
+        flag = source->flags[0];
+        if (flag != 0) {
+            lbl_802B1504[0x60] = flag;
+        }
+        flag = lbl_8040AE5C->flagSource->flags[1];
+        if (flag != 0) {
+            lbl_802B1565[0] = flag;
+        }
+        flag = lbl_8040AE5C->flagSource->flags[2];
+        if (flag != 0) {
+            lbl_802B1566[0] = flag;
+        }
+        flag = lbl_8040AE5C->flagSource->flags[3];
+        if (flag != 0) {
+            lbl_802B1567[0] = flag;
+        }
+    }
+    index = lbl_8040AE5C->field6C;
+    lbl_8040A594 = lbl_802B1504;
+    lbl_8040A5A0 = index;
 }
