@@ -285,18 +285,33 @@ sync. `draft_fn.py` writes `work/NAME/ghidra.c` whenever the project exists and 
 is missing; `--ghidra` regenerates it and `--no-ghidra` skips it. A Ghidra GUI holding the
 project open locks it; close the GUI first.
 
-**REA (interactive).** The `rea` MCP server uses the same Ghidra install. Open the ELF that
-`status` prints with `open_binary` (`provider_id: "ghidra"`). The first query imports and
-analyses it, in about a minute. Then use `procedure_pseudo_code`, `procedure_assembly`,
-`procedure_callers`/`procedure_callees`, `analyze_function`, `search_strings` and
-`read_bytes` (data tables), and call `close_binary` when you are done. Two limits apply:
+**REA (on demand).** REA uses the same Ghidra install. Its MCP server is not loaded by
+default, because its tool list costs every session several thousand tokens; run the `rea` CLI
+from the shell when a question needs it. Point it at the ELF that `status` prints and keep a
+snapshot next to it, so only the first call imports (about a minute) and later calls take
+seconds:
+
+```sh
+ELF=build/ghidra/<checkout>/main.elf             # from ghidra_decompile.py status
+SNAP="--provider ghidra --snapshot ${ELF%/*}/rea.snapshot"
+rea decompile "$ELF" FN $SNAP                      # pseudocode
+rea instructions "$ELF" FN $SNAP                   # assembly
+rea procedure-references "$ELF" FN $SNAP           # callers and callees
+rea search "$ELF" PATTERN $SNAP                    # strings and procedure names
+rea read-bytes "$ELF" ADDR $SNAP                  # data tables; each command has --help
+```
+
+Add `--token-limit N` or `--filter-output KEYS` to keep output short. For a long interactive
+session, opt in to the MCP server: `claude --mcp-config tools/rea.mcp.json` or
+`codex -c mcp_servers.rea.enabled=true`, then `open_binary` on the ELF (`provider_id: "ghidra"`).
+Two limits apply either way:
 
 - REA imports without the r13/r2 context, so it shows small-data accesses as
   `*(unaff_r13 + -0x7fe4)` (address = `0x8040FA40` + offset; r2 uses `0x8041FA40`), and its
   `xrefs` misses those globals. Use the headless `xrefs` for them.
-- `set_address_name` and annotations last only for the session. Durable names go through
+- Names and annotations set through REA do not reach the build. Durable names go through
   `symbols.txt` with the evidence rules above; regenerate the ELF (`ghidra_decompile.py elf`)
-  before reopening.
+  and delete `rea.snapshot` before reopening.
 
 **Japanese PC exe (opt-in, about 2 minutes once).** Bootstrap does not run it:
 
