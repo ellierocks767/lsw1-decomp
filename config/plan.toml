@@ -2573,3 +2573,7 @@ reason = "best 69/150: reg alloc of hoisted global-base copies (r26-r29) and slo
 [[parked]]
 function = "NuAnimCurveSetApplyToJointBasic"
 reason = "best 186/211 (work/NuAnimCurveSetApplyToJointBasic/v32.c): FP regalloc only (radius/rb f29/f28 swapped; hit-block frac-t0 and quotient f11/f12 swapped); next: longer permuter run from v32 or vary hit-block temp reuse (dx for numerator helped +10)"
+
+[[parked]]
+function = "fn_80109720"
+reason = "best 57/59: (f0==lim||f0<lim) form gives beq/bge where target has cror un,eq,lt + bns; the f0<=lim form gives cror but hoists lfs f13 and addi r30 (52/59); next: permuter burst on work/hc/c.c-style body, float compare variants"
