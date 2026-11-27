@@ -2727,7 +2727,7 @@ reason = "best 187/199 (was 178): NuVecSubPS via static inline wrapper fixes fir
 
 [[parked]]
 function = "DrawTopShelf"
-reason = "best 259/340 (work/DrawTopShelf/try.c, macro-built 6 blocks, results discarded, per-block temps): lbl_80401864 addr hoisted before fadds in target (r31=&lbl, r30=obj swap), sc store order 48/50/li/4c, f29/f30 swap for k; next: pointer temps per block, permuter on try.c"
+reason = "retried: best 312/340: 1.0f literal + static inline per-object helpers (DtsObjA/B, DtsSpecA/B, DtsSetup); left: scale-vector stfs/addi r3/li r4 scheduling around NuMtxSetIdentity..fn_8000E540, block 2 special address computed early, block 5 pos load reg swap; next: setup helper shape (sc as by-value/return, NuMtxScale arg form) (work/hc/DrawTopShelf.best.c)"
 
 [[parked]]
 function = "Shop_DrawCodes"
