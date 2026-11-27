@@ -401,3 +401,47 @@ void fn_80109458(u8 *arg0) {
         }
     }
 }
+
+s32 fn_80107BFC(void *, void *, s32);
+extern s32 lbl_8040B18C;
+
+void DebugMenu_HandleEntry3(u8 *arg0) {
+    s32 i;
+    s32 j;
+    s32 c;
+    s32 n;
+    s32 flag;
+    u8 *s;
+    u8 *q;
+
+    s = *(u8 **)(arg0 + 0x238);
+    if (s != NULL) {
+        for (i = 0; i < *(s32 *)((u8 *)lbl_80409410 + 0x23C); i++) {
+            flag = 0;
+            if (s[0x22] == 2) {
+                if ((s8)s[0x31] == -1) {
+                    n = 0;
+                    c = s[0x1E];
+                    for (j = 0; j < c; j++) {
+                        q = s + 0xAC + j * 0x34;
+                        if ((q[0x2C] & 8) && *(s32 *)q != 0) {
+                            n++;
+                        }
+                    }
+                    if (n > 0) {
+                        flag = 1;
+                    }
+                } else {
+                    flag = 1;
+                }
+            }
+            if (flag != 0) {
+                fn_80107BFC(arg0, s, 0);
+            }
+            s += *(u16 *)(s + 0x1C);
+        }
+    }
+    if (lbl_8040B18C != 2) {
+        lbl_8040B18C = 1;
+    }
+}
