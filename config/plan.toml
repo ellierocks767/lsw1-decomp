@@ -2722,10 +2722,6 @@ function = "fn_80146B8C"
 reason = "best 24-30/58: target keeps t in f1 and reloads *p after lo select (lfs f0,0(r9) after lo), loop-invariant n copy r8; next: CalcSplinePoint(arg0,t) loop shape/permuter (work/hc/fn_80146B8C.best.c)"
 
 [[parked]]
-function = "Shop_UpdateMenu"
-reason = "best 81/87: only float regs (global f13/limit f12 in target, swapped in mine in first clamp block); next: permuter burst / different float local form"
-
-[[parked]]
 function = "MoveSubItemsRight"
 reason = "best 104/195: structure and addressing right; mismatch is the 4x clamp-to-[lo,hi] block (target reuses cr7 for x<hi, lo reloaded, result in separate reg), ~12 clamp forms tried; next: find clamp source form then mirror to Left; best in work/hc/MoveSubItemsRight.best.c"
 
