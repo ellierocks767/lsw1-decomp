@@ -1006,7 +1006,8 @@ struct PickupDrawDef { char unk0[0x22]; u8 flags; char unk23; void *special; cha
 struct PickupDrawCtx { f32 m[12]; };
 struct PickupDrawSub { char unk0[0x42]; u8 alpha; };
 struct PickupDrawView { char unk0[0x1a8]; struct PickupDrawSub *sub; };
-extern f32 lbl_801AEDAC[], lbl_801AEDB0[], lbl_801AEDB4[], lbl_801AEDC0[];
+extern const f32 lbl_801AEDAC[], lbl_801AEDB4[];
+extern f32 lbl_801AEDB0[], lbl_801AEDC0[];
 extern f32 MenuHeader[];
 extern s32 lbl_80408EA8;
 extern u8 *lbl_80408F94;
@@ -1037,8 +1038,6 @@ void fn_8013EA90(struct NUPICKUPPOOL_s *pool, struct NUPICKUP_s *first, s32 coun
     fn_8000DDD0(mp, 0);
     if (i >= count)
         return;
-    one = lbl_801AEDB4[0];
-    amp = lbl_801AEDAC[0];
     for (; i < count; i++, p++) {
         if (lbl_80408EA8 == 0) {
             if (p->active39 == 0)
@@ -1063,7 +1062,7 @@ void fn_8013EA90(struct NUPICKUPPOOL_s *pool, struct NUPICKUP_s *first, s32 coun
         pos.y = p->y;
         pos.z = ((struct PickupVec *)p)->z;
         if (p->kind3E == 5) {
-            fn_8000DD40(mp, (s32)(NuSinApprox(p->angle30 * 2) * amp));
+            fn_8000DD40(mp, (s32)(NuSinApprox(p->angle30 * 2) * lbl_801AEDAC[0]));
             fn_8000E3C0(mp, p->angle30);
             NuMtxTranslate(mp, p);
         } else if (p->kind3E == 4) {
@@ -1072,7 +1071,7 @@ void fn_8013EA90(struct NUPICKUPPOOL_s *pool, struct NUPICKUP_s *first, s32 coun
         }
         p->enabled3C = NuSpecialFindMultiWC(*(void **)((u8 *)lbl_801E15E8 + 0x24 + p->kind3E * 0x34), mp);
         if (p->link18 == 0 && dist < lbl_801AEDB0[0]) {
-            f32 s = one - dist / lbl_801AEDB0[0];
+            f32 s = lbl_801AEDB4[0] - dist / lbl_801AEDB0[0];
             v = *(struct PickupVec *)p;
             v.y = p->baseY + lbl_8040904C;
             if (p->kind3E == 5) {
