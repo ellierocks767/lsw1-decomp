@@ -1258,3 +1258,61 @@ void CUT_FindCharacters(CutSceneCharacters *scene)
         }
     }
 }
+
+void fn_8006497C(s32);
+extern void *lbl_8040AFB0;
+extern s32 lbl_8040AFE0;
+extern s32 lbl_8040AFEC;
+extern s32 lbl_8040B264;
+extern s32 lbl_8040B268;
+extern s32 lbl_8040B26C;
+extern s32 lbl_8040B270;
+extern s32 lbl_8040B274;
+
+static inline u8 *CutSceneGetHeader(u8 *scene)
+{
+    return *(u8 **)(scene + 8);
+}
+
+static inline s32 CutSceneGetFlags(u8 *scene)
+{
+    return *(s32 *)(CutSceneGetHeader(scene) + 0x3C);
+}
+
+static inline s32 CutSceneReadFlag(u8 *scene, s32 mask)
+{
+    s32 flag = CutSceneGetFlags(scene) & mask;
+
+    if (flag != 0) {
+        flag = 1;
+    }
+    return flag;
+}
+
+void fn_8011D6A4(u8 *scene)
+{
+    s32 flag2;
+    u8 *header;
+
+    header = CutSceneGetHeader(scene);
+    lbl_8040AFAC = 1;
+    flag2 = *(s32 *)(header + 0x3C) & 2;
+    lbl_8040AFB0 = scene;
+    if (flag2 != 0) {
+        lbl_8040AFE0 = 1;
+    } else {
+        lbl_8040AFE0 = 0;
+    }
+    lbl_8040AFEC = CutSceneReadFlag(scene, 4);
+    lbl_8040B264 = CutSceneReadFlag(scene, 8);
+    lbl_8040B268 = CutSceneReadFlag(scene, 0x20);
+    lbl_8040B26C = CutSceneReadFlag(scene, 0x40);
+    header = CutSceneGetHeader(scene);
+    lbl_8040B270 = *(s8 *)(header + 0x10);
+    fn_8006497C(*(s8 *)(scene + 0x10));
+    if (*(s16 *)(CutSceneGetHeader(scene) + 4) != -1) {
+        lbl_8040B274 = 1;
+    } else {
+        lbl_8040B274 = 0;
+    }
+}
