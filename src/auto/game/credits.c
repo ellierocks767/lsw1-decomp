@@ -497,3 +497,71 @@ void fn_8010B35C(u8 *arg0) {
         }
     }
 }
+
+extern f32 lbl_801AA0E4[];
+extern void *lbl_8040A738;
+extern void *lbl_8040A740;
+extern void *lbl_8040A744;
+void fn_8010AB90(f32 dt) {
+    f32 *zp;
+    u8 *p;
+    u8 *c;
+    u8 *nx;
+    u8 *fr;
+    u8 *t;
+    if (dt == lbl_801AA0E4[0]) {
+        return;
+    }
+    for (p = lbl_8040A744; p != NULL; p = nx) {
+        zp = lbl_801AA0E4;
+        nx = *(u8 **)p;
+        if (*(u8 **)(p + 0x10) == NULL) {
+            u8 **o = *(u8 ***)(p + 0x14);
+            if (o != NULL && *o == p) {
+                *o = NULL;
+                *(u8 **)(p + 0x14) = NULL;
+            }
+        }
+        c = *(u8 **)(p + 8);
+        *(u8 **)(p + 0x10) = NULL;
+        if (c != NULL) {
+            f32 zero = *zp;
+            fr = lbl_8040A738;
+            do {
+                f32 v = *(f32 *)(c + 0xE4) - dt;
+                *(f32 *)(c + 0xE4) = v;
+                if (v <= zero && *(u8 **)c == NULL) {
+                    t = *(u8 **)(c + 4);
+                    if (t != NULL) {
+                        *(u8 **)t = NULL;
+                    } else {
+                        *(u8 **)(p + 8) = NULL;
+                    }
+                    t = *(u8 **)c;
+                    if (t != NULL) {
+                        *(u8 **)(t + 4) = *(u8 **)(c + 4);
+                    }
+                    *(u8 **)c = fr;
+                    fr = c;
+                    break;
+                }
+                c = *(u8 **)c;
+            } while (c != NULL);
+            lbl_8040A738 = fr;
+        }
+        if (*(u8 **)(p + 8) == NULL) {
+            t = *(u8 **)(p + 4);
+            if (t != NULL) {
+                *(u8 **)t = *(u8 **)p;
+            } else {
+                lbl_8040A744 = *(u8 **)p;
+            }
+            t = *(u8 **)p;
+            if (t != NULL) {
+                *(u8 **)(t + 4) = *(u8 **)(p + 4);
+            }
+            *(u8 **)p = lbl_8040A740;
+            lbl_8040A740 = p;
+        }
+    }
+}

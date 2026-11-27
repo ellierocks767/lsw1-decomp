@@ -2587,10 +2587,6 @@ function = "fn_8010BB08"
 reason = "best 29/52: target keeps r6/r10 copies of list head across inner pop loop (mr r10,r6 each iteration) and no preheader merge; mine CSEs them; next: find source form that keeps the copy (inline w/ modified param, pointer-to-head) or permuter"
 
 [[parked]]
-function = "fn_8010AB90"
-reason = "best 75/76: only addi hoist position differs; next: permuter burst on pool-link temp ordering"
-
-[[parked]]
 function = "fn_80108EEC"
 reason = "best 66/80: arg0 copy-register structure (r28 vs r3) and loop reg assignment; next: try arg0 saved in local before null check, u8 loop counter"
 
