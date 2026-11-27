@@ -2511,11 +2511,6 @@ reason = "best 523/1224: scratch copies and triangle normal aggregate writebacks
 
 
 [[parked]]
-function = "fn_8013C620"
-reason = "best 41/51: target keeps i in r11 and hoists lfs of value into the j-loop preheader; moving value/v into the if added a saved register; next: permuter run"
-
-
-[[parked]]
 function = "fn_8013C8E8"
 reason = "best 54/85: target copies the 12-byte pos through r3=&sp8 and re-reads kind3E from stack; mine forwards it; next: pointer-to-local struct form or permuter run"
 

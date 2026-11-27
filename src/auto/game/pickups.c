@@ -1,6 +1,5 @@
 #include "game/pickups.h"
 
-extern f32 lbl_801AEC5C[];
 extern f32 lbl_801AEC60[];
 extern f32 lbl_801AEC64[];
 extern s32 lbl_804093C8;
@@ -9,14 +8,12 @@ extern f32 lbl_80409A08;
 void fn_8013C620(struct NUPICKUPPOOL_s* pool)
 {
     s32 i = 0, j;
-    f32* value = lbl_801AEC5C;
     if (pool->state710 == 0) {
         for (; i < 6; i++) {
-            f32 v = *value;
             for (j = 0; j < pool->counts[i]; j++) {
                 pool->groups[i][j].active39 = 1;
                 pool->groups[i][j].flags38 |= 0x1c;
-                pool->groups[i][j].value2C = v;
+                pool->groups[i][j].value2C = 0.0f;
             }
         }
         if (lbl_804093C8 == 3)
