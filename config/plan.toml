@@ -2569,3 +2569,7 @@ reason = "code 51/51 but MATCH (unverified references): 0.0f literal is address-
 [[parked]]
 function = "fn_80062DA0"
 reason = "best 69/150: reg alloc of hoisted global-base copies (r26-r29) and slot-field load/store interleave; next: inline slot-rebase helper taking dt, permuter from work/fn_80062DA0/try.c"
+
+[[parked]]
+function = "NuAnimCurveSetApplyToJointBasic"
+reason = "best 186/211 (work/NuAnimCurveSetApplyToJointBasic/v32.c): FP regalloc only (radius/rb f29/f28 swapped; hit-block frac-t0 and quotient f11/f12 swapped); next: longer permuter run from v32 or vary hit-block temp reuse (dx for numerator helped +10)"
