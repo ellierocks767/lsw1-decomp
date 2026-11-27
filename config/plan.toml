@@ -2672,3 +2672,15 @@ reason = "best 186/211 (work/NuAnimCurveSetApplyToJointBasic/v32.c): FP regalloc
 [[parked]]
 function = "fn_8011C090"
 reason = "best 39/43: first byte load folds to lbzu instead of addi plus lbzx; next: test a shared indexed read at loop entry and latch without constant-folding the initial index"
+
+[[parked]]
+function = "fn_8011BCBC"
+reason = "best 43/49: loop entry folds addi plus lbzx into lbzu and the cursor limit becomes bgt 30; next: test a shared inline quoted-token scanner that seeds the index at its entry and explicitly enforces the signed 31-byte limit"
+
+[[parked]]
+function = "fn_8011BD80"
+reason = "best 43/49: same initial lbzu and bgt 30 as fn_8011BCBC; next: retry the shared scanner after fn_8011BCBC matches and retain the 0xBE halfword destination"
+
+[[parked]]
+function = "fn_8011E1EC"
+reason = "best 47/71: path-table float reads fold into one record pointer and the reload/product schedule differs; next: expose independent float field bases through an inline helper, then tune the post-store reload separately"
