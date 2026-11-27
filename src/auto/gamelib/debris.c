@@ -292,8 +292,8 @@ void fn_80064A04(void *arg0, s8 arg1) {
 
 s32 fn_800631DC(void *, s8, s32);
 
-void fn_80064A28(void *arg0) {
-    fn_800631DC(arg0, 0, 0);
+s32 fn_80064A28(void *arg0) {
+    return fn_800631DC(arg0, 0, 0);
 }
 
 s32 fn_8005F114(void *, s32, void *, void *, void *, s32);

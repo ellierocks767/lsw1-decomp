@@ -922,34 +922,6 @@ void fn_80074374(s32 keep)
     }
 }
 
-typedef struct PartStateBits {
-    u32 b80 : 1;
-    u32 b40 : 1;
-    u32 hit : 1;
-    u32 b10 : 1;
-    u32 hasDebris : 1;
-    u32 mode : 2;
-    u32 rest : 25;
-} PartStateBits;
-
-typedef struct PartWorld {
-    u8 unk00[0x35];
-    u8 kind;
-    u8 unk36[0x98 - 0x36];
-    f32 bounce;
-    f32 push;
-} PartWorld;
-
-s32 fn_80059C44(struct nuvec_s *, struct nuvec_s *, f32, s32);
-s32 fn_8005A82C(void);
-extern f32 lbl_80199A64[];
-extern f32 lbl_80199A68[];
-extern f32 lbl_80199A6C[];
-extern struct nuvec_s lbl_80348074;
-extern f32 lbl_80408898;
-extern PartWorld *lbl_8040AE5C;
-
-
 typedef struct {
     u8 unk00[0xB4];
     char *name;
@@ -972,7 +944,7 @@ s32 fn_8006F71C(void);
 f32 fn_8006F28C(void);
 s32 fn_8006F55C(void);
 s32 fn_8006F46C(void);
-s32 fn_80064A28(char *name);
+s32 fn_80064A28(void *arg0);
 s32 fn_8006DDC4(char *name, s32 len);
 extern PartScene *lbl_8040848C;
 extern char lbl_801BB51C[];
