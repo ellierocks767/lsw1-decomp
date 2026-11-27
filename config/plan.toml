@@ -2476,3 +2476,7 @@ reason = "best 369/593: typed motion and tracked records match the 0xa0 frame an
 [[parked]]
 function = "fn_800581A8"
 reason = "best 370/654: scratch frame and halfword stream largely align, but return routing, loop setup and the saved vector length across NuFdiv differ; next: recover the address-taken vector and length lifetimes and separate the early return that leaves r3 unchanged"
+
+[[parked]]
+function = "fn_80055C64"
+reason = "best 436/885: mode dispatch and tracked-entry paths still emit 42 extra instructions with the output counter and vector copies recovered; next: isolate cases 2\u20134 and 17\u201320 and use typed 0x18 tracked entries to recover scan and writeback scheduling"
