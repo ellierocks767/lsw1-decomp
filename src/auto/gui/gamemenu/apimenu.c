@@ -894,3 +894,78 @@ void fn_80075B44(s32 page) {
     lbl_80407B20();
     lbl_803D9000[page] = 0;
 }
+
+extern s32 lbl_8034705C[];
+extern s32 lbl_80408A30;
+extern s32 lbl_80408A4C;
+extern s32 lbl_80408BB4;
+
+static inline void MenuFrame_ResetRange(MenuFrame *m) {
+    m->max10 = lbl_80408BAA - 1;
+    m->max12 = 1;
+    lbl_80408C4C = 0;
+    lbl_80408A30 = 0;
+}
+
+void fn_80078A44(MenuFrame *m) {
+    s32 sel;
+
+    if (*(s32 *)((s8 *)m + 0x68) != 0) {
+        if (m->selA < m->max12) {
+            if (lbl_80408C4C != 0) {
+                Menu_Open(0x3FF, -1, -1);
+            } else if (lbl_8040821C != 2) {
+                MenuFrame_ResetRange(m);
+                if (lbl_8040AE0C != 0) {
+                    Menu_Open(0x3FD, -1, -1);
+                } else {
+                    Menu_Open(0x3EC, -1, -1);
+                }
+            } else {
+                sel = m->sel8 - m->minC;
+                lbl_80408BB4 = sel;
+                if (lbl_8034705C[sel] != 0) {
+                    Menu_Open(0x3F5, 1, -1);
+                    m->unk50 = lbl_80408A44;
+                } else {
+                    m->unk50 = lbl_80408A4C;
+                }
+            }
+        } else {
+            Menu_Open(0x3F9, 1, -1);
+            m->unk50 = lbl_80408A44;
+        }
+    } else if (*(s32 *)((s8 *)m + 0x6C) != 0) {
+        Menu_Open(0x3F9, 1, -1);
+    }
+}
+
+extern f32 lbl_8019B92C[];
+extern f32 lbl_8019B930[];
+extern s32 lbl_80408224;
+extern s32 lbl_80408230;
+extern s32 lbl_80408BF4;
+extern f32 lbl_80408C3C;
+
+void fn_8007890C(void) {
+    if (lbl_80408BF4 != 0 || lbl_80408C28 > lbl_8019B92C[0]) {
+        lbl_80408C3C = lbl_8019B930[0];
+    }
+    if (lbl_80408BF4 != 0 && lbl_80408224 != 0) {
+        lbl_80408BF4 = 0;
+        fn_80076194();
+        MenuFrame_ResetRange(&gMenuStack[gMenuDepth]);
+        if (lbl_8040AE0C != 0) {
+            Menu_Open(0x3FD, -1, -1);
+        } else if (lbl_8040821C != 2) {
+            Menu_Open(0x3EC, -1, -1);
+        } else if (lbl_80408220 == 0) {
+            Menu_Open(0x3EE, 1, -1);
+        } else if (lbl_8040822C == 0 || lbl_80408230 == 0) {
+            Menu_Open(0x3ED, -1, -1);
+        }
+    }
+    if (lbl_80408C3C <= lbl_8019B92C[0]) {
+        Menu_CloseCurrent();
+    }
+}
