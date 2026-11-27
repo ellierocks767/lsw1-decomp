@@ -2540,3 +2540,7 @@ reason = "best 436/885: mode dispatch and tracked-entry paths still emit 42 extr
 [[parked]]
 function = "fn_80056E88"
 reason = "best 523/1224: scratch copies and triangle normal aggregate writebacks improve the seed but leave a 0xa8-byte frame versus retail 0xa0; next: recover the duplicated transform and triangle paths using three address-taken vectors at stack offsets 0x08, 0x18, and 0x28"
+
+[[parked]]
+function = "fn_8004BC1C"
+reason = "best 36/37: target enters loop at the DVDGetCommandBlockStatus call skipping the 'mr r3,r31' (extra b at +0x14); next: find loop shape that hoists the arg move above the loop head, permuter burst"
