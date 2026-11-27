@@ -2572,3 +2572,7 @@ reason = "best 78/85: struct+control flow match; store scheduling of the init st
 [[parked]]
 function = "fn_8004D4D0"
 reason = "best 54/76: struct-block copy and s16 list loop shape ok; mismatch first loop pretest vs bottom test and hdr reg choice (r9 vs r11), zero reg sharing; next: permuter"
+
+[[parked]]
+function = "fn_80049DC0"
+reason = "best 50/89: structs+switch layout right; mismatch is ProDG cr0 save (mfcr/slwi/mtcrf) vs cr4 for the shared type!=0x30 test; next: permuter or restructure test"
