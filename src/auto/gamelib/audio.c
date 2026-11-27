@@ -341,8 +341,35 @@ void fn_8006DCD4(const char *name, void *pos) {
     }
 }
 
+extern f32 lbl_801986CC[];
+
+void fn_8006DD1C(const char *name, void *pos, f32 a)
+{
+    s32 id = PauseMenu_HandleEntry1(name);
+
+    if (id != -1)
+        fn_8006B328(id, pos, a, lbl_801986CC[0]);
+}
+
+extern f32 lbl_801986D0[];
+
+void fn_8006DD70(const char *name, void *pos, f32 b)
+{
+    s32 id = PauseMenu_HandleEntry1(name);
+
+    if (id != -1)
+        fn_8006B328(id, pos, lbl_801986D0[0], b);
+}
+
 void fn_8006DE5C(s32 id, void *pos) {
     fn_8006B328(id, pos, lbl_801986D4[0], lbl_801986D4[0]);
+}
+
+extern f32 lbl_801986D8[];
+
+void fn_8006DE88(s32 id, void *pos, f32 a)
+{
+    fn_8006B328(id, pos, a, lbl_801986D8[0]);
 }
 
 extern void fn_80021738(struct nuhspecial_s *, struct nugscn_s *, s32);
@@ -491,4 +518,60 @@ void fn_80068DE0(s32 index, s32 i)
 
     }
     --lbl_8039B1AC[index].unk1C;
+}
+
+extern s32 lbl_804086E0;
+
+struct AudioTrackEntry {
+    s32 id;
+    s32 fields[4];
+};
+
+void fn_8006DF1C(struct AudioTrackEntry *entry)
+{
+    s32 count;
+
+    lbl_804086E0 = 0;
+    lbl_804086DC = (s32)entry;
+    if (entry->id != 0) {
+        count = 0;
+        do {
+            entry++;
+            count++;
+        } while (entry->id != 0);
+        lbl_804086E0 = count;
+    }
+}
+
+struct AudioIndexRange {
+    s16 start;
+    s16 count;
+    u8 pad4[4];
+};
+extern struct AudioIndexRange lbl_803C3604[];
+
+s32 fn_8006E37C(s32 index)
+{
+    return lbl_803C3604[index].count;
+}
+
+extern s16 lbl_803C3924[];
+
+s32 fn_8006E394(s32 index, s32 offset)
+{
+    return lbl_803C3924[lbl_803C3604[index].start + offset];
+}
+
+void fn_8006E288(s32 value, s32 mode)
+{
+    u16 current = lbl_801BB44C[0];
+
+    *(s32 *)(lbl_801BB44C + 14) = value;
+    if ((u32)(current - 11) > 2)
+        return;
+
+    if (mode != 13)
+        lbl_801BB44C[0] = 11;
+    else
+        lbl_801BB44C[0] = mode;
 }
