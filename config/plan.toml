@@ -2468,3 +2468,7 @@ reason = "best 97/192: sized the three vector backups and reproduced the stack f
 [[parked]]
 function = "fn_80058FD8"
 reason = "best 200/202: frame, mode dispatch and both square-root paths agree; direction Z and adjustment-scale loads are scheduled early in the active direction branch; next: trace the two load dependencies with typed vector and coefficient aliases"
+
+[[parked]]
+function = "fn_80059300"
+reason = "best 369/593: typed motion and tracked records match the 0xa0 frame and counted lookup, but early-hit branch placement, initial store scheduling, and later loop control diverge; next: isolate the tracked lookup and per-iteration aggregate copy state before tracing the comparison after fn_80039D28"
