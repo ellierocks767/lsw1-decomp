@@ -36,11 +36,13 @@ typedef struct {
 typedef struct HVQM4DvdStream {
     u8 fileInfo[0x3c];
     void* buffer;
-    u8 unk40[0xc];
+    void* ringBuffer;
+    u8 unk44[8];
     s32 driveStatus;
-    u8 unk50[8];
+    s32 endOffset;
+    s32 limitOffset;
     s32 readOffset;
-    u8 unk5c[4];
+    void* bufferPos;
     s32 nextOffset;
     s32 result;
     s32 seeking;
@@ -60,12 +62,28 @@ s32 fn_8004B66C(HVQM4DvdStream*);
 
 typedef struct HVQM4PlayerState {
     HVQM4DvdStream* stream;
-    u8 unk04[0x5c];
+    u8 unk04[0x24];
+    s32 usecPerFrame;
+    u32 maxFrameSize;
+    u8 unk30[0xe];
+    u8 flags;
+    u8 unk3f;
+    u8 hasAudio;
+    u8 unk41[3];
+    s32 audioSamples;
+    u8 seq[4];
+    u16 width16;
+    u16 height16;
+    u8 unk50[4];
+    s32 width;
+    s32 height;
+    s32 audioRate;
     void* work;
     HVQM4VideoQueue* video;
     HVQM4AudioQueue* audio;
     void* sound;
-    u8 unk70[0x320];
+    u8 unk70[8];
+    u8 thread[0x318];
     void* stack;
     u32 readSize;
     void* readBuffer;
@@ -462,6 +480,15 @@ extern terrainsphere_s lbl_802B13B4[];
 s32 fn_80052590(terrainpoly_s *, f32, f32, f32, f32);
 void fn_80052CAC(void);
 
+s32 fn_8000AE18(f32, f32);
+
+void fn_8004F164(void)
+{
+  lbl_8040AE5C->rotationY = (f32)fn_8000AE18(lbl_8040AE5C->delta.x, lbl_8040AE5C->delta.z);
+  lbl_8040AE5C->rotationX = (f32)fn_8000AE18(-lbl_8040AE5C->delta.y, NuFsqrt(lbl_8040AE5C->delta.x * lbl_8040AE5C->delta.x + lbl_8040AE5C->delta.z * lbl_8040AE5C->delta.z));
+  lbl_8040AE5C->len = NuFsqrt(lbl_8040AE5C->delta.z * lbl_8040AE5C->delta.z + (lbl_8040AE5C->delta.x * lbl_8040AE5C->delta.x + lbl_8040AE5C->delta.y * lbl_8040AE5C->delta.y));
+}
+
 void fn_8004F590(void *arg0)
 {
   f32 temp_f11;
@@ -655,6 +682,55 @@ s32 fn_8004AEB4(HVQM4PlayerState* player)
     return 1;
 }
 
+s32 fn_8004B8F0(s32, s32, HVQM4DvdStream*);
+
+s32 fn_8004BAB4(HVQM4DvdStream* stream, u32 offset)
+{
+    s32 status;
+    u32 delta;
+    u32 block;
+    u32 start;
+    void (*cb)(s32, s32, s32);
+    volatile HVQM4DvdStream* v = stream;
+
+    if (v->result == -1) {
+        return 0;
+    }
+    if (offset == v->limitOffset) {
+        return 1;
+    }
+    if ((u32)v->nextOffset > offset && offset >= (u32)v->limitOffset) {
+        delta = offset - v->limitOffset;
+        return (fn_8004B8F0(0, delta, stream) ^ delta) == 0;
+    } else {
+        stream->seeking = 1;
+        if (stream->result == 0) {
+            do {
+                status = DVDGetCommandBlockStatus(stream);
+                if (status != stream->driveStatus) {
+                    cb = stream->onStatusChange;
+                    stream->driveStatus = status;
+                    if (cb != NULL) {
+                        cb(stream->callbackArg0, stream->callbackArg1, status);
+                    }
+                }
+            } while (stream->result == 0);
+        }
+        stream->seeking = 0;
+        block = offset / 98304;
+        start = block * 0x18000;
+        v->limitOffset = start;
+        v->readOffset = 0;
+        v->nextOffset = start;
+        *(s32*)((u8*)stream + 0x44) = (s32)stream->ringBuffer + (block * 0x18000) % 2162688;
+        if (v->result == 2) {
+            v->result = 1;
+        }
+        delta = offset % 98304;
+    }
+    return (fn_8004B8F0(0, delta, stream) ^ delta) == 0;
+}
+
 void fn_8004BD4C(s32 length, HVQM4DvdStream* stream)
 {
     volatile HVQM4DvdStream* state = stream;
@@ -687,6 +763,66 @@ void HVQM4BufaSetFree(HVQM4AudioQueue* queue, HVQM4AudioNode* node)
     }
     node->nextFree = NULL;
     OSRestoreInterrupts(interrupts);
+}
+
+HVQM4AudioNode* HVQM4BufaGetFree(HVQM4AudioQueue* queue)
+{
+    s32 interrupts = OSDisableInterrupts();
+    HVQM4AudioNode* node = queue->freeHead;
+    HVQM4AudioNode* next;
+
+    if (node != NULL) {
+        do {
+            next = node->nextFree;
+            if (next == NULL) {
+                queue->freeTail = next;
+            }
+            queue->freeHead = next;
+        } while (0);
+        node->nextFree = NULL;
+    }
+    OSRestoreInterrupts(interrupts);
+    return node;
+}
+
+HVQM4AudioNode* HVQM4BufaGetSend(HVQM4AudioQueue* queue)
+{
+    s32 interrupts = OSDisableInterrupts();
+    HVQM4AudioNode* node = queue->sendHead;
+    HVQM4AudioNode* next;
+
+    if (node != NULL) {
+        do {
+            next = node->nextSend;
+            if (next == NULL) {
+                queue->sendTail = next;
+            }
+            queue->sendHead = next;
+        } while (0);
+        node->nextSend = NULL;
+    }
+    OSRestoreInterrupts(interrupts);
+    return node;
+}
+
+HVQM4VideoNode* HVQM4BufvGetDisp(HVQM4VideoQueue* queue)
+{
+    s32 interrupts = OSDisableInterrupts();
+    HVQM4VideoNode* node = queue->displayHead;
+    HVQM4VideoNode* next;
+
+    if (node != NULL) {
+        do {
+            next = node->nextDisplay;
+            if (next == NULL) {
+                queue->displayTail = next;
+            }
+            queue->displayHead = next;
+        } while (0);
+        node->nextDisplay = NULL;
+    }
+    OSRestoreInterrupts(interrupts);
+    return node;
 }
 
 s32 fn_8005241C(terrainvec_s *p, f32 r) {

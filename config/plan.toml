@@ -2482,6 +2482,18 @@ function = "fn_80072028"
 reason = "best 212/250: preamble reg alloc + mr r10,r9 copy of lbl_8040AE5C + addi form of lbl_80348074.y in nested check; next: permuter burst or different local/pointer shape"
 
 [[parked]]
+function = "NuGCutSceneSysPostBackgroundLoad"
+reason = "retried: best 18/19: exit stw B uses t (r9) not p (r10) - cprop of p=t into exit block; 2nd pass ~20 more shapes (rotated while, t=n at end, inline push/pop with &p, two-def p) + 180s permuter (only semantics-breaking p=t inside if(p) scored better); next: exit block with a second reaching def of p that is semantically equal, or asm-level evidence of a helper call order"
+
+[[parked]]
+function = "fn_8003A878"
+reason = "retried: best 133/135: li r10,0 + stb xdf after c4/c8 vs li r0; 2nd pass tried inline init helper, shared zero local across uses, bitfield/volatile/s8 xdf, xdf via result/base (all same codegen); next: r10 implies r0/r9/r11 conflict at alloc - try a different first-if shape that makes scene[0]/0x88 pseudos live earlier, or permuter with focus markers"
+
+[[parked]]
+function = "fn_8003BA5C"
+reason = "best 729/830 (work/fn_8003BA5C/best.c, short pass: time, 8 candidates): instruction count 825/830; remaining: f-reg alloc (t in f12/over f31), child vis-test branch polarity on 0x1000000 (target shares the lbl_801B0F08 else-block), anims[alt] at 0xbc should form base+lwzx, len-1 end compare copies len to f11, 0xde s8 arg reg; next: give instance a real struct (anims[2] at 0xbc, s8 at 0xde), try vis-test with ternary matrix arg / swapped if, then order_search on float temps"
+
+[[parked]]
 function = "fn_800533F8"
 reason = "best 256/282: 0 opcode/length diffs, only FPR cycles in pos/end_pos (f10/f12/f11/f9) and normal2 (f8/f9/f10) after order_search (720) and 60s permuter (2608 iters); next: test NuVecSub/NuVecAdd inline or local float temps for pos/end_pos and normal2"
 
@@ -2504,6 +2516,34 @@ reason = "best 170/176: 0 length diffs, only align/lbl_804083CC schedule at @40 
 [[parked]]
 function = "fn_8005BE2C"
 reason = "best 249/284 (284 vs 284 insns, permuter 1530): f28/f29 swap in quadratic roots + r6/r7 swap + unk18 max_t scheduling; next: inspect SolveQuadratic inline / focused permuter on quadratic+cmd block"
+
+[[parked]]
+function = "fn_800A1EE8"
+reason = "best 26/27: mr r3, r0 scheduled before stw r0, lbl_80408F7C before bl memset (permuter 1750 iters stuck); next: check memset declaration or heap-reset macro/inline"
+
+[[parked]]
+function = "fn_8009E8B4"
+reason = "best 173/179: 1 missing mr r9, r0 after lwz r0, lbl_804093B0 before cmpwi r0, 0x7e (inlined fn_800A1CEC matched all 10 stack-copy insns); next: check nested if or local copy of lbl_804093B0"
+
+[[parked]]
+function = "fn_8009E310"
+reason = "best 155/196: exact 196 insns and -0x70 frame; 0.1f vs 43300000 lis order causes r8/r9/r10 regalloc shift in &3 and &0xC; next: check how 0x2814/0xE08 and 0.1f are derived"
+
+[[parked]]
+function = "fn_8009DCE8"
+reason = "best 232/291: exact -0x38 frame and subfic r5, r3, 0x2800 matched; 0.1f vs 43300000 lis order and f9/f11 regalloc shift (same quirk as fn_8009E310); next: check how sw/sh float cast and 0.1f are written"
+
+[[parked]]
+function = "fn_80041E30"
+reason = "best 84/90: lbl_802935A0+0x640 folded into reloc; next: advance pointer sequentially from lbl_802935A0"
+
+[[parked]]
+function = "fn_800411EC"
+reason = "best 91/103: exact 103 insns, global zeroing store order around memset; next: reorder global stores"
+
+[[parked]]
+function = "fn_800414F8"
+reason = "best 75/95: switch matched 100%, serial copy struct and res regalloc left; next: use 12-byte struct copy for lbl_8040A474/80"
 
 [[parked]]
 function = "fn_80059C44"
@@ -2541,6 +2581,49 @@ reason = "best 436/885: mode dispatch and tracked-entry paths still emit 42 extr
 function = "fn_80056E88"
 reason = "best 523/1224: scratch copies and triangle normal aggregate writebacks improve the seed but leave a 0xa8-byte frame versus retail 0xa0; next: recover the duplicated transform and triangle paths using three address-taken vectors at stack offsets 0x08, 0x18, and 0x28"
 
+[[parked]]
+function = "fn_8004BC1C"
+reason = "best 36/37: target enters loop at the DVDGetCommandBlockStatus call skipping the 'mr r3,r31' (extra b at +0x14); next: find loop shape that hoists the arg move above the loop head, permuter burst"
+
+[[parked]]
+function = "HVQM4BufvGetFree"
+reason = "best 40/44 without register asm (44/44 only with asm(\"r30\") on found, rejected as unnatural): found is CSE'd into cur in the unlink loads; next: different loop/found structure so found stays a separate pseudo, body in work/hc"
+
+[[parked]]
+function = "HVQM4PlayerExViRetrace"
+reason = "best 49/60: u64 nextTime<=elapsed tail reloads and early-return shape differ; next: goto-style/ret var, longer permuter"
+
+[[parked]]
+function = "fn_8004AF88"
+reason = "best 49/64: data-pointer reg alloc/scheduling in node loop; next: pointer-walk loop or longer permuter"
+
+[[parked]]
+function = "fn_8004B66C"
+reason = "best 44/76: target reloads nextOffset (0x60) repeatedly but caches endOffset; next: volatile/typedef variants"
+
+[[parked]]
+function = "fn_8004EFB4"
+reason = "best 101/108: r10/r11 swap on slot ptr + arg order of A570/A574 scheduling; next: permuter long run or different slot-ptr expression"
+
+[[parked]]
+function = "fn_8004B79C"
+reason = "best 78/85: struct+control flow match; store scheduling of the init stores (0x54..0x68 emitted late, li r11/r10 swap for result vs endOffset); next: permuter/ordering of comma stores"
+
+[[parked]]
+function = "fn_8004D4D0"
+reason = "best 54/76: struct-block copy and s16 list loop shape ok; mismatch first loop pretest vs bottom test and hdr reg choice (r9 vs r11), zero reg sharing; next: permuter"
+
+[[parked]]
+function = "fn_80049DC0"
+reason = "best 50/89: structs+switch layout right; mismatch is ProDG cr0 save (mfcr/slwi/mtcrf) vs cr4 for the shared type!=0x30 test; next: permuter or restructure test"
+
+[[parked]]
+function = "fn_8004B2B0"
+reason = "best 53/79: loop reg alloc (data r12 vs r10, walker r10 vs r11, zero in r0 vs r28); next: permuter, different node/walker split"
+
+[[parked]]
+function = "fn_8004B8F0"
+reason = "best 99/113: reg alloc in copy loop (end/ring/limit r10/r8/r11) and li r30 placement; next: permuter from work/hc/best_fn_8004B8F0.c"
 
 [[parked]]
 function = "fn_8013C8E8"
@@ -2565,6 +2648,18 @@ reason = "draft 79/208 not hand-attempted (time limit spent on fn_8013EA90); nex
 [[parked]]
 function = "fn_8013C620"
 reason = "code 51/51 but MATCH (unverified references): 0.0f literal is address-taken (lis/addi r30, lfs 0(r30)) so strict check cannot compare it to lbl_801AEC5C; extern lbl_801AEC5C[] form scores 30/51; next: a const/static rodata form that keeps the address hoist and names the symbol"
+
+[[parked]]
+function = "fn_8004A6A4"
+reason = "best 235/290: arg regs r26/r24/r25/r28/r27 vs target r25/r27/r24/r26/r28, work/samples temps copy (mr r4,r3), arg-move scheduling around 0x3b8 store; next: permuter run with struct-field layout variants"
+
+[[parked]]
+function = "fn_8004F6B8"
+reason = "best 158/306: arg float reg order (f27/f26 swap) and li r0,1 placement after fcmpu in the 14 side tests; next: model as inline helper/macro per axis case or permuter run"
+
+[[parked]]
+function = "fn_8004D600"
+reason = "best 184/359 (sweep; raw draft 116/359): large m2c draft needs struct-typed rewrite of three float-bounds blocks and the remap loop, frame size 0x50 vs 0x40 mismatch; next: rewrite with terrainhdr_s/TerrainIndexedEntry fields, then permuter"
 
 [[parked]]
 function = "fn_80062DA0"

@@ -248,3 +248,276 @@ void *fn_80040DE8(void *arg0, s32 arg1) {
     }
     return NULL;
 }
+
+void *fn_80040E14(struct Pool *pool, void *data)
+{
+    struct PoolNode *node;
+
+    if (data != NULL) {
+        node = ((struct PoolNode *)data - 1)->next;
+        if (node != NULL) {
+            return node + 1;
+        }
+    } else {
+        node = pool->used_head;
+        if (node != NULL) {
+            return node + 1;
+        }
+    }
+    return NULL;
+}
+
+struct sl_tex_s {
+    u8 pad0[0x0C];
+    void *f0c;
+    u8 pad10[0x28];
+    void *f38;
+};
+
+void NuFileWrite(s32);
+s32 fn_80024DC8(s32, void **, void **);
+struct sl_tex_s *fn_80033FF0(s32);
+extern s32 lbl_802995A0[];
+extern s32 lbl_802999A0[];
+extern s32 lbl_80408248;
+
+void fn_800410B8(void)
+{
+    u8 buf[0x1000];
+    void *end;
+    void *cur;
+    s32 tex;
+
+    if (lbl_80408248 != 0) {
+        cur = buf;
+        end = &end;
+        tex = fn_80024DC8(lbl_80408248, &cur, &end);
+        if (tex != 0) {
+            struct sl_tex_s *info = fn_80033FF0(tex);
+            __builtin_memcpy(lbl_802995A0, info->f0c, 0x400);
+            __builtin_memcpy(lbl_802999A0, info->f38, 0x200);
+            NuFileWrite(tex);
+        }
+    }
+}
+
+s32 CARDFormatAsync(s32, void *);
+void fn_80043040(void);
+extern s32 lbl_8040A438;
+extern s32 lbl_8040A440;
+extern s32 lbl_8040A444;
+
+static inline void sl_card_error(s32 res)
+{
+    switch (res) {
+    case -128:
+        lbl_8040A434 = 0x15;
+        break;
+    case -3:
+        lbl_8040A434 = 0x16;
+        break;
+    case -6:
+        lbl_8040A434 = 0x17;
+        break;
+    case -5:
+        lbl_8040A434 = 0x18;
+        break;
+    case -2:
+        lbl_8040A434 = 0x19;
+        break;
+    case -13:
+        lbl_8040A434 = 0x1A;
+        break;
+    }
+}
+
+s32 fn_80041BB4(void)
+{
+    if (lbl_8040A438 != 0) {
+        sl_card_error(lbl_8040A438);
+        return 0;
+    }
+    lbl_8040A444 = 0;
+    lbl_8040A440 = CARDFormatAsync(0, fn_80043040);
+    if (lbl_8040A440 != 0) {
+        sl_card_error(lbl_8040A440);
+        return 0;
+    }
+    return 1;
+}
+
+s32 CARDDeleteAsync(s32, void *, void *);
+s32 CARDOpen(s32, void *, void *);
+s32 CARDReadAsync(void *, void *, s32, s32, void *);
+s32 CARDCreateAsync(s32, void *, s32, void *, void *);
+
+extern char lbl_80193B70[];
+extern s32 lbl_802935A0[];
+extern s32 lbl_80299BA0[];
+extern s32 lbl_8040A458;
+extern s32 lbl_8040A460;
+extern s32 lbl_8040A468;
+
+s32 fn_80041A74(void)
+{
+    if (lbl_8040A438 != 0) {
+        sl_card_error(lbl_8040A438);
+        return 0;
+    }
+    lbl_8040A444 = 0;
+    lbl_8040A440 = CARDDeleteAsync(0, lbl_80193B70, fn_80043040);
+    if (lbl_8040A440 != 0) {
+        sl_card_error(lbl_8040A440);
+        return 0;
+    }
+    lbl_8040A458 = 0;
+    lbl_8040A460 = 0;
+    return 1;
+}
+
+s32 fn_800417CC(void)
+{
+    if (lbl_8040A438 != 0) {
+        sl_card_error(lbl_8040A438);
+        return 0;
+    }
+    lbl_8040A440 = CARDOpen(0, lbl_80193B70, lbl_80299BA0);
+    if (lbl_8040A440 != 0 && lbl_8040A440 != -4) {
+        sl_card_error(lbl_8040A440);
+        return 0;
+    }
+    if (lbl_8040A440 == 0) {
+        lbl_8040A458 = 1;
+    }
+    return 1;
+}
+
+s32 fn_80041CE8(void)
+{
+    if (lbl_8040A438 != 0) {
+        sl_card_error(lbl_8040A438);
+        return 0;
+    }
+    lbl_8040A444 = 0;
+    lbl_8040A440 = CARDReadAsync(lbl_80299BA0, lbl_802935A0, 0x6000, 0, fn_80043040);
+    if (lbl_8040A440 != 0) {
+        sl_card_error(lbl_8040A440);
+        return 0;
+    }
+    return 1;
+}
+
+s32 fn_80041914(void)
+{
+    if (lbl_8040A438 != 0) {
+        sl_card_error(lbl_8040A438);
+        return 0;
+    }
+    lbl_8040A444 = 0;
+    lbl_8040A440 = CARDCreateAsync(0, lbl_80193B70, ((0x5FFF / lbl_8040A468) + 1) * lbl_8040A468, lbl_80299BA0, fn_80043040);
+    if (lbl_8040A440 != 0) {
+        sl_card_error(lbl_8040A440);
+        return 0;
+    }
+    lbl_8040A458 = 1;
+    return 1;
+}
+
+s32 CARDFreeBlocks(s32, s32 *, s32 *);
+s32 CARDSetStatusAsync(s32, s32, void *, void *);
+
+struct sl_card_stat_s {
+    u8 pad0[0x2E];
+    s8 bannerFormat;
+    u8 pad2f;
+    u32 iconAddr;
+    u16 iconFormat;
+    u16 iconSpeed;
+    u32 commentAddr;
+};
+
+extern s32 lbl_80299BA4[];
+extern struct sl_card_stat_s lbl_80299BB4[];
+extern s32 lbl_8040A448;
+extern s32 lbl_8040A44C;
+extern s32 lbl_8040A46C;
+extern s32 lbl_8040A470;
+
+s32 fn_80041674(void)
+{
+    if (lbl_8040A444 == 0) {
+        return -1;
+    }
+    lbl_8040A440 = lbl_8040A448;
+    if (lbl_8040A448 != 0) {
+        sl_card_error(lbl_8040A448);
+        return 0;
+    }
+    lbl_8040A440 = CARDFreeBlocks(0, &lbl_8040A46C, &lbl_8040A470);
+    if (lbl_8040A440 != 0) {
+        sl_card_error(lbl_8040A440);
+        return 0;
+    }
+    if (lbl_8040A44C != 0) {
+        return 2;
+    }
+    return 1;
+}
+
+s32 fn_80042378(void)
+{
+    if (lbl_8040A438 != 0) {
+        sl_card_error(lbl_8040A438);
+        return 0;
+    }
+    lbl_80299BB4[0].iconFormat = (lbl_80299BB4[0].iconFormat & ~3) | 1;
+    lbl_80299BB4[0].iconAddr = 0x40;
+    lbl_80299BB4[0].iconSpeed |= 3;
+    lbl_80299BB4[0].bannerFormat &= ~4;
+    lbl_80299BB4[0].commentAddr = 0;
+    lbl_8040A444 = 0;
+    CARDSetStatusAsync(0, lbl_80299BA4[0], lbl_80299BB4, fn_80043040);
+    if (lbl_8040A440 != 0) {
+        sl_card_error(lbl_8040A440);
+        return 0;
+    }
+    return 1;
+}
+
+s32 CARDMountAsync(s32, void *, void *, void *);
+s32 CARDGetSerialNo(s32, void *);
+void fn_80042FC8(void);
+
+extern s32 lbl_80289560[];
+extern s32 lbl_8034705C[];
+extern s32 lbl_80408240;
+extern s32 lbl_8040A450;
+extern s32 lbl_8040A454;
+extern s32 lbl_8040A474;
+extern s32 lbl_8040A478;
+extern s32 lbl_8040A47C;
+extern s32 lbl_8040A480;
+extern s32 lbl_8040A488;
+extern s32 lbl_8040A48C;
+extern s32 lbl_8040A490;
+
+s32 NuTexAnimProgReadScript(void)
+{
+    s32 i;
+
+    lbl_8040A44C = 0;
+    if (lbl_8040A438 != 0) {
+        sl_card_error(lbl_8040A438);
+        return 0;
+    }
+    lbl_8040A444 = 0;
+    lbl_8040A440 = CARDMountAsync(0, lbl_80289560, fn_80042FC8, fn_80043040);
+    if (lbl_8040A440 != 0) {
+        sl_card_error(lbl_8040A440);
+        return 0;
+    }
+    for (i = 2; i >= 0; i--) {
+        lbl_8034705C[i] = 0;
+    }
+    return 1;
+}

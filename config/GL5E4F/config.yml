@@ -240,3 +240,15 @@ add_relocations:
 - source: .text:0x80149DC8
   type: ha
   target: lbl_802E9C20
+# fn_8009FB78: @l use(s) 0x800A008C (callee-saved r28 across bctrl)
+- source: .text:0x8009FC48
+  type: ha
+  target: gPlayer1Pointer
+# fn_8009FB78: @l use(s) 0x800A008C (callee-saved r28 across bctrl)
+- source: .text:0x8009FCC0
+  type: ha
+  target: gPlayer1Pointer
+# fn_8009D5D0: @l use(s) 0x8009D838 (callee-saved r18)
+- source: .text:0x8009D61C
+  type: ha
+  target: lbl_8019E7E8
