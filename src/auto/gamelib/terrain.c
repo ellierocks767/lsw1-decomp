@@ -321,6 +321,9 @@ void fn_8004BDD0(void *arg0) {
     }
 }
 
+f32 NuCosApprox(s32);
+f32 NuSinApprox(s32);
+
 typedef struct NUTERRAINFLAGS_s {
     u8 pad00[0x60];
     u8 flags[4];
