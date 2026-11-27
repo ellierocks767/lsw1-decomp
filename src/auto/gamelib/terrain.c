@@ -1,4 +1,5 @@
 #include "types.h"
+#include "numath/numath.h"
 
 
 typedef struct HVQM4AudioNode HVQM4AudioNode;
@@ -322,7 +323,19 @@ void fn_8004BDD0(void *arg0) {
 
 f32 NuCosApprox(s32);
 f32 NuSinApprox(s32);
-extern void *lbl_8040AE5C;
+struct nuterrainquery_s {
+    u8 unk00[0x4C];
+    f32 height;
+    f32 radius;
+    u8 unk54[0x34];
+    u8 hitKind;
+    u8 unk89[0xF];
+    f32 hitFraction;
+    u8 unk9C[0xC];
+    struct nuvec_s normal;
+};
+
+extern struct nuterrainquery_s *lbl_8040AE5C;
 
 void fn_8004F590(void *arg0)
 {
@@ -549,4 +562,70 @@ void HVQM4BufaSetFree(HVQM4AudioQueue* queue, HVQM4AudioNode* node)
     }
     node->nextFree = NULL;
     OSRestoreInterrupts(interrupts);
+}
+
+extern const f32 lbl_8019504C[];
+extern const f32 lbl_80195050[];
+
+s32 fn_8005241C(struct nuvec_s *point, f32 radius)
+{
+    f32 z = point->z;
+    f32 queryRadius = lbl_8040AE5C->radius;
+    f32 combinedRadius;
+    f32 radiusSquared;
+    f32 distanceSquared;
+    f32 depth;
+    f32 height;
+    f32 zero;
+    f32 offset;
+    f32 resultZ;
+    f32 y;
+
+    if (z < -queryRadius - radius) {
+        return 0;
+    }
+
+    combinedRadius = queryRadius + radius;
+    if (z > combinedRadius + lbl_8040AE5C->height) {
+        return 0;
+    }
+
+    radiusSquared = combinedRadius * combinedRadius;
+    distanceSquared = point->x * point->x + point->y * point->y;
+    if (distanceSquared > radiusSquared) {
+        return 0;
+    }
+
+    depth = NuFsqrt(radiusSquared - distanceSquared);
+    resultZ = point->z;
+    zero = lbl_8019504C[0];
+    offset = resultZ - depth;
+    if (offset < zero || offset > (height = lbl_8040AE5C->height)) {
+        distanceSquared = resultZ * resultZ + distanceSquared;
+        if (!(distanceSquared < radiusSquared)) {
+            return 0;
+        }
+
+        depth = NuFsqrt(distanceSquared);
+        lbl_8040AE5C->hitKind = 0x14;
+        depth = lbl_80195050[0] / depth;
+        lbl_8040AE5C->hitFraction = zero;
+        lbl_8040AE5C->normal.x = -point->x * depth;
+        lbl_8040AE5C->normal.y = -point->y * depth;
+        lbl_8040AE5C->normal.z = -point->z * depth;
+        return 1;
+    }
+
+    distanceSquared = offset / height;
+    if (distanceSquared < lbl_8040AE5C->hitFraction) {
+        lbl_8040AE5C->hitKind = 4;
+        lbl_8040AE5C->hitFraction = distanceSquared;
+        lbl_8040AE5C->normal.x = -point->x;
+        y = point->y;
+        lbl_8040AE5C->normal.z = -depth;
+        lbl_8040AE5C->normal.y = -y;
+        return 1;
+    }
+
+    return 0;
 }
