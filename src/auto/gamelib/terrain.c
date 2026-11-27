@@ -598,3 +598,27 @@ HVQM4AudioNode* HVQM4BufaGetSend(HVQM4AudioQueue* queue)
     OSRestoreInterrupts(interrupts);
     return node;
 }
+
+HVQM4VideoNode* HVQM4BufvGetDisp(HVQM4VideoQueue* queue)
+{
+    HVQM4VideoNode* next;
+    HVQM4VideoNode* node;
+    s32 interrupts;
+
+    interrupts = OSDisableInterrupts();
+    node = queue->displayHead;
+
+    if (node != NULL) {
+        next = node->nextDisplay;
+
+        do {
+            if (next == NULL) {
+                queue->displayTail = next;
+            }
+        } while (0);
+        queue->displayHead = next;
+        node->nextDisplay = NULL;
+    }
+    OSRestoreInterrupts(interrupts);
+    return node;
+}
