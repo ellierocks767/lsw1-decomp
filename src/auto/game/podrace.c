@@ -915,3 +915,39 @@ void Shop_InitCodeChars(void) {
         NuSpecialFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), &atoz0to9icon[i], buf, 1);
     }
 }
+
+typedef struct { s32 x, y, z; } BoltVec;
+typedef struct { char pad0[0xE0]; char obj[5][0x130]; } BoltRow;
+extern s32 CollideBoltStarFighter(void *, void *, void *, void *);
+
+s32 fn_80146F20(void *arg0, void *arg1) {
+    BoltVec b;
+    BoltVec a;
+    char *w;
+    s32 i;
+    s32 j;
+    if (*(s32 *)((s8 *)lbl_80409410 + 0x1980) != 0) {
+        w = *(char **)((s8 *)lbl_80409410 + 0x1984);
+        if (w != NULL && (*(u16 *)((s8 *)arg0 + 0xE8) & 1)) {
+            a = *(BoltVec *)((s8 *)arg1 + 0xC);
+            b = *(BoltVec *)((s8 *)arg0 + 0x9C);
+            for (i = 0; i < 8; i++) {
+                if (*(s32 *)(w + 0x708 + i * 0x680) != 0) {
+                    for (j = 0; j < 5; j++) {
+                        if (*(s32 *)(w + 0x1F0 + i * 0x680 + j * 0x130) != 0 &&
+                            CollideBoltStarFighter(arg0, w + 0xE0 + i * 0x680 + j * 0x130, &a, &b) != 0) {
+                            return 1;
+                        }
+                    }
+                }
+            }
+            for (j = 0; j < 96; j++) {
+                if (*(s32 *)(w + 0x565E0 + j * 0x130) != 0 &&
+                    CollideBoltStarFighter(arg0, w + 0x564D0 + j * 0x130, &a, &b) != 0) {
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
