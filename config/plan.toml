@@ -2464,3 +2464,7 @@ reason = "best 321/811: typed batch traversal and four local vector copies recov
 [[parked]]
 function = "fn_80051908"
 reason = "best 346/583: typed vertex and vector accesses recover the divide and cross-product calls, but the extra saved FPR and branch targets differ; next: reconstruct the two inlined rotation blocks with matching temporary lifetimes"
+
+[[parked]]
+function = "fn_800645CC"
+reason = "best 40/41: aggregate assignment and transform resets match, final slot-base add has r9 and r10 reversed; next: test an inline that returns the second slot address from an unsigned byte offset without folding it into the first address."
