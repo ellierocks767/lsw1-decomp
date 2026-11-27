@@ -143,12 +143,28 @@ struct AudioNameEntry {
     const char *name;
     signed int bankBit : 15;
     unsigned int flag16 : 1;
-    unsigned int : 16;
-    u8 pad8[8];
+    unsigned int flag16_18 : 3;
+    unsigned int flag19 : 1;
+    unsigned int flag20 : 1;
+    unsigned int flag21 : 1;
+    unsigned int flagRest : 10;
+    s32 freq;
+    u8 unkC;
+    u8 padD[3];
     s16 next;
-    u8 pad12[2];
+    s16 unk12;
     s16 linked;
-    u8 rest[0x2a];
+    s16 unk16;
+    f32 unk18;
+    f32 unk1C;
+    f32 unk20;
+    f32 unk24;
+    f32 unk28;
+    f32 unk2C;
+    s32 unk30;
+    f32 unk34;
+    f32 unk38;
+    u8 pad3C[4];
 };
 extern struct AudioNameEntry lbl_803B6E04[];
 extern char lbl_8019854C[], lbl_8019857C[];
@@ -650,9 +666,28 @@ s32 fn_8006E2CC(void)
 }
 
 struct AudioVoice {
-    u8 pad0[0x10];
+    struct nuvec_s pos;
+    s32 unkC;
     s32 id;
-    u8 pad14[0x40];
+    s16 unk14;
+    s16 unk16;
+    s16 unk18;
+    s16 unk1A;
+    s16 unk1C;
+    u8 pad1E[2];
+    f32 unk20;
+    u8 unk24[0x10];
+    s32 unk34;
+    s32 unk38;
+    f32 unk3C;
+    s16 unk40;
+    s16 unk42;
+    f32 unk44;
+    f32 unk48;
+    s16 unk4C;
+    u8 pad4E[3];
+    s8 group;
+    u8 pad52[2];
 };
 
 extern struct AudioVoice lbl_803AC5B8[512];
@@ -896,7 +931,8 @@ extern void **lbl_804083FC;
 extern struct AudioEntry2EC *lbl_80408404;
 
 struct AudioEmitter {
-    u8 pad0[0x12];
+    u8 pad0[0x11];
+    s8 group;
     s16 unk12;
     s16 unk14;
     u8 pad16[6];
@@ -905,7 +941,9 @@ struct AudioEmitter {
     f32 unk24;
     u8 pad28[0x7c];
     f32 unkA4;
-    u8 padA8[0x360];
+    u8 padA8[0x200];
+    s32 unk2A8;
+    u8 pad2AC[0x15C];
     s16 unk408;
 };
 
@@ -996,5 +1034,196 @@ void fn_80067114(struct AudioScene7114 *arg0)
                 }
             }
         }
+    }
+}
+
+extern char lbl_802BEAA8[][32];
+extern struct AudioNameEntry lbl_803C3F24[];
+extern s32 lbl_804086D0;
+
+void fn_8006BA54(s32 arg0)
+{
+    lbl_803B6E04[arg0].bankBit = -1;
+    lbl_803B6E04[arg0].freq = 22050;
+    lbl_803B6E04[arg0].name = lbl_802BEAA8[lbl_804086D0];
+    lbl_803B6E04[arg0].unkC = 0;
+    lbl_803B6E04[arg0].unk18 = 0.0f;
+    lbl_803B6E04[arg0].unk12 = 0x3FFF;
+    lbl_803B6E04[arg0].unk1C = 0.0f;
+    lbl_803B6E04[arg0].unk20 = 0.0f;
+    lbl_803B6E04[arg0].linked = -1;
+    lbl_803B6E04[arg0].flag16 = 0;
+    lbl_803B6E04[arg0].flag16_18 = 0;
+    lbl_803B6E04[arg0].flag20 = 0;
+    lbl_803B6E04[arg0].unk24 = 0.0f;
+    lbl_803B6E04[arg0].unk28 = 0.0f;
+    lbl_803B6E04[arg0].unk2C = 0.0f;
+    lbl_803B6E04[arg0].unk30 = 0;
+    lbl_803B6E04[arg0].unk34 = 0.0f;
+    lbl_803B6E04[arg0].unk38 = 0.0f;
+    lbl_803B6E04[arg0].unk16 = 0;
+    lbl_803B6E04[arg0].flag21 = 0;
+    lbl_803C3F24[arg0] = lbl_803B6E04[arg0];
+}
+
+extern void fn_80060120(s32 *, s32, f32, f32, f32);
+extern void fn_800644E4(s32, s16, s16);
+extern void fn_80064730(s32, s16, s16, s16);
+extern void fn_80064860(s32, s16, s16, f32, f32);
+extern void fn_80064888(s32, f32);
+extern void fn_800648B4(s32, s32, s32, f32);
+extern void fn_800648D8(s32, s16);
+extern void fn_800648F4(s32, s32);
+extern s32 fn_80064A04(u8 *, s32);
+extern s32 lbl_803B6DB8[];
+
+void fn_8006AD0C(s32 arg0)
+{
+    s32 i;
+
+    for (i = 0; i < 512; i++) {
+        if (lbl_803AC5B8[i].group == arg0) {
+            s32 savedId = lbl_803AC5B8[i].id;
+            if (savedId == 99999) {
+                lbl_803AC5B8[i].id = -1;
+                lbl_803AC5B8[i].unkC = fn_80064A04(lbl_803AC5B8[i].unk24, arg0);
+                fn_80060120(&lbl_803AC5B8[i].id, lbl_803AC5B8[i].unkC, lbl_803AC5B8[i].pos.x, lbl_803AC5B8[i].pos.y, lbl_803AC5B8[i].pos.z);
+                if (lbl_803AC5B8[i].id != -1) {
+                    lbl_80408404[lbl_803AC5B8[i].id].pad104[0x175] = 0;
+                    fn_800644E4(lbl_803AC5B8[i].id, lbl_803AC5B8[i].unk14, lbl_803AC5B8[i].unk16);
+                    fn_80064730(lbl_803AC5B8[i].id, lbl_803AC5B8[i].unk18, lbl_803AC5B8[i].unk1A, lbl_803AC5B8[i].unk1C);
+                    fn_80064888(lbl_803AC5B8[i].id, lbl_803AC5B8[i].unk20);
+                    fn_800648B4(lbl_803AC5B8[i].id, lbl_803AC5B8[i].unk34, lbl_803AC5B8[i].unk38, lbl_803AC5B8[i].unk3C);
+                    fn_80064860(lbl_803AC5B8[i].id, lbl_803AC5B8[i].unk40, lbl_803AC5B8[i].unk42, lbl_803AC5B8[i].unk44, lbl_803AC5B8[i].unk48);
+                    fn_800648D8(lbl_803AC5B8[i].id, lbl_803AC5B8[i].unk4C);
+                    fn_800648F4(lbl_803AC5B8[i].id, lbl_803B6DB8[lbl_803AC5B8[i].group]);
+                } else {
+                    lbl_803AC5B8[i].id = savedId;
+                }
+            }
+        }
+    }
+    lbl_803B6DD8[arg0] = 1;
+}
+
+extern void fn_8005EB80(s32 *);
+extern void fn_8005ECC8(void *);
+extern s32 *lbl_804083EC;
+extern s32 lbl_804083F0;
+extern s32 lbl_804083F4;
+extern s32 lbl_804085D8;
+extern s32 lbl_8040AEAC;
+
+void fn_8006AE9C(s32 arg0)
+{
+    s32 i;
+    s32 j;
+    s32 none = -1;
+
+    lbl_803B6DD8[arg0] = 0;
+    for (i = 0; i < 512; i++) {
+        if (lbl_803AC5B8[i].id != -1 && lbl_803AC5B8[i].id != 99999) {
+            if (lbl_803AC5B8[i].group == arg0) {
+                if (lbl_803AC5B8[i].id != -1 && lbl_803AC5B8[i].id != 99999) {
+                    fn_8005EB80(&lbl_803AC5B8[i].id);
+                    lbl_803AC5B8[i].id = 99999;
+                }
+            } else if (lbl_803AC5B8[i].unkC > 0) {
+                struct AudioEmitter *em = (struct AudioEmitter *)lbl_804083FC[lbl_803AC5B8[i].unkC];
+                if (em != NULL && em->group == arg0) {
+                    if (lbl_803AC5B8[i].id != -1) {
+                        if (lbl_803AC5B8[i].id != 99999) {
+                            fn_8005EB80(&lbl_803AC5B8[i].id);
+                        }
+                        lbl_803AC5B8[i].id = none;
+                        lbl_804085E4--;
+                    }
+                }
+            }
+        }
+    }
+    for (i = 1; i < lbl_804083F4; i++) {
+        struct AudioEmitter *em = (struct AudioEmitter *)lbl_804083FC[i];
+        if (em != NULL && em->group == arg0) {
+            for (j = 0; j < lbl_804083F0; j++) {
+                if (lbl_80408404[j].unk102 == i) {
+                    s32 tmp = j;
+                    fn_8005EB80(&tmp);
+                }
+            }
+            fn_8005ECC8(lbl_804083FC[i]);
+        }
+    }
+}
+
+void fn_8006B03C(s32 arg0)
+{
+    s32 i;
+    s32 j;
+    s32 sentinel = 99999;
+    s32 none = -1;
+
+    lbl_803B6DD8[arg0] = 0;
+    lbl_8038E820[arg0] = 0;
+    for (i = 0; i < 512; i++) {
+        if (lbl_803AC5B8[i].group == arg0) {
+            if (lbl_803AC5B8[i].id != -1) {
+                if (lbl_803AC5B8[i].id != sentinel) {
+                    fn_8005EB80(&lbl_803AC5B8[i].id);
+                }
+                lbl_803AC5B8[i].id = none;
+                lbl_804085E4--;
+            }
+        }
+    }
+    for (i = 1; i < lbl_804083F4; i++) {
+        struct AudioEmitter *em = (struct AudioEmitter *)lbl_804083FC[i];
+        if (em != NULL && em->group == arg0) {
+            for (j = 0; j < lbl_804083F0; j++) {
+                if (lbl_80408404[j].unk102 == i) {
+                    s32 tmp = j;
+                    fn_8005EB80(&tmp);
+                }
+            }
+            fn_8005ECC8(lbl_804083FC[i]);
+            if (((struct AudioEmitter *)lbl_804083FC[i])->unk2A8 != 0) {
+                lbl_8040AEAC--;
+                lbl_804083EC[lbl_8040AEAC] = ((struct AudioEmitter *)lbl_804083FC[i])->unk2A8;
+                ((struct AudioEmitter *)lbl_804083FC[i])->unk2A8 = 0;
+            }
+            lbl_804083FC[i] = NULL;
+            lbl_804085D8--;
+        }
+    }
+}
+
+void fn_8006D4F0(s32 arg0)
+{
+    s32 prev;
+    s32 old;
+
+    if (!lbl_804086E8 && !lbl_804086EC) {
+        lbl_801BB44C[2] = 1 - lbl_801BB44C[2];
+        old = lbl_801BB44C[3];
+        lbl_801BB44C[3] = lbl_801BB44C[5];
+        lbl_801BB44C[5] = old;
+        prev = lbl_801BB44C[3];
+        fn_80044BB8(lbl_801BB44C[2]);
+        if (arg0 == 1) {
+            fn_80044C30(lbl_801BB44C[2], (s32)((f32)((struct AudioTrackEntry *)lbl_804086DC)[prev].fields[2] * lbl_804086FC));
+            fn_80044BF4(1 - lbl_801BB44C[2]);
+            fn_80044C30(lbl_801BB44C[2], 0);
+            lbl_801BB44C[0] = 4;
+            *(f32 *)((u8 *)lbl_801BB44C + 0x18) = 1.0f;
+        } else {
+            if ((u32)((u16)lbl_801BB44C[0] - 5) <= 1) {
+                *(f32 *)((u8 *)lbl_801BB44C + 0x18) = 1.0f - *(f32 *)((u8 *)lbl_801BB44C + 0x18);
+            } else {
+                *(f32 *)((u8 *)lbl_801BB44C + 0x18) = 0.0f;
+            }
+            fn_80044C30(lbl_801BB44C[2], (s32)((f32)((struct AudioTrackEntry *)lbl_804086DC)[prev].fields[2] * *(f32 *)((u8 *)lbl_801BB44C + 0x18)));
+            lbl_801BB44C[0] = (arg0 == 3) ? 6 : 5;
+        }
+        fn_80044D4C();
     }
 }
