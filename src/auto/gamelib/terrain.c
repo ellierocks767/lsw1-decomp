@@ -243,6 +243,40 @@ void HVQM4PlayerExBufaSetFree(HVQM4PlayerState* player, HVQM4AudioNode* node)
     HVQM4BufaSetFree(player->audio, node);
 }
 
+HVQM4VideoNode* HVQM4BufvGetFree(HVQM4VideoQueue* queue)
+{
+    register HVQM4VideoNode* found asm("r30") = NULL;
+    HVQM4VideoNode* cur;
+    s32 interrupts = OSDisableInterrupts();
+
+    cur = queue->freeHead;
+    if (cur != NULL) {
+        do {
+            if (cur->busy == 0) {
+                found = cur;
+                if (found == queue->freeHead) {
+                    if (found->nextFree == found) {
+                        queue->freeHead = NULL;
+                    } else {
+                        queue->freeHead = found->nextFree;
+                        goto unlink;
+                    }
+                } else {
+unlink:
+                    found->prevFree->nextFree = found->nextFree;
+                    found->nextFree->prevFree = found->prevFree;
+                }
+                cur->prevFree = NULL;
+                cur->nextFree = NULL;
+                break;
+            }
+            cur = cur->nextFree;
+        } while (cur != queue->freeHead);
+    }
+    OSRestoreInterrupts(interrupts);
+    return found;
+}
+
 s32 fn_8004A578(s32, s32 *);
 extern s32 lbl_80408378;
 
