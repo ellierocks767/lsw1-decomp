@@ -2456,3 +2456,11 @@ reason = "best 256/282: 0 opcode/length diffs, only FPR cycles in pos/end_pos (f
 [[parked]]
 function = "fn_80053860"
 reason = "best 214/324: frame -0x48 vs -0x50 (stmw r24 vs r23, missing mr r31,r0 and mr r27,r30 preheader copies) and f28/f29 min_x/max_x swap after variant_search (2000); next: recover why wall->unk2 copies r30->r27 in inner loop preheader and swap min_x/max_x allocation"
+
+[[parked]]
+function = "fn_8005D9C0"
+reason = "best 40/43: 0 length diffs, only add r9,r6,r9 operand order and stw r8,0x27c vs sth r0,0x100 swap after 1271 candidates; next: test struct field typing or separate zero local for unk27c"
+
+[[parked]]
+function = "fn_8005D6E4"
+reason = "best 114/118: 0 opcode/length diffs, only r9/r11 swap in debris_insert after variant_search (29) and 25s permuter (1302 iters); next: test inlining debris_insert without helper or different index expression"

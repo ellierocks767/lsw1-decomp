@@ -146,11 +146,11 @@ void fn_80063D78(s32 *arg0) {
     }
 }
 
-s32 fn_8005EF6C(s32);
+void fn_8005EF6C(s32, f32);
 extern s32 lbl_80408404;
 
-void fn_80064888(s32 arg0) {
-    fn_8005EF6C(lbl_80408404 + (arg0 * 0x2EC));
+void fn_80064888(s32 arg0, f32 farg0) {
+    fn_8005EF6C(lbl_80408404 + (arg0 * 0x2EC), farg0);
 }
 
 extern s32 lbl_80408404;
@@ -718,9 +718,10 @@ void fn_8005FF74(s32 effect, void *arg1, s32 arg2, s16 angleZ, s16 angleY, void 
 typedef struct debrisnode_s {
     u8 pad00[8];
     s8 *deb;
-    u8 pad0c[0x50];
+    u8 pad0c[0x4c];
+    struct debrisnode_s *prev;
     struct debrisnode_s *next;
-    s16 unk60;
+    u16 unk60;
 } debrisnode_s;
 
 extern debrisnode_s *lbl_8038E6D8[];
@@ -865,5 +866,66 @@ s32 fn_8005F114(void *arg0, s32 arg1, void *arg2, void *arg3, void *arg4, s32 ar
             }
             return idx;
         }
+    }
+}
+
+f32 NuRandIntSeeded(s32 *);
+extern f32 lbl_804083C0;
+
+typedef struct debrisdef_ef6c_s {
+    u8 pad00[0x1c];
+    f32 unk1c;
+    f32 unk20;
+    f32 unk24;
+    f32 unk28;
+    u8 unk2c;
+    u8 pad2d[0x23];
+    f32 unk50;
+    f32 unk54;
+    u8 pad58[0x295];
+    u8 unk2ed;
+} debrisdef_ef6c_s;
+
+typedef struct debris_ef6c_s {
+    u8 pad00[0x102];
+    s16 unk102;
+    u8 pad104[0x4c];
+    s16 unk150;
+    s16 unk152;
+    u8 pad154[8];
+    f32 unk15c;
+    f32 unk160;
+    f32 unk164;
+} debris_ef6c_s;
+
+void fn_8005EF6C(s32 arg0, f32 farg0) {
+    debris_ef6c_s *deb = (debris_ef6c_s *)arg0;
+    s32 frames = (s32)(farg0 * 60.0f);
+    if (deb != NULL) {
+        debrisdef_ef6c_s *def = ((debrisdef_ef6c_s **)lbl_804083FC)[deb->unk102];
+        f32 t;
+        if (def->unk2ed == 4) {
+            t = lbl_804083C0;
+        } else {
+            t = lbl_804083BC;
+        }
+        if (def->unk20 != 0.0f || def->unk28 != 0.0f) {
+            deb->unk160 = t;
+        } else {
+            f32 period = def->unk1c + def->unk24;
+            f32 base = period * (f32)(s32)(t / period);
+            if (def->unk2c == 7 && def->unk24 == 0.0f) {
+                deb->unk150 = (s16)((f32)frames * def->unk50);
+                deb->unk152 = (s16)((f32)frames * def->unk54);
+                deb->unk160 = base + period;
+            } else {
+                deb->unk160 = base + farg0 + period;
+            }
+            while (deb->unk160 > t) {
+                deb->unk160 -= period;
+            }
+        }
+        deb->unk164 = NuRandIntSeeded(&lbl_80408410) * def->unk20 + (deb->unk160 + def->unk1c);
+        deb->unk15c = -10.0f;
     }
 }
