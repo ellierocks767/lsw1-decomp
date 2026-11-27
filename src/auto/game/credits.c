@@ -365,3 +365,39 @@ found:
         }
     }
 }
+
+s32 fn_80105DEC(void *, s32);
+
+void fn_80109458(u8 *arg0) {
+    u8 *e;
+    u8 *s;
+    u8 *q;
+    s32 k;
+    s32 i;
+    u8 *p;
+    s32 j;
+
+    s = *(u8 **)(arg0 + 0x238);
+    if (s != NULL) {
+        for (k = 0; k < *(s32 *)(arg0 + 0x23C); k++) {
+            fn_80105DEC(s, 0);
+            if (s != NULL) {
+                p = s + 0xA8;
+                for (i = 0; i < s[0x1E]; i++) {
+                    q = s + i * 0x34;
+                    if ((q[0xD8] & 0x18) == 0) {
+                        e = *(u8 **)(arg0 + 0x58C);
+                        for (j = 0; j < *(s32 *)(arg0 + 0x590); j++, e += 0xF4) {
+                            if (fn_80013890((s32)(e + 4), p) != 0) {
+                                fn_8011FB44((s32)e);
+                                break;
+                            }
+                        }
+                    }
+                    p += 0x34;
+                }
+            }
+            s += *(u16 *)(s + 0x1C);
+        }
+    }
+}
