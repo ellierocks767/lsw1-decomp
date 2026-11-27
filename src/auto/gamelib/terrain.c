@@ -322,7 +322,23 @@ void fn_8004BDD0(void *arg0) {
 
 f32 NuCosApprox(s32);
 f32 NuSinApprox(s32);
-extern void *lbl_8040AE5C;
+typedef struct NUTERRAINMOTION_s {
+    u8 pad00[0x1C];
+    f32 position[3];
+    f32 step[3];
+    u8 pad34[0x54];
+    u8 mode;
+    u8 pad89[0x0F];
+    f32 field98;
+    u8 pad9C[4];
+    f32 fieldA0;
+    u8 padA4[8];
+    f32 fieldAC;
+    u8 padB0[8];
+    f32 fieldB8;
+} TerrainMotion;
+
+extern TerrainMotion *lbl_8040AE5C;
 
 void fn_8004F590(void *arg0)
 {
@@ -549,4 +565,59 @@ void HVQM4BufaSetFree(HVQM4AudioQueue* queue, HVQM4AudioNode* node)
     }
     node->nextFree = NULL;
     OSRestoreInterrupts(interrupts);
+}
+
+void fn_8005592C(void);
+extern const f32 lbl_8019510C[];
+extern const f32 lbl_80195110[];
+extern const f32 lbl_80195114[];
+
+s32 fn_80056A38(u8 *flags)
+{
+    TerrainMotion *motion;
+    f32 scale;
+    f32 threshold;
+    s32 mode;
+
+    fn_8005592C();
+    motion = lbl_8040AE5C;
+    mode = motion->mode;
+    switch (mode) {
+        case 0:
+            flags[0] = mode;
+            lbl_8040AE5C->position[0] += lbl_8040AE5C->step[0];
+            lbl_8040AE5C->position[1] += lbl_8040AE5C->step[1];
+            lbl_8040AE5C->position[2] += lbl_8040AE5C->step[2];
+            return 0;
+
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            motion->field98 -= motion->fieldA0;
+            if (motion->field98 < lbl_8019510C[0]) {
+                motion->field98 = lbl_8019510C[0];
+            }
+
+            threshold = lbl_80195110[0];
+            scale = lbl_8040AE5C->field98;
+            lbl_8040AE5C->position[0] += lbl_8040AE5C->step[0] * scale;
+            lbl_8040AE5C->position[1] += lbl_8040AE5C->step[1] * scale;
+            lbl_8040AE5C->position[2] += lbl_8040AE5C->step[2] * scale;
+            if (lbl_8040AE5C->fieldB8 < threshold) {
+                flags[0] = 0;
+            } else {
+                flags[0] = 1;
+                flags[1] = 1;
+                lbl_8040AE5C->position[1] += lbl_8040AE5C->fieldAC * lbl_80195114[0];
+            }
+            return 0;
+
+        case 17:
+        case 18:
+        case 19:
+        case 20:
+            return 1;
+    }
+    return 1;
 }
