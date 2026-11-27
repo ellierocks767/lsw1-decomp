@@ -31,7 +31,8 @@ s32 fn_8008F22C(s32 *);
 s32 fn_8008F234(s32 *);
 s32 fn_8008F23C(s32 *);
 s32 fn_8008F244(s32 *);
-s32 fn_8008F24C(s32 *);
+struct gaiv3;
+void fn_8008F24C(void (*)(const struct gaiv3 *, s32, s32, s32));
 s32 fn_8008F254(s32 *);
 s32 fn_8008F25C(s32 *);
 s32 fn_8008F264(s32 *);
@@ -55,7 +56,7 @@ u8 fn_8012CD50(char *name);
 s32 fn_8012CE08(s32 arg0);
 u8 fn_8012CE4C(s32 arg0);
 u8 fn_8012CE74(char *name);
-extern s32 fn_8012CF28[];
+void fn_8012CF28(const struct gaiv3 *, s32, s32, s32);
 s32 fn_8012D068(s32 arg0);
 s32 GameAIActionParseSpeed(char *name, u8 *out);
 extern s32 fn_8012D13C[];
@@ -834,6 +835,74 @@ void fn_80129CCC(struct gameai_update_system_s *system)
         for (i = 0; i < ((struct gaisys_s *)lbl_80409410)->nprocs; ++i) {
             struct gaisys_s *scripts = lbl_80409410;
             AIScriptProcess(system, NULL, NULL, &scripts->procs[i], lbl_80408E9C);
+        }
+    }
+}
+
+struct gameai_joint_model_s {
+    u8 unk0[0xA0];
+    u32 jointMask;
+};
+
+struct gameai_model_entry_s {
+    u8 unk0[0x20];
+    struct gameai_joint_model_s *model;
+    u8 unk24[0x24];
+};
+
+struct gameai_joint_object_s {
+    u8 unk0[0x60];
+    f32 unk60;
+    f32 unk64;
+};
+
+struct gameai_joint_entry_s {
+    u32 unk0;
+    struct gameai_joint_object_s *object;
+    u8 unk8[0x4C];
+};
+
+struct gameai_joint_table_s {
+    u8 unk0[0x18];
+    struct gameai_joint_entry_s *joints;
+    s16 *jointIndices;
+    struct gameai_model_entry_s *models;
+};
+
+s32 NuAngAdd(s32, s32);
+void fn_8000DC80(void *, const struct gaiv3 *);
+void fn_8000E498(void *, s32);
+void fn_80027404(struct gameai_joint_object_s *, void *, s32, s16 *);
+s32 fn_8009536C(struct gameai_joint_entry_s *, s16 *, u32);
+extern const f32 lbl_801ACFA4[];
+extern s32 lbl_804093AC;
+
+void fn_8012CF28(const struct gaiv3 *position, s32 angle, s32 model, s32 adjust)
+{
+    f32 matrix[16];
+    s16 joints[32];
+    struct gaiv3 adjusted;
+    struct gameai_joint_table_s *table = lbl_80408DF0;
+    s16 index = table->jointIndices[model];
+    if (index != -1) {
+        struct gameai_joint_entry_s *entry = &table->joints[index];
+        s32 count = fn_8009536C(entry, joints, table->models[model].model->jointMask);
+        if (count > 0) {
+            s16 adjustedAngle = NuAngAdd(angle, 0x8000);
+            fn_8000DC80(matrix, position);
+            fn_8000E498(matrix, adjustedAngle);
+            if (lbl_804093AC == 0x4C) {
+                if (!adjust) {
+                    return;
+                }
+                fn_80027404(entry->object, matrix, count, joints);
+            } else {
+                fn_80027404(entry->object, matrix, count, joints);
+            }
+            if (adjust) {
+                adjusted = *position;
+                adjusted.y += entry->object->unk64 * lbl_801ACFA4[0] + entry->object->unk60;
+            }
         }
     }
 }
