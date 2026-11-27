@@ -874,3 +874,21 @@ s32 BuyShopItem(ShopItem *items, s32 index, s32 charge)
     }
     return 1;
 }
+
+typedef struct { s32 id; f32 val; } ShopPair;
+typedef struct { char pad[0x63734]; s32 count; ShopPair pairs[256]; } ShopData;
+typedef struct { char pad[0x1984]; ShopData *shop; } ShopRoot;
+#define SHOP() (((ShopRoot *)lbl_80409410)->shop)
+#define ID (*(s32 *)(*(char **)((char *)arg0 + 0xD4) + 0x524))
+#define VAL (*(f32 *)((char *)arg0 + 0xF8))
+s32 fn_80146194(void *arg0) {
+    s32 i;
+    i = 0;
+    for (; i < SHOP()->count; i++) {
+        if (SHOP()->pairs[i].id == ID && SHOP()->pairs[i].val == VAL) return 0;
+    }
+    if (i <= 0xFF) {
+    SHOP()->pairs[i].id = ID; SHOP()->pairs[i].val = VAL; SHOP()->count++; return 1;
+    }
+    return 0;
+}
