@@ -1,4 +1,5 @@
 #include "game/ai.h"
+#include "game/creature.h"
 
 struct fn_8012CD28_s {
     s32 x;
@@ -436,6 +437,9 @@ struct gaibox_s {
     f32 y;
     f32 z;
     s16 yrot;
+    u8 flags;
+    u8 unk2B[5];
+    u64 objectMask;
 };
 
 s32 fn_8012C994(struct gaibox_s *box, f32 *pos, f32 r) {
@@ -606,4 +610,50 @@ s32 fn_8012A3F4(u8 *w, struct gaihandle *h) {
         }
     }
     return 0;
+}
+
+extern f32 lbl_801ACEC8[];
+extern f32 lbl_801ACECC[];
+extern struct NUGAMEOBJECT_s *lbl_80409430;
+extern s32 lbl_8040B058;
+
+void fn_80129F6C(struct gaibox_s *box)
+{
+    struct NUGAMEOBJECT_s *object;
+    s32 i;
+    f32 offset[3];
+    s32 flags;
+
+    box->objectMask = 0;
+    box->flags &= ~7;
+    object = lbl_80409430;
+    i = 0;
+    if (i < lbl_8040B058) {
+        f32 minValue = lbl_801ACEC8[0];
+        f32 minY = lbl_801ACECC[0];
+        do {
+            if ((object->flags20C & 0x80080000) == 0x80080000 &&
+                object->playerPacket != NULL &&
+                (object->unk28F == 0 || object->unk103C > minValue)) {
+                NuVecSub(offset, object->position, box->pos);
+                NuVecRotateY(offset, offset, -box->yrot);
+                if (offset[0] >= -box->x && offset[1] >= minY &&
+                    offset[2] >= -box->z && offset[0] <= box->x &&
+                    offset[1] <= box->y && offset[2] <= box->z) {
+                    box->objectMask |= 1ULL << object->maskIndex;
+                    if (object->playerPacket != NULL && (object->flags20C & 0x01000000)) {
+                        box->flags |= 1;
+                    }
+                    flags = object->motionFlags;
+                    if (flags & 1) {
+                        box->flags |= 4;
+                    } else if (!(flags & 4)) {
+                        box->flags |= 2;
+                    }
+                }
+            }
+            i++;
+            object++;
+        } while (i < lbl_8040B058);
+    }
 }
