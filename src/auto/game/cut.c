@@ -1482,7 +1482,8 @@ void __fini_cpp_exceptions(void)
 }
 
 typedef struct CutSceneController {
-    u8 unk0[0x24];
+    u8 unk0[0x20];
+    f32 value20;
     f32 value24;
     u8 unk28[0x14];
     u32 flags;
@@ -1494,5 +1495,14 @@ void fn_8011C028(f32 value)
     CutSceneController *controller = (CutSceneController *)lbl_8040A768;
 
     controller->value24 = magnitude;
+    controller->flags |= 0x800;
+}
+
+void fn_8011BFF4(f32 value)
+{
+    f32 magnitude = fn_8000ED40(value);
+    CutSceneController *controller = (CutSceneController *)lbl_8040A768;
+
+    controller->value20 = magnitude;
     controller->flags |= 0x800;
 }
