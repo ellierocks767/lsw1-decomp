@@ -2090,3 +2090,16 @@ void fn_800659B8(s32 set, s32 index) {
     }
     lbl_8038E840[set].count1--;
 }
+
+void fn_80065AE0(s32 set, s32 index) {
+    s32 i;
+
+    for (i = index; i < lbl_8038E840[set].count2 - 1; i++) {
+        lbl_8038E840[set].a2[i] = lbl_8038E840[set].a2[i + 1];
+        lbl_8038E840[set].b2[i] = lbl_8038E840[set].b2[i + 1];
+        lbl_8038E840[set].c2[i] = lbl_8038E840[set].c2[i + 1];
+        lbl_8038E840[set].v2[i] = lbl_8038E840[set].v2[i + 1];
+        strcpy(lbl_8038E840[set].names2[i], lbl_8038E840[set].names2[i + 1]);
+    }
+    lbl_8038E840[set].count2--;
+}
