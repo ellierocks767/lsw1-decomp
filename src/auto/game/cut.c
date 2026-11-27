@@ -1,4 +1,6 @@
 #include "types.h"
+#include "numath/numath.h"
+#include "nu3dx/nuanim.h"
 
 extern s32 lbl_80409970;
 extern s32 lbl_8040A758;
@@ -1735,5 +1737,44 @@ void fn_8011E8D4(CutSceneState *scene)
             fn_8011C168(scene, command);
             list = (CutSceneCommandList *)scene->entry;
         }
+    }
+}
+
+typedef struct CutSceneLocator {
+    struct numtx_s matrix;
+    struct nuvec_s translation;
+    f32 scale;
+    struct nuanimdata2_s *animation;
+    u32 axis;
+    u8 flags;
+} CutSceneLocator;
+
+void NuAnimData2CalcTime(struct nuanimdata2_s *, struct nuanimtime_s *, f32);
+s32 instNuGCutSceneClipTest(CutSceneLocator *, struct nuanimtime_s *, f32 *);
+void fn_8003CEE0(CutSceneLocator *, struct numtx_s *, struct nuanimtime_s *, f32);
+void fn_8000D134(struct numtx_s *, struct numtx_s *, struct numtx_s *);
+s32 fn_800BA014(s32, struct numtx_s *);
+
+void fn_8011EDD8(s32 unused0, s32 unused1, s32 unused2, CutSceneLocator *locator,
+                 struct numtx_s *transform, f32 frame)
+{
+    struct numtx_s matrix;
+    struct nuanimtime_s time;
+    struct nuanimtime_s *animationTime = &time;
+
+    NuAnimData2CalcTime(locator->animation, animationTime, frame);
+    /* Keep frame in f1 at both retail call sites. */
+    if (((s32 (*)(CutSceneLocator *, f32, struct nuanimtime_s *, f32 *))instNuGCutSceneClipTest)(
+            locator, frame, animationTime, NULL)) {
+        ((void (*)(f32, CutSceneLocator *, struct numtx_s *, struct nuanimtime_s *))fn_8003CEE0)(
+            frame, locator, &matrix, animationTime);
+        if (locator->flags & 4) {
+            NuMtxPreTranslate(&matrix, &locator->translation);
+        }
+        if (transform != NULL) {
+            fn_8000D134(&matrix, &matrix, transform);
+        }
+        fn_800BA014(10, &matrix);
+        fn_800BA014(11, &matrix);
     }
 }
