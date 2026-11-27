@@ -2530,3 +2530,145 @@ void fn_80062B38(void) {
     }
     lbl_8040AEB0 = (lbl_8040AEB0 + 1) & 0x1F;
 }
+
+typedef struct deb_trail_pt_s {
+    struct nuvec_s pos;
+    struct nuvec_s v;
+    f32 time;
+} deb_trail_pt_s;
+
+typedef struct deb_trail_src_s {
+    struct nuvec_s pos;
+    u8 pad0c[4];
+    struct nuvec_s v;
+} deb_trail_src_s;
+
+typedef struct deb_trail_def_s {
+    u8 pad00[0x12];
+    s16 unk12;
+    s16 unk14;
+    u8 pad16[0x2E - 0x16];
+    u8 unk2e;
+    u8 pad2f[0xA4 - 0x2F];
+    f32 unka4;
+    u8 pada8[0x2EC - 0xA8];
+    s8 unk2ec;
+    u8 unk2ed;
+} deb_trail_def_s;
+
+typedef struct deb_trail_s {
+    u8 pad00[0x100];
+    s16 unk100;
+    s16 unk102;
+    s16 unk104;
+    u16 unk106;
+    u8 pad108[4];
+    s16 unk10c;
+    u16 unk10e;
+    struct nuvec_s pos;
+    u8 pad11c[0x140 - 0x11C];
+    deb_trail_src_s *(*callback)(struct deb_trail_s *, deb_trail_def_s *, f32);
+    u8 pad144[0x168 - 0x144];
+    deb_trail_pt_s pts[8];
+    s16 idx;
+    s16 skip;
+    f32 next_time;
+    u8 pad250[0x2E4 - 0x250];
+    f32 unk2e4;
+} deb_trail_s;
+
+extern f32 lbl_8019565C[];
+extern f32 lbl_80195668[];
+
+static inline void DebTrailSetCount(s8 *arg0, s32 arg1) {
+    s8 *t;
+
+    t = *(s8 **)(*(s16 *)(arg0 + 0x102) * 4 + lbl_804083FC);
+    *(u16 *)(arg0 + 0x10E) = arg1;
+    if (*(u8 *)(t + 0x2E) == 7) {
+        *(s16 *)(arg0 + 0x10C) = (arg1 + 0xB) / 12;
+    } else {
+        *(s16 *)(arg0 + 0x10C) = (arg1 + 0x1F) / 32;
+    }
+    if (*(s16 *)(arg0 + 0x10C) > 0x20) {
+        *(s16 *)(arg0 + 0x10C) = 0x20;
+        if (*(u8 *)(t + 0x2E) == 7) {
+            *(u16 *)(arg0 + 0x10E) = 0x180;
+        } else {
+            *(u16 *)(arg0 + 0x10E) = 0x400;
+        }
+    }
+    if (*(s16 *)(arg0 + 0x10C) == *(s16 *)(arg0 + 0x100)) {
+        *(u16 *)(arg0 + 0x106) = *(u16 *)(arg0 + 0x10E);
+    } else {
+        fn_8005DA6C(arg0);
+    }
+}
+
+void fn_800608E0(s32 arg0, f32 farg0) {
+    deb_trail_s *deb;
+    deb_trail_def_s *def;
+    f32 start;
+    f32 end;
+    f32 step;
+    f32 t;
+    s32 i;
+
+    if (farg0 < 0.0f || arg0 == -1) {
+        return;
+    }
+    deb = (deb_trail_s *)(lbl_80408404 + arg0 * 0x2EC);
+    def = ((deb_trail_def_s **)lbl_804083FC)[deb->unk102];
+    if (farg0 == 0.0f) {
+        farg0 = def->unka4;
+    }
+    if (def->unk2ed == 4) {
+        start = lbl_804083C0 - farg0;
+        end = lbl_804083C0 + lbl_804083C8;
+    } else {
+        start = lbl_804083BC - farg0;
+        end = lbl_804083BC + lbl_804083C8;
+    }
+
+    if (deb->unk10c == 0) {
+        DebTrailSetCount((s8 *)deb, def->unk12);
+    }
+    deb->unk104 = 1;
+    if (deb->unk100 > 0) {
+        step = 1.0f / (f32)def->unk14;
+        deb->unk2e4 = start;
+        t = start + step;
+        if (t < end) {
+            i = 1;
+            while (1) {
+            deb_trail_src_s *p = deb->callback(deb, def, t);
+            if (def->unk2ec != 0 && p != NULL) {
+                s32 zero = 0;
+                if (t >= deb->next_time) {
+                if (deb->skip > 0) {
+                    deb->skip--;
+                } else {
+                    deb->pts[deb->idx].time = t;
+                    deb->pts[deb->idx].pos.x = p->pos.x + deb->pos.x;
+                    deb->pts[deb->idx].pos.y = p->pos.y + deb->pos.y;
+                    deb->pts[deb->idx].pos.z = p->pos.z + deb->pos.z;
+                    deb->pts[deb->idx].v = p->v;
+                    deb->idx++;
+                    if (deb->idx >= def->unk2ec) {
+                        deb->idx = zero;
+                    }
+                    deb->next_time = t + def->unka4 / (f32)def->unk2ec;
+                }
+                }
+            }
+            t = deb->unk2e4 + step;
+            if (!(t < end)) {
+                break;
+            }
+            if (++i > 999) {
+                break;
+            }
+            }
+        }
+    }
+}
