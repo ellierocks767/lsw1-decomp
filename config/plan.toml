@@ -2464,3 +2464,7 @@ reason = "best 40/43: 0 length diffs, only add r9,r6,r9 operand order and stw r8
 [[parked]]
 function = "fn_8005D6E4"
 reason = "best 114/118: 0 opcode/length diffs, only r9/r11 swap in debris_insert after variant_search (29) and 25s permuter (1302 iters); next: test inlining debris_insert without helper or different index expression"
+
+[[parked]]
+function = "fn_8005CB34"
+reason = "best 170/176: 0 length diffs, only align/lbl_804083CC schedule at @40 and r10/r11 swap on lbl_8040AE78 after variant_search (2000) and 30s permuter (1430 iters); next: test variptr_u union or inline align macro for arg0"

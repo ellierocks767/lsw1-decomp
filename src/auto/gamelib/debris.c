@@ -929,3 +929,112 @@ void fn_8005EF6C(s32 arg0, f32 farg0) {
         deb->unk15c = -10.0f;
     }
 }
+
+typedef struct debriscmd_s {
+    void *obj;
+    s32 unk04;
+    s32 unk08;
+    s32 unk0c;
+    struct debriscmd_s *next;
+    u8 pad14[0x18];
+} debriscmd_s;
+
+typedef struct debristrash2_s {
+    void *obj;
+    void *owner;
+    s32 state;
+    u8 pad0c[0x4c];
+    struct debristrash2_s *prev;
+    struct debristrash2_s *next;
+    u8 pad60[4];
+} debristrash2_s;
+
+extern debriscmd_s *lbl_8038E5D8[2][32];
+extern s32 lbl_804083CC;
+extern s32 lbl_804083D0;
+extern s32 lbl_8040AE74;
+extern debriscmd_s **lbl_8040AE78;
+extern s32 lbl_8040AE7C[2];
+extern debristrash2_s *lbl_8040AE90;
+
+static inline void cmd_unlink(debriscmd_s **head, debriscmd_s *node) {
+    while (*head != NULL) {
+        if (*head == node) {
+            *head = node->next;
+            break;
+        }
+        head = &(*head)->next;
+    }
+    node->next = NULL;
+}
+
+static inline void cmd_append(debriscmd_s **head, debriscmd_s *node) {
+    while (*head != NULL) {
+        head = &(*head)->next;
+    }
+    *head = node;
+    node->next = NULL;
+}
+
+void fn_8005ECC8(void *arg0) {
+    s32 i;
+    for (i = 0; i < lbl_804083CC + lbl_804083D0; i++) {
+        if (lbl_8040AE90[i].state == 0 && lbl_8040AE90[i].owner == arg0) {
+            s32 q, slot;
+            debriscmd_s *cmd;
+            s32 qidx, bidx;
+            debristrash2_s *tr;
+            s32 list_idx;
+            void *obj = lbl_8040AE90[i].obj;
+
+            for (q = 0; q < 2; q++) {
+                for (slot = 0; slot < 32; slot++) {
+                    debriscmd_s *cur = lbl_8038E5D8[q][slot];
+                    while (cur != NULL) {
+                        debriscmd_s *nxt = cur->next;
+                        if (cur->obj == obj) {
+                            cmd_unlink(&lbl_8038E5D8[q][slot], cur);
+                            lbl_8040AE78[--lbl_8040AE74] = cur;
+                            cur->obj = NULL;
+                        }
+                        cur = nxt;
+                    }
+                }
+            }
+
+            lbl_8040AE78[lbl_8040AE74]->obj = lbl_8040AE90[i].obj;
+            lbl_8040AE78[lbl_8040AE74]->unk04 = 0;
+            if (*(u8 *)((s8 *)arg0 + 0x2e) == 7) {
+                lbl_8040AE78[lbl_8040AE74]->unk08 = 9;
+            } else {
+                lbl_8040AE78[lbl_8040AE74]->unk08 = 2;
+            }
+            lbl_8040AE78[lbl_8040AE74]->unk0c = 0;
+
+            cmd = lbl_8040AE78[lbl_8040AE74];
+            qidx = (*(u8 *)((s8 *)arg0 + 0x2ed) == 4);
+            bidx = (lbl_8040AE7C[qidx] + 4) & 31;
+            cmd_append(&lbl_8038E5D8[qidx][bidx], cmd);
+            lbl_8040AE74++;
+
+            tr = (debristrash2_s *)(i * 0x64 + (u32)lbl_8040AE90);
+            list_idx = *(s8 *)((s8 *)arg0 + 0x2ed);
+            if ((debristrash2_s *)lbl_8038E6D8[list_idx] == tr) {
+                debristrash2_s *nxt = tr->next;
+                lbl_8038E6D8[list_idx] = (debrisnode_s *)nxt;
+                if (nxt != NULL) {
+                    nxt->prev = NULL;
+                }
+            } else if (tr->prev != NULL) {
+                tr->prev->next = tr->next;
+                if (tr->next != NULL) {
+                    tr->next->prev = tr->prev;
+                }
+            }
+            tr->prev = NULL;
+            tr->next = NULL;
+            lbl_8040AE90[i].obj = NULL;
+            lbl_8040AE90[i].owner = NULL;
+        }
+    }
+}
