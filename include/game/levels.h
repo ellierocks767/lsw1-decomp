@@ -36,6 +36,22 @@ struct NULEVELINFO_s {
     s16 unk46;                    /* fn_8010CCA0 stores a level table index */
 };
 
+struct nugscn_s;
+struct NUTURRET_s;
+struct NUTURRETMASK_s;
+
+struct CHRISMINIKIT_s {
+    struct nugscn_s *scene;
+    struct CHRISMINIKITOBJECT_s *objects;
+    u8 count;
+    u8 level;
+};
+
+struct CHRISMINIRUNNER_s {
+    struct nugscn_s *scene;
+    struct CHRISMINIKITOBJECT_s *objects;
+};
+
 /* Object behind the lbl_80409410 pointer (also read by pickups, obstacle and turret). */
 struct lbl_80409410_s {
     u8 pad0[0x184];
@@ -48,15 +64,28 @@ struct lbl_80409410_s {
     u8 pad1A0[0x1A8 - 0x1A0];
     struct NULEVELINFO_s *unk1A8;
     void *unk1AC;                 /* episode_s; also s32 at +0x18/+0x1C, pointer at +0x40 */
-    u8 pad1B0[0x1B8 - 0x1B0];
+    u8 pad1B0[4];
+    struct NUTURRETMASK_s *unk1B4; /* fn_8014093C records turret flags here */
     s32 unk1B8;                   /* first argument of fn_800958F8 (Maul_A) */
     s32 unk1BC;                   /* first argument of fn_8010B780 (Maul_A) */
     s32 unk1C0;                   /* scene handle: first argument of NuSpecialFind */
-    u8 pad1C4[0x240 - 0x1C4];
+    u8 pad1C4[0x208 - 0x1C4];
+    struct CHRISMINIKIT_s miniKit; /* LoadMiniKit and fn_80141CD8 */
+    struct CHRISMINIRUNNER_s miniRunner; /* fn_80141958 and fn_80141D20 */
+    u8 pad21C[0x240 - 0x21C];
     struct lbl_80409410_240_s *unk240;
     s32 unk244;
-    u8 pad248[0x1974 - 0x248];
+    u8 pad248[0x2DC - 0x248];
+    struct CHRISLEVELENTRY_s **unk2DC; /* fn_80145F18 updates entry 0 at +0x6C */
+    u8 pad2E0[0x578 - 0x2E0];
+    struct NUTURRET_s *turrets;
+    u8 pad57C[0x1974 - 0x57C];
     struct nugspline_s *unk1974;  /* fn_800CCDE4 family */
+    u8 pad1978[8];
+    s32 unk1980; /* fn_80146018 selects space-level state */
+    struct CHRISLEVELDATA_s *unk1984; /* fn_80145F18 and ProcessSpaceLevel */
+    u8 pad1988[4];
+    void *unk198C; /* fn_80146018 allocates space-level state */
 };
 
 extern struct lbl_80409410_s *lbl_80409410;
