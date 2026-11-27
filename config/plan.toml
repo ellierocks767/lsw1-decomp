@@ -2439,7 +2439,7 @@ reason = "best 212/250: preamble reg alloc + mr r10,r9 copy of lbl_8040AE5C + ad
 
 [[parked]]
 function = "NuGCutSceneSysPostBackgroundLoad"
-reason = "best 18/19: final stw uses r9 (cur) not r10 (prev), copy-propagated; next: permuter burst"
+reason = "retried: best 18/19: exit stw B uses t (r9) not p (r10) - cprop of p=t into exit block; 2nd pass ~20 more shapes (rotated while, t=n at end, inline push/pop with &p, two-def p) + 180s permuter (only semantics-breaking p=t inside if(p) scored better); next: exit block with a second reaching def of p that is semantically equal, or asm-level evidence of a helper call order"
 
 [[parked]]
 function = "fn_8003A878"
