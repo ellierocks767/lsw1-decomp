@@ -433,8 +433,17 @@ void instNuGCutSceneEnd(gcut_instance_view* instance)
 }
 
 typedef struct gcut_cam_state { u8 flags; u8 value; u8 pad[2]; } gcut_cam_state;
-typedef struct gcut_cam_runtime { u32 unused; gcut_cam_state* states; u8 a, b, c; } gcut_cam_runtime;
-typedef struct gcut_cam_data { u32 count; u8 pad[12]; u8 value; } gcut_cam_data;
+typedef struct gcut_cam_cut { f32* target; f32 start; f32 duration; s8 camera; u8 pad[3]; } gcut_cam_cut;
+typedef struct gcut_cam_runtime { gcut_cam_cut* cuts; gcut_cam_state* states; u8 a; s8 b; u8 c; u8 pad; u8 count; } gcut_cam_runtime;
+typedef struct gcut_cam_view { gcut_matrix matrix; u8 flags; u8 pad41; u8 index; u8 pad43[13]; } gcut_cam_view;
+typedef struct gcut_cam_data {
+    u32 count;
+    gcut_cam_view* cameras;
+    struct gcut_anim* anim;
+    struct gcut_events* events;
+    u8 value;
+    s8 map[1];
+} gcut_cam_data;
 void instNuGCutCamSysStart(gcut_cam_runtime* runtime, gcut_cam_data* data)
 {
     u32 i;
@@ -2021,3 +2030,122 @@ void fn_8003E9B8(u8* object, gcut_matrix* matrix, s32* visible, s32* id, f32* x,
     }
 }
 #undef GCUT_SAMPLE
+
+extern gcut_matrix lbl_8034701C;
+extern s32 lbl_80408198;
+extern char str_instNuGCutCamSysUpdate_InternalError[];
+extern s32 NuAnimData2GetEnd(gcut_anim*);
+extern void fn_8001BE94(gcut_anim*, s32, gcut_matrix*, f32);
+extern void NuAnimCurve2SetApplyToMatrix(f32*, s8*, s32, void*, gcut_matrix*);
+extern f32 fn_8000ED40(f32);
+extern f32 fn_8000B234(f32);
+extern void NuMtxLookAtZ(gcut_matrix*, f32*);
+extern void NuMtxMulR(gcut_matrix*, f32*);
+extern void fn_8000BAFC(f32*, f32*, f32*, f32);
+extern void fn_8000B518(f32*, gcut_matrix*);
+typedef struct gcut_vec3 { f32 x, y, z; } gcut_vec3;
+void instNuGCutCamSysUpdate(gcut_instance_view* instance, f32 frame)
+{
+    u8 time[24];
+    gcut_matrix matrix;
+    f32 from[4];
+    f32 to[4];
+    f32 result[4];
+    gcut_vec3 saved;
+    u8 value;
+    s32* words = (s32*)instance;
+    gcut_cam_runtime* runtime = (gcut_cam_runtime*)words[0x9c/4];
+    gcut_cam_data* system = (gcut_cam_data*)((s32*)instance->scene)[4];
+    gcut_events* events;
+    gcut_cam_cut* cut;
+    gcut_cam_state* state;
+
+    if (system->events) {
+        if (fn_800407F4(system->events, (gcut_trigger_byte*)&runtime->a, &value, frame)) {
+            runtime->b = value;
+            words[0x8c/4] |= 0x80000;
+            lbl_8040819C = 1;
+        }
+        events = system->events;
+        if (runtime->a < events->count) {
+            f32 t = events->times[runtime->a];
+            if (t - frame < 1.0f && events->values[runtime->a] != runtime->b) {
+                *(f32*)((u8*)instance + 0x94) = t - 1.0f;
+                if (words[0x88/4] & 0x2000)
+                    *(f32*)((u8*)instance + 0x94) = *(f32*)((u8*)instance->scene + 8) - (t - 1.0f);
+                if (*(f32*)((u8*)instance + 0x94) < 1.0f)
+                    *(f32*)((u8*)instance + 0x94) = 1.0f;
+            }
+        }
+    }
+    while (runtime->c < runtime->count && frame >= runtime->cuts[runtime->c].start) {
+        cut = &runtime->cuts[runtime->c];
+        state = &runtime->states[system->map[cut->camera]];
+        state->flags |= 2;
+        state->value = runtime->c;
+        runtime->c++;
+    }
+    while (runtime->c != 0 && frame < runtime->cuts[runtime->c - 1].start) {
+        runtime->c--;
+        cut = &runtime->cuts[runtime->c];
+        state = &runtime->states[system->map[cut->camera]];
+        state->flags |= 2;
+        state->value = runtime->c;
+    }
+    if (runtime->b >= 0) {
+        gcut_cam_view* camera;
+        if ((u32)runtime->b >= system->count)
+            fn_80009948(lbl_8019308C, 0xb7e)(str_instNuGCutCamSysUpdate_InternalError);
+        state = &runtime->states[runtime->b];
+        camera = &system->cameras[runtime->b];
+        if ((camera->flags & 1) && camera->index < NuAnimData2GetEnd(system->anim)) {
+            if (system->anim->magic == 0x414e4934) {
+                fn_8001BE94(system->anim, camera->index, &lbl_8034701C, *(f32*)((u8*)instance + 0x94));
+            } else {
+                gcut_anim* anim;
+                ((void (*)(gcut_anim*, f32, void*))NuAnimData2CalcTime)(system->anim, *(f32*)((u8*)instance + 0x94), time);
+                anim = system->anim;
+                NuAnimCurve2SetApplyToMatrix(&anim->curves[*(s16*)((u8*)anim + 6) * camera->index],
+                                             &anim->types[*(s16*)((u8*)anim + 6) * camera->index],
+                                             (*(s8**)((u8*)anim + 0x14))[camera->index], time, &lbl_8034701C);
+            }
+        } else {
+            lbl_8034701C = camera->matrix;
+        }
+        if (words[0x88/4] & 0x1000000)
+            fn_8000D134(&lbl_8034701C, &lbl_8034701C, &instance->matrix);
+        lbl_80408198 = 1;
+        if (state->flags & 2) {
+            s32 reverse = 0;
+            f32 blend;
+            f32 duration;
+            cut = &runtime->cuts[state->value];
+            duration = fn_8000ED40(cut->duration);
+            if (fn_8000B234(cut->duration) < 0.0f)
+                reverse = 1;
+            if (reverse && frame >= cut->start + duration) {
+                state->flags &= 0xfd;
+            } else {
+                saved = *(gcut_vec3*)&lbl_8034701C.m[12];
+                matrix = lbl_8034701C;
+                NuMtxLookAtZ(&matrix, cut->target);
+                if (duration > 0.01f) {
+                    blend = (frame - cut->start) / duration;
+                    if (blend > 1.0f)
+                        reverse = 1;
+                    else if (blend < 0.0f)
+                        reverse = 0;
+                } else {
+                    blend = 1.0f;
+                }
+                if (reverse)
+                    blend = 1.0f - blend;
+                NuMtxMulR(&matrix, to);
+                NuMtxMulR(&lbl_8034701C, from);
+                fn_8000BAFC(result, from, to, blend);
+                fn_8000B518(result, &lbl_8034701C);
+                *(gcut_vec3*)&lbl_8034701C.m[12] = saved;
+            }
+        }
+    }
+}
