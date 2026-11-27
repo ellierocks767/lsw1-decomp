@@ -2676,3 +2676,7 @@ reason = "best 100/174: extra floating-point save and different fighter-slot tra
 [[parked]]
 function = "fn_801451A4"
 reason = "best 136/163: threshold branches and fighter initialization schedule differ; next: recover scale constant lifetimes and isolate the indexed wing and counted inner loops"
+
+[[parked]]
+function = "fn_8014165C"
+reason = "best 71/97: the 12-byte position copy and byte progress increment still differ in scheduling; next: recover why both stack vectors stay addressable across construction and reproduce the indexed progress store as an 8-bit update"
