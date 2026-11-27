@@ -1185,3 +1185,19 @@ void fn_8011AFEC(void) {
         (*(f32 *)(lbl_8040A758_p + (0x34))) = temp_f1;
     }
 }
+
+void fn_800AFF58(char *);
+extern char MenuHeader[];
+extern u8 *lbl_8040A774;
+extern f32 lbl_8040AFA0;
+extern s32 lbl_8040B25C;
+
+void fn_8011E968(void) {
+    if (lbl_8040A774 != NULL) {
+        *(u32 *)(lbl_8040A774 + 0x88) &= ~0x40000000u;
+        lbl_8040AFAC = 0;
+        lbl_8040B25C = -1;
+        lbl_8040AFA0 = 0.0f;
+        fn_800AFF58(MenuHeader);
+    }
+}
