@@ -53,3 +53,39 @@ void fn_801410F4(void *arg0) {
         }
     }
 }
+
+void fn_801433C0(void *records, s32 count)
+{
+    s32 remaining;
+    u8 *cursor;
+
+    /* Retail walks the 0x50-byte records with its cursor at offset 0x20. */
+    remaining = count;
+    if (count > 0) {
+        cursor = (u8 *)records + 0x20;
+        do {
+            *(s16 *)(cursor + 0x22) = 0;
+            *(f32 *)(cursor - 0x20) = 80.0f;
+            *(f32 *)(cursor - 0x1C) = 55.0f;
+            *(f32 *)(cursor - 0x18) = 200.0f;
+            *(f32 *)(cursor - 0x14) = 1.0f;
+            *(f32 *)(cursor + 0x10) = 0.0f;
+            *(f32 *)(cursor + 0x14) = 0.0f;
+            *(f32 *)(cursor + 0x18) = 0.0f;
+            *(f32 *)(cursor + 0x1C) = 0.0f;
+            *(f32 *)(cursor - 0x10) = 0.0f;
+            *(f32 *)(cursor - 0xC) = 0.0f;
+            *(f32 *)(cursor - 4) = 0.0f;
+            *(f32 *)cursor = 0.0f;
+            *(f32 *)(cursor + 4) = 0.0f;
+            (*(f32 *)((s8 *)(cursor) + (8))) = 0.0f;
+            *(f32 *)(cursor + 0xC) = 0.0f;
+            (*(f32 *)((s8 *)(cursor) + (-8))) = 200.0f;
+            *(s32 *)(cursor + 0x28) = 0xFFFFFF;
+            *(s16 *)(cursor + 0x20) = 0;
+            *(f32 *)(cursor + 0x2C) = 5.0f;
+            cursor += 0x50;
+            remaining -= 1;
+        } while (remaining != 0);
+    }
+}
