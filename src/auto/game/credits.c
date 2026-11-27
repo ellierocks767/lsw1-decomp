@@ -565,3 +565,30 @@ void fn_8010AB90(f32 dt) {
         }
     }
 }
+
+s32 ObjHitObj(s32, void *, s32);
+s32 fn_80063A58(s32 *, f32);
+s32 fn_80064A94(void *, f32, f32);
+s32 fn_80064B40(void *, f32, f32);
+extern s32 gCameraState[];
+extern u8 *gPlayer1Pointer[];
+extern f32 lbl_801A9D0C[];
+extern f32 lbl_801A9D10[];
+void fn_80109720(void) {
+    s32 i;
+    fn_80063A58(gCameraState, lbl_801A9D0C[0]);
+    for (i = 0; i < 8; i++) {
+        u8 *t = gPlayer1Pointer[i];
+        if (t != NULL && *(u8 *)(t + 0x28F) == 0) {
+            if (*(f32 *)(t + 0x1044) <= lbl_801A9D10[0] && !(*(f32 *)(t + 0x102C) > lbl_801A9D10[0]) && !(*(s32 *)(t + 0xF28) & 0x10)) {
+                void *q = t + 0x90;
+                if (fn_80064B40(q, *(f32 *)(t + 0xBC), *(f32 *)(t + 0x1030)) != -1) {
+                    ObjHitObj(0, t, 1);
+                }
+                if (fn_80064A94(q, *(f32 *)(t + 0xBC), *(f32 *)(t + 0x1030)) != -1) {
+                    ObjHitObj(0, t, 1);
+                }
+            }
+        }
+    }
+}
