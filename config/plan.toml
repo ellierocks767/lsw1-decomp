@@ -2400,3 +2400,7 @@ reason = "best 191/211: memset arg lbl_8019E17C (4-byte rodata ptr) target emits
 [[parked]]
 function = "fn_8007B0C4"
 reason = "best 74/117: fwd/back callee-saved regs swapped, hoisted pb[0] load gets extra clrlwi, found_* returns placed after else-branch; next: permuter"
+
+[[parked]]
+function = "AIScriptLoadScp"
+reason = "best 193/194: addi r28,r29,0x10 (states=&sc->states) scheduled before bl NuFParPushCom instead of after; goto loop + store order CB8,CBC,CC0,CD0 fixed the rest; next: permuter burst on placement of states/PushCom"
