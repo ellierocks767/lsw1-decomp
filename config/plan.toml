@@ -2464,3 +2464,7 @@ reason = "best 177/201: frame, rotation, normalization and final flag copy agree
 [[parked]]
 function = "fn_80056B88"
 reason = "best 97/192: sized the three vector backups and reproduced the stack frame; halfword update loads add truncations and broad scratch/vector scheduling still differs; next: model the packed halfword stream header and compare separate GCC reload lifetimes for both walks"
+
+[[parked]]
+function = "fn_80058FD8"
+reason = "best 200/202: frame, mode dispatch and both square-root paths agree; direction Z and adjustment-scale loads are scheduled early in the active direction branch; next: trace the two load dependencies with typed vector and coefficient aliases"
