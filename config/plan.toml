@@ -2592,4 +2592,4 @@ reason = "best 75/90: constants not shared across stores, lwz r3/r30 order; next
 
 [[parked]]
 function = "fn_8010B464"
-reason = "best 96/99: float load order and regs in first branch; next: permuter burst on float temps"
+reason = "retried: best 96/99 (work/hc/b464_best.c): loads emit last-source-first, so source x,y,z in both branches gives target order z,x,y but y/z get f0/f12 swapped (93/99); 216 per-branch load x store orders, decl orders, ternaries, per-branch stores (cross-jumped) and a 180 s permuter burst all <=96; next: raise z's global-alloc priority (extra refs merged later, as fn_8010B35C's duplicated hit=1) or a vec3 helper/inline"
