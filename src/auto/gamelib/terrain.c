@@ -462,6 +462,15 @@ extern terrainsphere_s lbl_802B13B4[];
 s32 fn_80052590(terrainpoly_s *, f32, f32, f32, f32);
 void fn_80052CAC(void);
 
+s32 fn_8000AE18(f32, f32);
+
+void fn_8004F164(void)
+{
+  lbl_8040AE5C->rotationY = (f32)fn_8000AE18(lbl_8040AE5C->delta.x, lbl_8040AE5C->delta.z);
+  lbl_8040AE5C->rotationX = (f32)fn_8000AE18(-lbl_8040AE5C->delta.y, NuFsqrt(lbl_8040AE5C->delta.x * lbl_8040AE5C->delta.x + lbl_8040AE5C->delta.z * lbl_8040AE5C->delta.z));
+  lbl_8040AE5C->len = NuFsqrt(lbl_8040AE5C->delta.z * lbl_8040AE5C->delta.z + (lbl_8040AE5C->delta.x * lbl_8040AE5C->delta.x + lbl_8040AE5C->delta.y * lbl_8040AE5C->delta.y));
+}
+
 void fn_8004F590(void *arg0)
 {
   f32 temp_f11;
