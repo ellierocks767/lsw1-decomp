@@ -2364,3 +2364,7 @@ reason = "best 26/28: lhzx/sthx base,index operand order swapped (r11,r8 vs r8,r
 [[parked]]
 function = "fn_8006C54C"
 reason = "best 40/68: constants r22/r23 hoist order and stores reordered; next: permuter burst, try storing count before chain"
+
+[[parked]]
+function = "fn_8006E3E0"
+reason = "best 418/472 (472/472 insns, 0xe0 frame): loop-invariant @ha hoisting picks 0.015625f over 0.5f/lbl_80198758, shifting freqX f11->f10 and 0.0f f13->f11 across loops 2-5; next: match GCC loop-hoist priority for lbl_80198758/0.25f/0.5f over 0.015625f (e.g. avoid CSE collapsing 0.5f uses or permuter burst)"
