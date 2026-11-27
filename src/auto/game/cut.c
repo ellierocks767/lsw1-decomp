@@ -1380,8 +1380,7 @@ typedef struct CutSceneState {
     u8 unk0[0x1A8];
     u8 *entry;
     u8 unk1AC[0x440];
-    s8 indices[5];
-    u8 unk5F1[0x5B];
+    s8 indices[96];
     CutSceneSlot slots[8];
 } CutSceneState;
 
@@ -1463,4 +1462,13 @@ void fn_8011B428(void)
             record->flags |= 8;
         }
     }
+}
+
+s32 fn_8011E9C4(s32 index)
+{
+    if ((u32)index < 96 && ((CutSceneState *)lbl_80409410)->indices[index] != -1) {
+        lbl_80409940 = index;
+        return 1;
+    }
+    return 0;
 }
