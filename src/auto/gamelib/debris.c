@@ -2176,3 +2176,58 @@ void fn_80064088(s32 effect, s32 arg1, s32 arg2, f32 value, s32 angleZ, s32 angl
                                   (s32)transformPtr, 0, amount, 0);
     }
 }
+
+struct DebSpecial { void *scene; void *special; void *display; };
+struct DebScene { u8 pad0[0x20]; s32 numspecial; };
+extern struct DebScene *lbl_80408488;
+extern s32 lbl_8040AEBC;
+extern s32 lbl_8040AEC8;
+extern struct nuvec_s lbl_80399D80;
+extern const f32 lbl_80195808[];
+void fn_80021738(struct DebSpecial *, struct DebScene *, s32);
+void *fn_800133E4(struct DebSpecial *);
+
+static inline f32 DebSetDistSq(s32 set)
+{
+    struct nuvec_s d;
+    struct DebSpecial special;
+    struct nuvec_s *pos;
+
+    fn_80021738(&special, lbl_80408488, lbl_8038E840[set].unk0);
+    fn_800133E4(&special);
+    NuVecSub(&d, &lbl_80399D80, pos);
+    return d.x * d.x + d.y * d.y + d.z * d.z;
+}
+
+void fn_80065820(f32 minDist)
+{
+    s32 i;
+    f32 dist;
+
+    if (lbl_80408488 == NULL) {
+        return;
+    }
+    if (lbl_8040AEC8 != -1) {
+        dist = DebSetDistSq(lbl_8040AEC8);
+        if (dist == lbl_80195808[0]) {
+            return;
+        }
+    }
+    lbl_8040AEC8 = -1;
+    lbl_8040AEBC = -1;
+    for (i = 0; i < lbl_80408488->numspecial; i++) {
+        dist = DebSetDistSq(i);
+        if (minDist < lbl_80195808[0] || dist < minDist) {
+            lbl_8040AEC8 = i;
+            minDist = dist;
+        }
+    }
+    if (lbl_8040AEC8 != -1) {
+        for (i = 0; i < 64; i++) {
+            if (lbl_8038E840[i].unk0 == lbl_8040AEC8) {
+                lbl_8040AEBC = i;
+                break;
+            }
+        }
+    }
+}
