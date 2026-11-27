@@ -747,6 +747,43 @@ extern f32 lbl_80195640[];
 extern f32 lbl_80195644[];
 extern f32 lbl_80195648[];
 
+extern const f32 lbl_8019572C[];
+
+struct deb_transform_slot {
+    u8 unk00[0x80];
+    struct numtx_s transform80;
+    struct numtx_s transformC0;
+    u8 unk100[0x180];
+    f32 unk280;
+    u8 unk284[0x68];
+};
+
+static inline void DebInitTransform80(s32 slot)
+{
+    ((struct deb_transform_slot *)lbl_80408404)[slot].transform80 = lbl_801B0F08[0];
+}
+
+void fn_800644E4(s32 slot, s16 angleZ, s16 angleY)
+{
+    struct deb_transform_slot *effects;
+    struct deb_transform_slot *effect;
+    s32 base;
+
+    if (slot != -1) {
+        DebInitTransform80(slot);
+        base = lbl_80408404;
+        effects = (struct deb_transform_slot *)base;
+        effect = &effects[slot];
+        fn_8000E540(&effect->transform80, angleZ);
+        base = lbl_80408404;
+        effects = (struct deb_transform_slot *)base;
+        effect = &effects[slot];
+        fn_8000E3C0(&effect->transform80, angleY);
+        effects = (struct deb_transform_slot *)lbl_80408404;
+        effects[slot].unk280 = lbl_8019572C[0];
+    }
+}
+
 void fn_8005FF74(s32 effect, void *arg1, s32 arg2, s16 angleZ, s16 angleY, void *arg5)
 {
     struct numtx_s matrix = lbl_801B0F08[0];
