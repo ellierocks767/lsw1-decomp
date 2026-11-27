@@ -445,3 +445,55 @@ void DebugMenu_HandleEntry3(u8 *arg0) {
         lbl_8040B18C = 1;
     }
 }
+
+s32 PlayFootStepSfx();
+extern f32 lbl_801AA128[];
+
+void fn_8010B35C(u8 *arg0) {
+    f32 a;
+    f32 b;
+    f32 f;
+    f32 *p;
+    s32 i;
+    s32 hit;
+
+    if (arg0[0x45] == 0) {
+        s16 idx = *(s16 *)(arg0 + 0x4A);
+        if (idx != -1) {
+            u8 *t = *(u8 **)(arg0 + 0x60);
+            if (((s32 *)*(u8 **)(t + 0xC))[idx] != 0) {
+                p = (f32 *)((s32 *)*(u8 **)(t + 8))[idx];
+                if (*(u16 *)((u8 *)p + 8) & 0x100) {
+                    b = *(f32 *)(arg0 + 0xC);
+                    a = *(f32 *)(arg0 + 8);
+                    if (a != b) {
+                        p += 9;
+                        hit = 0;
+                        i = 0;
+                        for (; i < 4; p++, i++) {
+                            if (i > 1 || *(s16 *)(arg0 + 0x1074) == 2 || *(s16 *)(arg0 + 0x1074) == 0x3F || *(s16 *)(arg0 + 0x1074) == 0x41 || *(s16 *)(arg0 + 0x1074) == 0x40) {
+                                f = *p;
+                                if (f >= lbl_801AA128[0]) {
+                                    if (a >= f) {
+                                        if (b > a) {
+                                            hit = 1;
+                                        } else if (b < f) {
+                                            hit = 1;
+                                        }
+                                    } else if (b > a) {
+                                        if (b < f) {
+                                            hit = 1;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (hit != 0) {
+                            PlayFootStepSfx();
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

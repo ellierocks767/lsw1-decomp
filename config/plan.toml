@@ -2583,10 +2583,6 @@ function = "fn_80108D2C"
 reason = "best 19/31: bit-set loop; signed i/32 temp lands r11 vs target r9 (target has extra mr r9,r11 + different slw/slwi order); next: permuter burst, two-pseudo variants"
 
 [[parked]]
-function = "fn_8010B35C"
-reason = "best 65/66: li r10 (i=0) scheduled before addi r11 instead of after li r9 (hit); next: permuter burst on init/loop shape, see work/hc/parked"
-
-[[parked]]
 function = "fn_8010BB08"
 reason = "best 29/52: target keeps r6/r10 copies of list head across inner pop loop (mr r10,r6 each iteration) and no preheader merge; mine CSEs them; next: find source form that keeps the copy (inline w/ modified param, pointer-to-head) or permuter"
 
