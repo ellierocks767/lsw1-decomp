@@ -7989,3 +7989,20 @@ void fn_800C48A4(void) {
     }
     lbl_803EAE44[0] = FindObstacle((s32)lbl_80409410, lbl_801A1EBC);
 }
+
+extern f32 lbl_801A2B8C[];
+extern f32 lbl_801A2B90[];
+DEFINE_INTRO_UPDATE(IntroUpdate_800C4C4C, lbl_801A2B90)
+
+void fn_800C4C4C(void)
+{
+    if (lbl_804091F8 != 0) {
+        fn_800BB20C(0, 0, 2, lbl_801A2B8C[0]);
+    } else if (IntroUpdate_800C4C4C(2, lbl_801A2B8C[0])) {
+        lbl_80408F2C = 1;
+        lbl_804093B0 = 0x5F;
+        if (lbl_8040AF64 != -1) {
+            lbl_8040AF94 = 1;
+        }
+    }
+}
