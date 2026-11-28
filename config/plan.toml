@@ -2836,3 +2836,7 @@ reason = "best 39/55: fallback scene and signed bounds are recovered, but the ta
 [[parked]]
 function = "fn_8011C168"
 reason = "best 137/144: lwzx r28,r24 operand order, 2 insn sched, subi r0,r30,0x10; next: permuter run"
+
+[[parked]]
+function = "fn_800C03BC"
+reason = "best 17/31: u16 flags test; target does rlwinm+cmpwi for &0xC0 and keeps flags in r11/p in r10, mine uses andi. and p in r11; next: permuter, different flag-local shapes"
