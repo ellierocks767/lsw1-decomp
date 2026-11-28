@@ -2752,3 +2752,7 @@ reason = "retried: best 312/340: 1.0f literal + static inline per-object helpers
 [[parked]]
 function = "Shop_DrawCodes"
 reason = "retried: best 376/391: literals + char[7] sda buffer + static inline draw helpers (DcDraw/DcDrawAt) + pos=lbl_80401894 hoisted; left: target keeps clrlwi on the (u8)(c-0x30)<=9 test (gcc drops it in every spelling tried), base/t fsubs register order, scale-vector stfs/li r4 scheduling in the setup (same as DrawTopShelf); next: char test via inline helper/switch, setup helper shape (work/hc/Shop_DrawCodes.best.c)"
+
+[[parked]]
+function = "fn_800B4834"
+reason = "best 64/80: the three-entry loop matches but initial material store scheduling, constant hoists and f0-to-f31 copy differ; next: expand a shared material initializer at both call sites and test whether it splits the first-store and loop opacity lifetimes"
