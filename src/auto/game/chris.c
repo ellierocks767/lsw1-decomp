@@ -1032,3 +1032,131 @@ void fn_801409B4(struct ChrisPool **pool, u32 *arena, s32 unused, s32 capacity)
     (*pool)->head = NULL;
     (*pool)->tail = NULL;
 }
+
+struct ChrisCameraPlayer {
+    u8 pad000[0x6C];
+    struct nuvec_s position;
+    u8 pad078[0x194];
+    u32 flags;
+};
+
+extern struct ChrisCameraPlayer *gPlayer1Pointer[];
+extern char MenuHeader[];
+extern f32 lbl_801AF5DC[];
+extern f32 lbl_801AF5E0[];
+extern f32 lbl_801AF5E4[];
+extern f32 lbl_801AF5E8[];
+extern f32 lbl_801AF5EC[];
+extern f32 lbl_801AF5F0[];
+extern f32 lbl_801AF5F4[];
+extern f32 lbl_801AF5F8[];
+extern f32 lbl_80409B5C;
+extern f32 lbl_80409B60;
+extern f32 lbl_80409B64;
+extern f32 lbl_80409B68;
+extern f32 lbl_80409B6C;
+
+void fn_8000DDD0(struct numtx_s *transform, s32 angle);
+void fn_8000E540(struct numtx_s *transform, s32 angle);
+void NuVec4MtxTransformVU0(struct nuvec4_s *dest, struct nuvec4_s *src, struct numtx_s *transform);
+void *fn_80059C44(struct nuvec_s *position, struct nuvec_s *delta, f32 radius, void *context);
+void fn_800B02E0(void *camera, f32 amplitude, f32 duration, f32 speed);
+void JudderGameCamera(void *camera, s32 mode, s32 flags, f32 duration);
+f32 fn_8000C038(void);
+
+void fn_8014564C(void)
+{
+    struct numtx_s transform;
+    struct nuvec_s position, *origin;
+    struct nuvec4_s delta, *rotated;
+    s32 i;
+    register f32 negative asm("fr28");
+    register f32 positive asm("fr29");
+    f32 nearest;
+    f32 zero;
+    f32 timer;
+
+    nearest = lbl_801AF5DC[0];
+
+    if (gPlayer1Pointer[0]->flags & 0x01000000) {
+        position = gPlayer1Pointer[0]->position;
+        origin = &position;
+    } else {
+        position = gPlayer1Pointer[1]->position;
+        origin = &position;
+    }
+    fn_8000DDD0(&transform, 0x2000);
+    i = 0;
+    rotated = &delta;
+    fn_8000E540(&transform, 0x2000);
+    {
+        f32 one;
+        zero = lbl_801AF5E8[0];
+        one = lbl_801AF5E0[0];
+        negative = lbl_801AF5E4[0];
+        /* Keep the zero and negative loads ordered as in the retail setup. */
+        asm("" : "=f"(zero) : "0"(zero), "f"(negative));
+        positive = lbl_801AF5DC[0];
+        delta.w = one;
+    }
+    do {
+        switch (i) {
+        case 0:
+        case 6:
+            delta.x = negative;
+            goto xAxis;
+        case 1:
+        case 7:
+            delta.x = positive;
+xAxis:
+            delta.y = zero;
+            delta.z = zero;
+            break;
+        case 2:
+        case 8:
+            delta.y = negative;
+            goto yAxis;
+        case 3:
+        case 9:
+            delta.y = positive;
+yAxis:
+            delta.x = zero;
+            delta.z = zero;
+            break;
+        case 4:
+        case 10:
+            delta.z = negative;
+            goto zAxis;
+        case 5:
+        case 11:
+            delta.z = positive;
+zAxis:
+            delta.x = zero;
+            delta.y = zero;
+            break;
+        }
+        if (i > 5)
+            NuVec4MtxTransformVU0(&delta, &delta, &transform);
+        if (fn_80059C44(origin, (struct nuvec_s *)rotated, lbl_801AF5EC[0], NULL) != NULL) {
+            delta.x = NuFsqrt(delta.z * delta.z + (delta.x * delta.x + delta.y * delta.y));
+            if (delta.x < nearest)
+                nearest = delta.x;
+        }
+        i++;
+    } while (i <= 11);
+    if (nearest < lbl_801AF5DC[0]) {
+        f32 amplitude;
+        register f32 speed asm("fr3");
+        zero = lbl_801AF5E0[0];
+        zero -= nearest / lbl_801AF5DC[0];
+        amplitude = zero * lbl_80409B68 + lbl_80409B6C;
+        speed = zero * lbl_80409B60 + lbl_80409B64;
+        fn_800B02E0(MenuHeader, amplitude, lbl_801AF5F0[0], speed);
+    }
+    timer = lbl_80409B5C - lbl_80408E9C;
+    lbl_80409B5C = timer;
+    if (timer < lbl_801AF5E8[0]) {
+        JudderGameCamera(MenuHeader, 2, 0, lbl_801AF5F0[0]);
+        lbl_80409B5C = fn_8000C038() * lbl_801AF5F4[0] + lbl_801AF5F8[0];
+    }
+}
