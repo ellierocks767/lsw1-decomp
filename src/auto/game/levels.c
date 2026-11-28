@@ -6508,3 +6508,33 @@ void Menu_Unknown3_BuildOptions(void *menu) {
     fn_800769B4(menu, *(s32 *)(text + 0xB34), *flags);
     fn_800769B4(menu, *(s32 *)(text + 0xB44), *flags);
 }
+
+void fn_8000DCE0(struct numtx_s *, struct nuvec_s *);
+s32 NuSpecialFindMultiWC(struct nuhspecial_s *, struct numtx_s *);
+extern f32 lbl_801A1614[], lbl_801A1618[];
+extern s32 lbl_80409154;
+extern void *lbl_8040AFE4;
+
+void fn_800B4974(void) {
+    struct numtx_s matrix;
+    struct nuvec_s scale;
+    struct numtx_s aligned;
+
+    if (lbl_80409154 != 0) {
+        struct numtx_s *result;
+        f32 value = *(f32 *)(lbl_8040AF5C + 0x4C) * lbl_801A1614[0] * lbl_801A1618[0];
+        scale.x = scale.y = scale.z = value;
+        fn_8000DCE0(&matrix, &scale);
+        result = &matrix;
+        matrix._30 = *(f32 *)((u8 *)lbl_8040AFE4 + 0x70);
+        matrix._31 = *(f32 *)((u8 *)lbl_8040AFE4 + 0x74);
+        matrix._32 = *(f32 *)((u8 *)lbl_8040AFE4 + 0x78);
+        if (*(s32 *)((u8 *)lbl_80409410 + 0x774) != 0) {
+            if ((u32)result & 8) {
+                aligned = matrix;
+                result = &aligned;
+            }
+            NuSpecialFindMultiWC((struct nuhspecial_s *)((u8 *)lbl_80409410 + 0x76C), result);
+        }
+    }
+}
