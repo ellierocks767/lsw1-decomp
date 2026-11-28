@@ -7289,7 +7289,7 @@ void fn_800BB7CC(void)
 }
 
 f32 fn_8000CB50(struct nuvec_s *);
-s32 fn_800D02E4(void *, void *, void *, f32);
+s32 fn_800D02E4(struct nuvec_s *, struct nuvec_s *, struct nuvec_s *, f32);
 
 void *fn_800B99D0(s32 arg0, s32 arg1, s32 arg2, f32 farg0, f32 farg1)
 {
@@ -7319,7 +7319,7 @@ void *fn_800B99D0(s32 arg0, s32 arg1, s32 arg2, f32 farg0, f32 farg1)
                 lim *= lim;
                 dist = fn_8000CD08(obj + 0x30, arg1, NULL);
                 if (dist < lim &&
-                    fn_800D02E4(obj + 0x30, &dir, (void *)arg1, radSq) != 0) {
+                    fn_800D02E4((struct nuvec_s *)(obj + 0x30), &dir, (struct nuvec_s *)arg1, radSq) != 0) {
                     bestDist = dist;
                     best = obj;
                 }
@@ -8940,4 +8940,21 @@ s16 fn_800CC830(s16 level)
         }
     }
     return level;
+}
+extern f32 lbl_801A4FC8[];
+s32 fn_800D02E4(struct nuvec_s *p, struct nuvec_s *v, struct nuvec_s *q, f32 lim)
+{
+    struct nuvec_s d;
+    f32 dot;
+    f32 len;
+
+    d.x = q->x - p->x;
+    d.y = q->y - p->y;
+    d.z = q->z - p->z;
+    dot = v->x * d.x + v->y * d.y + v->z * d.z;
+    if (dot < lbl_801A4FC8[0]) {
+        return 0;
+    }
+    len = d.x * d.x + d.y * d.y + d.z * d.z - dot * dot;
+    return len <= lim;
 }
