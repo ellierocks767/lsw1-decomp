@@ -2618,7 +2618,7 @@ void fn_800D4C88(void) {
     lbl_8040B058 = 0;
 }
 
-s32 fn_800AB8C8();
+void fn_800AB8C8(void);
 s32 fn_80105C74(s32);
 s32 fn_801205AC(s32);
 s32 fn_8013DE58(s32, ...);
@@ -5394,5 +5394,186 @@ void fn_800B00B8(struct levels_fade_s *o, f32 a, f32 b) {
         o->f138 = zero;
         o->f13C = a;
         o->b178 = o->b175;
+    }
+}
+
+void fn_8002A3A8(void *);
+
+struct levels_ac698_s {
+    u8 pad0[0x1CC];
+    void *p1CC;
+    u8 pad1D0[0x8];
+    void *p1D8;
+    u8 pad1DC[0x8];
+    void *p1E4;
+    u8 pad1E8[0x8];
+    void *p1F0;
+    u8 pad1F4[0x8];
+    void *p1FC;
+};
+
+void fn_800AC698(struct levels_ac698_s *arg0) {
+    if (arg0->p1FC != NULL) {
+        fn_8002A3A8(arg0->p1FC);
+    }
+    arg0->p1FC = NULL;
+    if (arg0->p1F0 != NULL) {
+        fn_8002A3A8(arg0->p1F0);
+    }
+    arg0->p1F0 = NULL;
+    if (arg0->p1E4 != NULL) {
+        fn_8002A3A8(arg0->p1E4);
+    }
+    arg0->p1E4 = NULL;
+    if (arg0->p1D8 != NULL) {
+        fn_8002A3A8(arg0->p1D8);
+    }
+    arg0->p1D8 = NULL;
+    if (arg0->p1CC != NULL) {
+        fn_8002A3A8(arg0->p1CC);
+    }
+    arg0->p1CC = NULL;
+}
+
+extern f32 lbl_8019FF18[];
+extern s32 lbl_80409000;
+
+struct levels_ac7ac_s {
+    u8 pad0[0x270];
+    f32 x;
+    f32 y;
+    f32 z;
+};
+
+void fn_800AC7AC(void *arg0, struct levels_ac7ac_s *arg1, struct nuvec_s *arg2) {
+    arg1->x = arg2->x;
+    arg1->y = 0.0f;
+    arg1->z = arg2->z;
+    if ((fn_8000ED40(arg2->x) > 0.1f) || (fn_8000ED40(arg2->z) > 0.1f)) {
+        lbl_80409000 += 1;
+    }
+    if ((arg1->x == 0.0f) && (arg1->z == 0.0f)) {
+        arg1->x = lbl_8019FF18[0];
+    }
+}
+
+s32 fn_800AAE44(s32);
+extern s32 lbl_803E0470[];
+extern s32 lbl_8040B044;
+
+void fn_800AC384(void) {
+    s32 i;
+
+    lbl_8040B044 = 0;
+    NuTimeBar_DefaultColours[lbl_8040B044] = 0xFF;
+    for (i = 0; i <= 0x84; i++) {
+        if (((u32)lbl_803E0470[i / 32] >> (i & 0x1F)) & 1) {
+            fn_800AAE44(i);
+        }
+    }
+    for (lbl_8040B044 = 0; lbl_8040B044 < 0x3F && NuTimeBar_DefaultColours[lbl_8040B044] != 0xFF; lbl_8040B044++) {
+    }
+}
+
+s32 APILoadCharacterModels(void *, s32, void *, void *, s32);
+extern s32 lbl_80408DF4;
+extern s32 lbl_8040907C;
+extern u8 lbl_8040907F;
+extern s32 lbl_80409080;
+
+struct levels_ac85c_s {
+    u8 b0;
+    u8 b1;
+    s16 h2;
+};
+
+void fn_800AC85C(void) {
+    s32 sp8;
+    s32 *p = &sp8;
+    struct levels_ac85c_s spC;
+    s32 tmp;
+
+    spC.b0 = lbl_8040907F;
+    spC.h2 = -0x100;
+    spC.b1 = 1;
+    lbl_80408DF4 = 1;
+    *p = lbl_80408F80;
+    APILoadCharacterModels(&spC, 0, &lbl_80408F7C, p, 1);
+    tmp = lbl_8040907C;
+    lbl_8040907C = -1;
+    lbl_80409080 = tmp;
+}
+
+void AISysGetCharacterPathPos(void *, void *, void *, s32, s32);
+extern const f32 lbl_8019FE9C[];
+
+struct levels_abb94_s {
+    u8 pad0[0x2A0];
+    u8 path2A0[0xA0];
+    s16 h340;
+    s16 h342;
+    s16 h344;
+    u8 pad346[0x66];
+    u8 arr3AC[0x18];
+    u8 pad3C4[0x14];
+    s32 f3D8;
+    u8 pad3DC[0x8];
+    s32 f3E4;
+    s32 f3E8;
+    u8 pad3EC[0x1E];
+    u8 b40A;
+    u8 b40B;
+    u8 pad40C[0x34];
+    u32 f440;
+    u8 pad444[0xC];
+    s32 f450;
+    u8 pad454[0xAD4];
+    u32 bfF28_0 : 26;
+    u32 bfF28_26 : 1;
+    u32 bfF28_27 : 5;
+    s32 fF2C;
+    u8 padF30[0x15A];
+    u8 b108A;
+    u8 b108B;
+    f32 f108C;
+};
+
+void fn_800ABB94(struct levels_abb94_s *arg0) {
+    arg0->f3E4 = 0;
+    arg0->f3E8 = 0;
+    arg0->h342 = -1;
+    arg0->h344 = -1;
+    arg0->f3D8 = 0;
+    arg0->b108A = 0;
+    arg0->b108B = 0;
+    arg0->f450 = 0;
+    arg0->fF2C = 0;
+    arg0->f440 &= ~0x06000000;
+    arg0->f108C = lbl_8019FE9C[0];
+    arg0->f440 &= ~0x00400000;
+    arg0->bfF28_26 = 0;
+    memset(arg0->arr3AC, 0, 0x18);
+    arg0->b40B = 0;
+    arg0->b40A = 0xFF;
+    arg0->h340 = -1;
+    AISysGetCharacterPathPos(*(void **)((s8 *)lbl_80409410 + 0x2E8), arg0, arg0->path2A0, 0xFF, 1);
+}
+
+struct levels_turretmask_s {
+    u8 pad0[8];
+    u64 mask;
+};
+
+void fn_800AB8C8(void) {
+    struct levels_turretmask_s *m = *(struct levels_turretmask_s **)((s8 *)lbl_80409410 + 0x1B4);
+    if (m != NULL) {
+        s8 *p = (s8 *)lbl_80409430;
+        s32 i;
+        m->mask = 0;
+        for (i = 0; i < lbl_8040B058; i++, p += 0x1098) {
+            if (*(s32 *)(p + 0x20C) < 0 && (*(s32 *)(p + 0x208) & 0x400) && *(u8 *)(p + 0x40C) == 3) {
+                (*(struct levels_turretmask_s **)((s8 *)lbl_80409410 + 0x1B4))->mask |= (1ULL << i);
+            }
+        }
     }
 }
