@@ -9040,3 +9040,26 @@ s32 fn_800CFEE8(f32 *a, f32 *b, f32 f1, f32 f2, f32 f3, f32 f4)
     r = f1 + f3;
     return dx * dx + dy * dy + dz * dz <= r * r;
 }
+
+void fn_800CE080(void)
+{
+    s16 *h;
+    s32 *s;
+    s32 off;
+    s16 z;
+    u8 *base = (u8 *)lbl_801D6648;
+
+    if (*(s32 *)base != 0) {
+        z = 0; s = lbl_803EAD24; h = (s16 *)base + 9; off = 0;
+        do {
+            NuSpecialFind(lbl_80409410->unk1C0, s, *(s32 **)((s32)off + (s32)base), 1);
+            if (fn_800130F4(s) != 0) {
+                fn_80013200(s, 0);
+                *h = z;
+            }
+            off += 0x14;
+            h += 10;
+            s += 3;
+        } while (*(s32 *)((s32)off + (s32)base) != 0);
+    }
+}
