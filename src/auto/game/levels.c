@@ -5577,3 +5577,64 @@ void fn_800AB8C8(void) {
         }
     }
 }
+
+extern const f32 lbl_8019FF84[];
+extern void *lbl_804093A8;
+
+void fn_800ACAF8(void *arg0, struct nuvec_s *arg1, struct nuvec_s *arg2) {
+    f32 dist[2];
+    f32 h;
+    f32 t;
+    struct nuvec_s *target;
+    void *sub;
+
+    h = (*(f32 *)((s8 *)arg0 + 0x1014) + *(f32 *)((s8 *)arg0 + 0x1018))
+        * *(f32 *)(*(s8 **)((s8 *)arg0 + 0x64) + 0x38)
+        * lbl_8019FF84[0];
+    sub = *(void **)((s8 *)arg0 + 0xEEC);
+    if (sub != NULL
+        && (*(s8 *)((s8 *)arg0 + 0x28F) != 0 || *(u8 *)((s8 *)sub + 0x7D5) != 0)
+        && !(*(s32 *)((s8 *)lbl_804093A8 + 4) & 0x20)) {
+        if (*(s8 *)((s8 *)arg0 + 0x28F) != 0) {
+            *arg1 = *(struct nuvec_s *)((s8 *)arg0 + 0x6C);
+        } else {
+            *arg1 = *(struct nuvec_s *)((s8 *)arg0 + 0x1D0);
+        }
+        arg1->y += h;
+        return;
+    }
+    target = NULL;
+    arg1->x = *(f32 *)((s8 *)arg0 + 0x6C);
+    arg1->y = *(f32 *)((s8 *)arg0 + 0x70) + h;
+    arg1->z = *(f32 *)((s8 *)arg0 + 0x74);
+    {
+        s8 *sub2 = *(s8 **)((s8 *)arg0 + 0xEEC);
+        switch (*(s8 *)(sub2 + 0x7DF)) {
+        case 9:
+            target = (struct nuvec_s *)(*(s8 **)(sub2 + 0x620) + 0x78);
+            break;
+        case 31: {
+            s8 *p = *(s8 **)(sub2 + 0x678);
+            if (p != NULL) {
+                target = (struct nuvec_s *)(p + 0x90);
+            }
+            break;
+        }
+        case 33: {
+            s8 *p = *(s8 **)(sub2 + 0x64C);
+            if (p != NULL && *(s32 *)(p + 0x128) < 0) {
+                target = (struct nuvec_s *)(p + 0x30);
+            }
+            break;
+        }
+        }
+    }
+    if (target != NULL) {
+        dist[0] = NuVecDist(arg2, arg1, NULL);
+        dist[1] = NuVecDist(arg2, target, NULL);
+        t = dist[0] / (dist[0] + dist[1]);
+        arg1->x += (target->x - arg1->x) * t;
+        arg1->y += (target->y - arg1->y) * t;
+        arg1->z += (target->z - arg1->z) * t;
+    }
+}
