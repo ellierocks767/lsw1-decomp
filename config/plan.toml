@@ -2872,3 +2872,7 @@ reason = "best 48/56: only reg alloc in first vec copy (r8/r7/r10/r6 vs r10/r8/r
 [[parked]]
 function = "fn_800CC8BC"
 reason = "best 27/45: ctr loop with hoisted flag in cr7 and separate ids pointer vs count pointer; next: separate inline helper sharing fn_800CC764 shape, or longer permuter"
+
+[[parked]]
+function = "fn_800CFD80"
+reason = "best 33/34: neg r5 scheduled before beq and a lands in r0 vs r3 unless a separate neg local is used; permuter 'unused s32 local' result was a false positive (strict 30/34); next: longer permuter run or fn_8000ABDC u16 return prototype"
