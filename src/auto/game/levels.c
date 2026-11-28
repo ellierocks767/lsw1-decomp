@@ -4374,10 +4374,25 @@ void fn_800CE144(void) {
 }
 
 extern f32 lbl_801A4F10[];
-extern void *lbl_802E0BE4[];
+struct levelstate_c6900_0_s {
+    u8 pad0[0x28];
+    f32 unk28;
+};
+
+/* Level state block at lbl_802E0BE4 as read by fn_800C6900. */
+struct levelstate_c6900_s {
+    struct levelstate_c6900_0_s *unk0;
+    void *unk4;                   /* nuvec_s at +0x10 */
+    struct nuhspecial_s unk8[10];
+    s16 unk80[10];
+    u8 unk94;
+    u8 pad95[0x98 - 0x95];
+};
+
+extern struct levelstate_c6900_s lbl_802E0BE4;
 void fn_800CF03C(void) {
     s32 v;
-    if (lbl_802E0BE4[0] != NULL && *(f32 *)((s8 *)lbl_802E0BE4[0] + 0x28) == lbl_801A4F10[0] && lbl_80409008 == NULL) {
+    if (lbl_802E0BE4.unk0 != NULL && lbl_802E0BE4.unk0->unk28 == lbl_801A4F10[0] && lbl_80409008 == NULL) {
         if ((s32)lbl_80409004 == gPlayer1Pointer[0]) {
             v = gPlayer1Pointer[1];
         } else {
@@ -8484,27 +8499,45 @@ void fn_800C5A10(s32 i)
     }
 }
 
-struct levelstate_c6900_0_s {
-    u8 pad0[0x28];
-    f32 unk28;
-};
-
-/* Level state block at lbl_802E0BE4 as read by fn_800C6900. */
-struct levelstate_c6900_s {
-    struct levelstate_c6900_0_s *unk0;
-    void *unk4;                   /* nuvec_s at +0x10 */
-    u8 pad8[0x80 - 0x8];
-    s16 unk80[10];
-    u8 unk94;
-};
-
 s32 NuStrICmp(char *, char *);
 extern void *lbl_8040AE4C;
 extern const f32 lbl_801A2E88[];
 extern const f32 lbl_801A2E8C[];
 extern char lbl_801A2E7C[];
 
-#define LS ((struct levelstate_c6900_s *)lbl_802E0BE4)
+#define LS (&lbl_802E0BE4)
+
+struct levelnames_c67b8_s {
+    char *name[10];
+};
+
+extern const struct levelnames_c67b8_s lbl_801A2E48;
+extern char lbl_801A2E70[];
+extern s32 lbl_801A2D3C[];
+extern s32 lbl_8040B16C;
+
+void fn_800C67B8(void)
+{
+    struct levelstate_c6900_s *ls;
+    struct levelnames_c67b8_s names;
+    s32 i;
+
+    names = lbl_801A2E48;
+    ls = &lbl_802E0BE4;
+    memset((s32 *)ls, 0, sizeof(*ls));
+    ls->unk0 = (void *)CheckAIMessage(lbl_80408F58, (s32 *)lbl_801A2E70, 0);
+    ls->unk4 = (void *)AIPathFindLocator(lbl_80409410->unk2E8, lbl_801A2D3C);
+    for (i = 0; i < 10; i++) {
+        if (NuSpecialFind(lbl_80409410->unk1C0, (s32 *)&ls->unk8[i], (s32 *)names.name[i], 1) != 0) {
+            fn_800135B0(&ls->unk8[i]);
+            ls->unk80[i] = fn_8005A5F8();
+        } else {
+            ls->unk80[i] = -1;
+        }
+    }
+    lbl_8040B16C = 0;
+}
+
 
 void fn_800C6900(void)
 {
