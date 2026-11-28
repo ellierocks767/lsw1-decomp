@@ -47,6 +47,61 @@ void fn_800A20AC(void)
     fn_800B9D44(lbl_803E0298 + 4);
 }
 
+struct CRLEVEL_s {
+    char pad0[8];
+    s32 count;
+    char padC[0xC];
+    void *sets;
+    char pad1C[4];
+    char *defs;
+};
+extern struct CRLEVEL_s *lbl_80408DF0;
+
+struct CRANIMSET_s {
+    char pad0[4];
+    void *hgobj;
+    void **mtx;
+    void **anims;
+    char pad10[0x44];
+};
+struct CRROOTDATA_s {
+    char pad0[0x270];
+    f32 pos[3];
+    char pad27C[0x20];
+};
+void fn_800AC7AC();
+extern f32 lbl_8019FA7C[];
+void NuHGobjEvalAnim2Root(void *hgobj, void *anim, f32 time, s32 njanims, void *janim, void *mtx_array, void *rootfn, void *rootdata);
+
+void fn_800A2370(void)
+{
+    char mtx[0x4000];
+    struct CRROOTDATA_s root;
+    s32 i;
+    s32 j;
+    struct CRANIMSET_s *set = lbl_80408DF0->sets;
+    f32 zero;
+
+    for (i = 0; i <= 30; i++, set++) {
+        j = 0;
+        if (j < lbl_80408DF0->count) {
+            zero = lbl_8019FA7C[0];
+            do {
+                if (set != NULL && set->anims[j] != NULL && set->hgobj != NULL) {
+                    root.pos[0] = zero;
+                    root.pos[1] = zero;
+                    root.pos[2] = zero;
+                    NuHGobjEvalAnim2Root(set->hgobj, set->anims[j], zero, 0, 0, mtx, fn_800AC7AC, &root);
+                    *(f32 *)((char *)set->mtx[j] + 0x34) = root.pos[0];
+                    *(f32 *)((char *)set->mtx[j] + 0x38) = root.pos[1];
+                    *(f32 *)((char *)set->mtx[j] + 0x3C) = root.pos[2];
+                }
+                j++;
+            } while (j < lbl_80408DF0->count);
+        }
+    }
+}
+
 extern u8 NuTimeBar_DefaultColours[];
 extern u8 lbl_801D53C8[];
 extern s32 lbl_8040B044;
@@ -206,20 +261,39 @@ void GameLoadCharacterModels(s32 arg0, s32 arg1)
     APILoadCharacterModels(arg0, 0, &lbl_80408F7C, &sp8, 1);
 }
 
+s32 fn_8006F8B0();
+void fn_80071A70(s32, s32);
+void fn_80071B78(s32, f32, f32);
+void fn_80071C04(s32, f32 *, s32);
+extern struct NUGAMEOBJECT_s *gPlayer1Pointer[];
+extern f32 lbl_802DA01C[];
+
+void fn_800A474C(void)
+{
+    s32 i;
+    s32 id;
+
+    for (i = 0; i < 2; i++) {
+        if (gPlayer1Pointer[i] != NULL) {
+            *(s32 *)((char *)gPlayer1Pointer[i]->playerPacket + 0x820) = fn_8006F8B0();
+            id = *(s32 *)((char *)gPlayer1Pointer[i]->playerPacket + 0x820);
+            if (id != -1) {
+                lbl_802DA01C[0] = (u32)((u8 *)gPlayer1Pointer[i]->characterData->config)[0xC5] / 255.0f;
+                lbl_802DA01C[1] = (u32)((u8 *)gPlayer1Pointer[i]->characterData->config)[0xC6] / 255.0f;
+                lbl_802DA01C[2] = (u32)((u8 *)gPlayer1Pointer[i]->characterData->config)[0xC7] / 255.0f;
+                fn_80071A70(id, 2);
+                fn_80071C04(id, lbl_802DA01C, 0);
+                fn_80071B78(id, 0.0f, 1.25f);
+            }
+        }
+    }
+}
+
 u64 __lshrdi3();
 void fn_800868B4(void *, void *);
 s32 fn_8008F180(void *, u8, f32, f32, f32);
 void *fn_800A55D4(u8, s32);
 extern f32 lbl_8019FB9C[];
-struct CRLEVEL_s {
-    char pad0[8];
-    s32 count;
-    char padC[0xC];
-    void *sets;
-    char pad1C[4];
-    char *defs;
-};
-extern struct CRLEVEL_s *lbl_80408DF0;
 extern s32 lbl_80408FB4;
 
 void fn_800A4C78(char *arg0) {
@@ -274,6 +348,49 @@ void fn_800A4C78(char *arg0) {
             }
         }
         *(u32 *)(arg0 + 0x1378) &= ~0x8000;
+    }
+}
+
+s32 fn_800B9ED4(void);
+extern f32 lbl_80408E9C;
+void fn_800A5A3C(char *obj);
+
+static inline void creatureResetTimer(char *obj)
+{
+    *(s16 *)(obj + 0x50) = 1;
+    *(f32 *)(obj + 0x24) = 0.0f;
+    *(f32 *)(obj + 0x28) = (f32)fn_800B9ED4() * 1.5259022e-05f * 7.0f + 8.0f;
+    *(f32 *)(obj + 0x20) = 0.0f;
+}
+
+void fn_800A5C64(char *obj)
+{
+    f32 dt;
+    f32 a;
+    f32 b;
+    f32 lim;
+
+    if (*(s32 *)(obj + 0x60) != 0) {
+        if (*(s16 *)(obj + 0x4E) == 1) {
+            dt = lbl_80408E9C;
+            a = *(f32 *)(obj + 0x20);
+            b = *(f32 *)(obj + 0x24);
+            lim = *(f32 *)(obj + 0x28);
+            a += dt;
+            b += dt;
+            *(f32 *)(obj + 0x20) = a;
+            *(f32 *)(obj + 0x24) = b;
+            if (b >= lim) {
+                if (*(s16 *)(obj + 0x50) == 1) {
+                    fn_800A5A3C(obj);
+                } else {
+                    creatureResetTimer(obj);
+                }
+            }
+            *(s16 *)(obj + 0x4E) = *(s16 *)(obj + 0x50);
+        } else {
+            creatureResetTimer(obj);
+        }
     }
 }
 
@@ -332,7 +449,6 @@ void fn_800A30A8(char *obj, s32 unused) {
     *(f32 *)(obj + 0x77C) = 0.0f;
 }
 
-s32 fn_800B9ED4(void);
 
 void ResetPlayerContexts(void *arg) {
     char *obj = arg;
@@ -417,4 +533,647 @@ void fn_800A3224(char *obj) {
     *(f32 *)(*(char **)(obj + 0xEEC) + 0x144) = 1.0f;
     *(f32 *)(obj + 0x1E8) = 0.0f;
     *(u32 *)(obj + 0x20C) &= ~0x40000;
+}
+
+void NuVecAdd(void *, void *, void *);
+void NuVecScale(void *, void *, f32);
+void fn_80098190(void *, void *, s32, s32, void *);
+void *memset(void *, s32, u32);
+extern struct NUGAMEOBJECT_s *gPlayer1Pointer[];
+
+s32 fn_800AAC04(void *outPos, s8 *outInfo)
+{
+    struct CRVEC_s sum;
+    f32 count;
+    s32 i;
+
+    memset(&sum, 0, sizeof(sum));
+    count = 0.0f;
+    for (i = 0; i < 2; i++) {
+        struct NUGAMEOBJECT_s *player = gPlayer1Pointer[i];
+        if (player != NULL && (player->flags20C & 0x01000000)) {
+            NuVecAdd(&sum, &sum, player->position);
+            count += 1.0f;
+        }
+    }
+    if (count > 0.0f) {
+        NuVecScale(outPos, &sum, 1.0f / count);
+        if (outInfo != NULL) {
+            fn_80098190(*(void **)((char *)lbl_80409410 + 0x2DC), outPos, -1, -1, outInfo);
+        }
+        return 1;
+    }
+    if (outInfo != NULL) {
+        outInfo[1] = -1;
+    }
+    return 0;
+}
+
+void NuMtxTranslate(void *, void *);
+void fn_8000DCE0(void *, void *);
+void fn_8001AF60(s32);
+void fn_8001AF70(void);
+s32 fn_800BA014(s32, void *);
+s32 fn_800CF9D8(void *, s32, void *, f32);
+extern s32 lbl_803E04B4[];
+
+struct CRCHARMODEL_s {
+    char pad0[0x14];
+    void *parts[1];
+};
+
+struct CRMTX_s {
+    f32 m[4][4];
+};
+
+struct CRPKT_AA178_s {
+    char pad0[0x194];
+    struct {
+        f32 r[3][4];
+        struct CRVEC_s pos;
+        f32 w;
+    } mats[1];
+};
+
+void fn_800AA178(char *arg0, s32 arg1)
+{
+    struct CRMTX_s mtx;
+    struct CRMTX_s mtx2;
+    struct CRVEC_s scale;
+    char *charInfo = *(char **)(*(char **)(arg0 + 0x64) + 0x20);
+    s8 idx = *(s8 *)(charInfo + 0xDC);
+
+    if (idx != -1 && ((struct CRCHARMODEL_s *)*(void **)(arg0 + 0x60))->parts[idx] != NULL) {
+        if (*(u8 *)(*(char **)(arg0 + 0xEEC) + 0x7D6) == 0 && *(u8 *)(charInfo + 0xC3) != 0 && *(f32 *)(*(char **)(arg0 + 0xEEC) + 0x6B0) > 0.0f) {
+            if ((u32)(lbl_803E04B4[0] & 3) > 1U) {
+                return;
+            }
+            scale.x = 1.0f;
+        } else {
+            f32 s = *(f32 *)(*(char **)(arg0 + 0xEEC) + 0x6AC);
+            if (s <= 0.0f) {
+                return;
+            }
+            scale.x = s;
+        }
+        scale.y = scale.z = scale.x;
+        fn_8000DCE0(&mtx, &scale);
+        NuMtxTranslate(&mtx, &((struct CRPKT_AA178_s *)*(void **)(arg0 + 0xEEC))->mats[idx].pos);
+        fn_800BA014(*(f32 *)(*(char **)(arg0 + 0xEEC) + 0x6B0) > 0.0f ? 4 : 3, &mtx);
+        if (arg1 != 0) {
+            u8 *pFlag = (u8 *)(arg0 + 0x107F);
+            fn_800CF9D8(&mtx, *pFlag, &mtx2, *(f32 *)(arg0 + 0x1040));
+            fn_8001AF60(0);
+            fn_800BA014(*(f32 *)(*(char **)(arg0 + 0xEEC) + 0x6B0) > 0.0f ? 0x2C : 0x2B, &mtx2);
+            fn_8001AF70();
+        }
+    }
+}
+
+s32 fn_800952D8(s32);
+s32 fn_8009D158(void);
+void fn_8009D160(void *, s32, s32, s32);
+s32 fn_800B2ED4(void);
+void fn_800AC85C(void);
+extern s32 gDebugLevelStreamingEnabled;
+extern s32 lbl_80408DF4;
+extern s32 lbl_80408FD4;
+extern s32 lbl_8040907C;
+extern s32 lbl_80409080;
+extern f32 lbl_8040B020;
+
+void fn_800AB534(void)
+{
+    s32 candidates[134];
+    s32 sp220[2];
+    s32 state = fn_800B2ED4();
+
+    if (*(s32 *)((char *)lbl_80409410 + 0x198) == 0x7B && state != 0x16 &&
+        (u32)(state - 0x18) > 1U && lbl_8040907C == -1 && lbl_80409080 == -1 &&
+        fn_8009D158() == 0 && (u32)(lbl_80408F80 - lbl_80408F7C) > 0xFFFFFU) {
+        s32 count = 0;
+        s32 i;
+        if (fn_800952D8(0x6A) == 0) {
+            candidates[count++] = 0x6A;
+        } else if (fn_800952D8(0x7F) == 0) {
+            candidates[count++] = 0x7F;
+        } else if (fn_800952D8(0x5E) == 0) {
+            candidates[count++] = 0x5E;
+        } else {
+            for (i = 0; i < 0x85; i++) {
+                if (creatureCharacterIndex(i) != -1 && creatureHasCharacter(i) && fn_800952D8(i) == 0) {
+                    candidates[count++] = i;
+                }
+            }
+        }
+        if (count > 0) {
+            i = (count > 1) ? (fn_800B9ED4() / ((0xFFFF / count) + 1)) : 0;
+            lbl_8040907C = candidates[i];
+            lbl_8040B020 = 0.0f;
+            if (lbl_80408FD4 != 0 || gDebugLevelStreamingEnabled == 0) {
+                struct {
+                    u8 id;
+                    u8 flag;
+                    s16 end;
+                } req;
+                s32 *memEndPtr = sp220;
+                req.id = (u8)lbl_8040907C;
+                req.end = -0x100;
+                req.flag = 1;
+                lbl_80408DF4 = 1;
+                sp220[0] = lbl_80408F80;
+                APILoadCharacterModels((s32)&req, 0, &lbl_80408F7C, memEndPtr, 1);
+                lbl_80409080 = lbl_8040907C;
+                lbl_8040907C = -1;
+            } else {
+                fn_8009D160(fn_800AC85C, 0, 0, 0);
+            }
+        }
+    }
+}
+
+void NuMtxPreScale(void *, void *);
+void fn_8000D134(void *, void *, void *);
+
+void fn_800AA2F4(char *arg0, s32 arg1)
+{
+    struct CRMTX_s mtx0;
+    struct CRMTX_s mtx;
+    struct CRMTX_s mtx2;
+    struct CRVEC_s scale;
+    s8 idx = *(s8 *)(*(char **)(*(char **)(arg0 + 0x64) + 0x20) + 0xE1);
+
+    if (idx != -1 && ((struct CRCHARMODEL_s *)*(void **)(arg0 + 0x60))->parts[idx] != NULL) {
+        s32 id1 = -1;
+        s32 id2 = -1;
+        s32 doMul = 0;
+        switch (*(s16 *)(arg0 + 0x1074)) {
+        case 2:
+        case 0x3F:
+        case 0x40:
+        case 0x41:
+            id1 = 5;
+            id2 = 0x2D;
+            doMul = 0;
+            break;
+        }
+        mtx = *(struct CRMTX_s *)(*(char **)(arg0 + 0xEEC) + (idx << 6) + 0x194);
+        if (doMul != 0) {
+            fn_8000D134(&mtx, &mtx0, &mtx);
+        }
+        {
+            f32 s = *(f32 *)(*(char **)(arg0 + 0xEEC) + 0x6B4);
+            if (s != 1.0f) {
+                scale.z = s;
+                scale.y = s;
+                scale.x = s;
+                NuMtxPreScale(&mtx, &scale);
+            }
+        }
+        if (id1 != -1) {
+            fn_800BA014(id1, &mtx);
+        }
+        if (arg1 != 0 && id2 != -1) {
+            u8 *pFlag = (u8 *)(arg0 + 0x107F);
+            fn_800CF9D8(&mtx, *pFlag, &mtx2, *(f32 *)(arg0 + 0x1040));
+            fn_8001AF60(0);
+            fn_800BA014(id2, &mtx2);
+            fn_8001AF70();
+        }
+    }
+}
+
+void NuSpecialFindMultiWC(void *, void *);
+s32 fn_800130F4(void *);
+
+void fn_800AAA2C(char *arg0, s32 arg1, struct CRMTX_s *arg2, struct CRMTX_s *arg3)
+{
+    struct CRMTX_s aligned;
+    void *special;
+
+    switch (arg1) {
+    case 0x79:
+    case 0x39:
+        special = arg0 + 0x1E4;
+        break;
+    case 0x24:
+        special = arg0 + 0x1CC;
+        break;
+    case 0x38:
+        special = arg0 + 0x1D8;
+        break;
+    case 0x1B:
+        special = arg0 + 0x1F0;
+        break;
+    case 0x5A:
+        special = arg0 + 0x1FC;
+        break;
+    default:
+        special = NULL;
+        break;
+    }
+    if (fn_800130F4(special) != 0) {
+        if (arg2 != NULL) {
+            if ((u32)arg2 & 0xF) {
+                aligned = *arg2;
+                arg2 = &aligned;
+            }
+            NuSpecialFindMultiWC(special, arg2);
+        }
+        if (arg3 != NULL) {
+            if ((u32)arg3 & 0xF) {
+                aligned = *arg3;
+                arg3 = &aligned;
+            }
+            NuSpecialFindMultiWC(special, arg3);
+        }
+    }
+}
+
+s32 fn_80095630(void *, s32, s32, s32);
+void fn_800A9794(struct NUGAMEOBJECT_s *, s32);
+void fn_800F78FC(void *, s32, f32, f32);
+extern u8 lbl_801D59C6[];
+extern f32 lbl_80409808;
+
+struct CRGAME774_s {
+    char pad0[0x774];
+    struct {
+        void *p;
+        char pad4[0xC];
+    } entries[1];
+};
+
+#define IS_CAPE_ANIM(a) ((s16)(a) == 0x11 || (s16)(a) == 0x4E || (s16)(a) == 0x5D || (s16)(a) == 0x4F || (s16)(a) == 0x29)
+
+static inline void drawExtra100(struct NUGAMEOBJECT_s *arg0, s32 arg1)
+{
+    if (*(s16 *)((char *)arg0 + 0x1074) != 0x71 || (s8)arg0->unk1081[4] > 1) {
+        struct CRMTX_s mtx;
+        struct CRMTX_s mtx2;
+        s8 idx = *(s8 *)((char *)arg0->characterData->config + 0xDE);
+        if (idx != -1 && ((struct CRCHARMODEL_s *)arg0->characterModel)->parts[idx] != NULL) {
+            mtx = *(struct CRMTX_s *)((char *)arg0->playerPacket + (idx << 6) + 0x194);
+            fn_800BA014(0x100, &mtx);
+            if (arg1 != 0) {
+                fn_800CF9D8(&mtx, (u8)arg0->unk1064[0x1B], &mtx2, *(f32 *)((char *)arg0 + 0x1040));
+                fn_8001AF60(0);
+                fn_800BA014(0x100, &mtx2);
+                fn_8001AF70();
+            }
+        }
+    }
+}
+
+void fn_800AA4A8(struct NUGAMEOBJECT_s *arg0)
+{
+    fn_800AAA2C(lbl_80409410, *(s16 *)((char *)arg0 + 0x1074),
+        (struct CRMTX_s *)((char *)arg0 + 0xC8),
+        arg0->drawMatrixEnabled ? (struct CRMTX_s *)((char *)arg0 + 0x148) : NULL);
+    if (*(f32 *)((char *)arg0->playerPacket + 0x6BC) > 0.0f) {
+        fn_800A9794(arg0, arg0->drawMatrixEnabled);
+    }
+    if (*(f32 *)((char *)arg0->playerPacket + 0x6AC) > 0.0f ||
+        *(f32 *)((char *)arg0->playerPacket + 0x6B0) > 0.0f) {
+        fn_800AA178((char *)arg0, arg0->drawMatrixEnabled);
+    }
+    if (*(f32 *)((char *)arg0->playerPacket + 0x6B4) > 0.0f) {
+        fn_800AA2F4((char *)arg0, arg0->drawMatrixEnabled);
+    }
+    {
+        char *pkt = (char *)arg0->playerPacket;
+        f32 t = *(f32 *)(pkt + 0x740);
+        if (t > 0.0f && *(f32 *)(pkt + 0x74C) > 0.0f &&
+            ((struct CRGAME774_s *)lbl_80409410)->entries[*(s16 *)(pkt + 0x7A8)].p != NULL) {
+            fn_800F78FC(pkt + 0x604, *(s16 *)(pkt + 0x7A8), *(f32 *)(pkt + 0x74C), t / lbl_80409808);
+        }
+    }
+    if (lbl_8040AFB8 == 0 && lbl_801D59C6[0] != 0 && *(s32 *)((char *)lbl_80409410 + 0x1774) != 0) {
+        drawExtra100(arg0, arg0->drawMatrixEnabled);
+    }
+    if (*(s16 *)((char *)arg0 + 0x1074) == 0xF) {
+        s16 setIdx = *(s16 *)(*(char **)((char *)lbl_80408DF0 + 0x1C) + 0x92);
+        if (setIdx != -1) {
+            char *set = (char *)lbl_80408DF0->sets + setIdx * 0x54;
+            if (((u8)arg0->unk0[0x45] == 0 && IS_CAPE_ANIM(*(u16 *)((char *)arg0 + 0x4A)) &&
+                 (*(void ***)(set + 0xC))[(s16)*(u16 *)((char *)arg0 + 0x4A)] != NULL) ||
+                ((u8)arg0->unk0[0x45] != 0 && IS_CAPE_ANIM(*(u16 *)((char *)arg0 + 0x46)) &&
+                 (*(void ***)(set + 0xC))[(s16)*(u16 *)((char *)arg0 + 0x46)] != NULL &&
+                 IS_CAPE_ANIM(*(u16 *)((char *)arg0 + 0x48)) &&
+                 (*(void ***)(set + 0xC))[(s16)*(u16 *)((char *)arg0 + 0x48)] != NULL)) {
+                struct CRMTX_s mtx;
+                struct CRMTX_s *capeMtx = (struct CRMTX_s *)((char *)arg0->playerPacket + 0x150);
+                void *reflMtx;
+                if (fn_80095630(&arg0->unk0[8], 0x4F, 1, 1) == 0) {
+                    *capeMtx = *(struct CRMTX_s *)((char *)arg0 + 0xC8);
+                    *(f32 *)((char *)capeMtx + 0x40) =
+                        (arg0->drawMatrixEnabled != 0 && (u8)arg0->unk1064[0x1B] == 2)
+                            ? *(f32 *)((char *)arg0 + 0x1040)
+                            : 2000000.0f;
+                }
+                reflMtx = (*(f32 *)((char *)capeMtx + 0x40) != 2000000.0f &&
+                           fn_800CF9D8(capeMtx, 2, &mtx, *(f32 *)((char *)capeMtx + 0x40)) != 0)
+                              ? &mtx
+                              : NULL;
+                fn_800A8DAC(set, &arg0->unk0[8], capeMtx, NULL, reflMtx, NULL, NULL, 1U);
+            }
+        }
+    }
+}
+
+f32 NuSinApprox(s32);
+s32 fn_80095AF8(s32, s32, s32 *);
+void fn_800D6968(s32, f32, s32, f32, s32, f32, f32, f32, f32);
+struct CRPOS2_s {
+    f32 x;
+    f32 y;
+};
+extern struct CRPOS2_s lbl_803E808C[];
+extern f32 lbl_803E8394[];
+extern f32 lbl_80408F00;
+extern f32 lbl_80409064;
+extern f32 lbl_80409068;
+extern s32 lbl_80409070;
+extern f32 lbl_804094D8;
+
+void fn_800AAF44(s32 arg0, s32 arg1, s32 arg4, f32 farg0, f32 farg1, f32 farg2)
+{
+    s32 sp8;
+    f32 stepX = lbl_80409064 * farg1;
+    f32 stepY = lbl_80409068 * farg1;
+    f32 size = lbl_804094D8 * farg1;
+    s32 count = 0;
+
+    if (!(lbl_80408F00 > -0.1f)) {
+        if (farg2 > 1.0f) {
+            farg2 = 1.0f;
+        }
+        if (*lbl_801D53C8 != 255) {
+            u8 *p = lbl_801D53C8;
+            do {
+                count++;
+                if (count > 63) {
+                    break;
+                }
+                p += 12;
+            } while (*p != 255);
+        }
+        if (count > 0) {
+            s32 cols = lbl_80409070;
+            s32 rows = (count / cols) + 1;
+            f32 y = farg0 - ((f32)(count / cols) * stepY * 0.5f);
+            f32 startX = -((f32)(cols - 1) * stepX * 0.5f);
+            s32 r;
+            for (r = 0; r < rows; r++, y += stepY) {
+                f32 x = startX;
+                s32 c;
+                for (c = 0; c < lbl_80409070; c++, x += stepX) {
+                    s32 idx = r * lbl_80409070 + c;
+                    if (idx < count) {
+                        s32 ch;
+                        lbl_803E808C[idx].x = x;
+                        lbl_803E808C[idx].y = y;
+                        ch = lbl_801D53C8[idx * 12];
+                        if (!(farg2 <= 0.0f)) {
+                            s32 icon = 0xCA;
+                            f32 alpha = 1.0f;
+                            if (arg0 != 0 && fn_80095AF8(arg0, ch, &sp8) != 0) {
+                                s32 pulse;
+                                if (arg1 != 0) {
+                                    continue;
+                                }
+                                if (sp8 == 0) {
+                                    icon = 0xC9;
+                                    pulse = 1;
+                                } else if (sp8 == 1) {
+                                    icon = 0xC8;
+                                    pulse = 1;
+                                } else {
+                                    alpha = 0.25f;
+                                    pulse = 0;
+                                }
+                                if (pulse != 0) {
+                                    alpha = NuSinApprox((s32)(lbl_803E8394[2] * 65536.0f)) * 0.125f + 0.375f;
+                                }
+                            }
+                            if (!creatureHasCharacter(ch)) {
+                                alpha = 0.25f;
+                                ch = -1;
+                            }
+                            alpha *= farg2;
+                            fn_800D6968(ch, x, icon, y, 1, 0.002f, size, alpha, alpha);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void NuMtxSetIdentity(void *);
+u8 NuPortalClipTest(void *, void *, f32, s16);
+s16 NuPortalWhichRoom(void *, void *);
+void fn_8000E250(void *, s32);
+void fn_8000E318(void *, s32);
+void fn_8000E3C0(void *, s32);
+void fn_8000E498(void *, s32);
+void fn_8000E540(void *, s32);
+void fn_8000E608(void *, s32);
+extern f32 lbl_8040904C;
+
+s32 fn_800A8FF4(void)
+{
+    s32 i = 0;
+    struct NUGAMEOBJECT_s *obj = lbl_80409430;
+
+    for (; i < lbl_8040B058; i++, obj++) {
+        obj->motionFlags |= 0x800;
+        if ((obj->flags20C & 0x80080000) == 0x80080000) {
+            *(u8 *)((char *)obj->playerPacket + 0x7DE) = obj->drawUpdated;
+            obj->drawUpdated = 0;
+            if ((obj->unk28F == 0 || (!(obj->unk103C > 0.0f) && *(f32 *)((char *)obj + 0x1038) != 0.0f) ||
+                 (*(u8 *)((char *)obj->characterData->config + 0xE5) == 8 && *(u8 *)((char *)obj->playerPacket + 0x7D5) != 0)) &&
+                ((*(u32 *)((char *)obj->playerPacket + 0x7B0) & 0x04000000) == 0 ||
+                 *(s8 *)((char *)obj->playerPacket + 0x7DF) != -1) &&
+                (*(u8 *)((char *)obj->playerPacket + 0x7DF) != 0x12 ||
+                 *(u8 *)((char *)obj->playerPacket + 0x7CA) != 2)) {
+                struct CRVEC_s scale;
+                struct CRVEC_s pos;
+                struct CRMTX_s mtx;
+                struct CRMTX_s shadowMtx;
+                struct CRMTX_s reflMtx;
+
+                pos.x = obj->position[0];
+                pos.y = obj->position[1];
+                if (obj->motionFlags & 0x100) {
+                    pos.y += *(f32 *)((char *)obj + 0x101C) * *(f32 *)((char *)obj + 0xB8);
+                }
+                pos.z = obj->position[2];
+                obj->drawResult = 1;
+                if (*(u32 *)((char *)obj + 0xF24) & 0x40) {
+                    if ((*(u32 *)((char *)obj + 0xF24) & 0x20) && !(obj->flags20C & 0x20000000)) {
+                        *(s16 *)((char *)obj + 0x1078) =
+                            (*(void **)((char *)lbl_80409410 + 0x1C0) != NULL)
+                                ? NuPortalWhichRoom(*(void **)((char *)lbl_80409410 + 0x1C0), &obj->unk78[0x18])
+                                : -1;
+                    }
+                    if (*(void **)((char *)lbl_80409410 + 0x1C0) != NULL) {
+                        if (NuPortalClipTest(*(void **)((char *)lbl_80409410 + 0x1C0), &obj->unk78[0x18],
+                                (*(f32 *)((char *)obj + 0x1F0) > *(f32 *)((char *)obj + 0x1EC))
+                                    ? *(f32 *)((char *)obj + 0x1F0)
+                                    : *(f32 *)((char *)obj + 0x1EC),
+                                *(s16 *)((char *)obj + 0x1078)) == 0) {
+                            obj->drawResult = 0;
+                            continue;
+                        }
+                    }
+                }
+                {
+                    f32 s = *(f32 *)((char *)obj + 0xB8);
+                    scale.z = s;
+                    scale.y = s;
+                    scale.x = s;
+                }
+                fn_8000DCE0(&mtx, &scale);
+                switch ((u8)obj->unk1064[0x1A]) {
+                case 0:
+                    fn_8000E3C0(&mtx, 0x8000);
+                    if (*(u16 *)((char *)obj + 0x27C) != 0) {
+                        fn_8000E250(&mtx, *(u16 *)((char *)obj + 0x27C));
+                    }
+                    if (*(u16 *)((char *)obj + 0x27E) != 0) {
+                        fn_8000E3C0(&mtx, *(u16 *)((char *)obj + 0x27E));
+                    }
+                    if (*(u16 *)((char *)obj + 0x280) != 0) {
+                        fn_8000E540(&mtx, *(u16 *)((char *)obj + 0x280));
+                    }
+                    NuMtxTranslate(&mtx, &pos);
+                    break;
+                case 1:
+                    fn_8000E3C0(&mtx, *(u16 *)((char *)obj + 0x27E) + 0x8000);
+                    if (*(u16 *)((char *)obj + 0x27C) != 0) {
+                        fn_8000E250(&mtx, *(u16 *)((char *)obj + 0x27C));
+                    }
+                    if (*(u16 *)((char *)obj + 0x280) != 0) {
+                        fn_8000E540(&mtx, *(u16 *)((char *)obj + 0x280));
+                    }
+                    NuMtxTranslate(&mtx, &pos);
+                    break;
+                default:
+                    fn_8000E3C0(&mtx, *(u16 *)((char *)obj + 0x27E) + 0x8000);
+                    if (*(u16 *)((char *)obj + 0x280) != 0) {
+                        fn_8000E540(&mtx, *(u16 *)((char *)obj + 0x280));
+                    }
+                    if (*(u16 *)((char *)obj + 0x27C) != 0) {
+                        fn_8000E250(&mtx, *(u16 *)((char *)obj + 0x27C));
+                    }
+                    NuMtxTranslate(&mtx, &pos);
+                    break;
+                case 3:
+                    fn_8000E3C0(&mtx, 0x8000);
+                    if (*(u16 *)((char *)obj + 0x280) != 0) {
+                        fn_8000E540(&mtx, *(u16 *)((char *)obj + 0x280));
+                    }
+                    if (*(u16 *)((char *)obj + 0x27C) != 0) {
+                        fn_8000E250(&mtx, *(u16 *)((char *)obj + 0x27C));
+                    }
+                    if (*(u16 *)((char *)obj + 0x27E) != 0) {
+                        fn_8000E3C0(&mtx, *(u16 *)((char *)obj + 0x27E));
+                    }
+                    NuMtxTranslate(&mtx, &pos);
+                    break;
+                case 4:
+                    mtx = *(struct CRMTX_s *)((char *)obj->playerPacket + 0x594);
+                    NuMtxPreScale(&mtx, &scale);
+                    fn_8000E498(&mtx, 0x8000);
+                    NuMtxTranslate(&mtx, &pos);
+                    break;
+                case 5:
+                    mtx = *(struct CRMTX_s *)((char *)obj->playerPacket + 0x594);
+                    NuMtxPreScale(&mtx, &scale);
+                    fn_8000E498(&mtx, 0x8000);
+                    break;
+                }
+                if (obj->playerPacket != NULL) {
+                    if (*(s16 *)((char *)obj->playerPacket + 0x7AA) != 0) {
+                        fn_8000E608(&mtx, *(s16 *)((char *)obj->playerPacket + 0x7AA));
+                    }
+                    if (*(s16 *)((char *)obj->playerPacket + 0x7AC) != 0) {
+                        fn_8000E318(&mtx, *(s16 *)((char *)obj->playerPacket + 0x7AC));
+                    }
+                    if (*(s16 *)((char *)obj->playerPacket + 0x7AE) != 0) {
+                        fn_8000E498(&mtx, *(s16 *)((char *)obj->playerPacket + 0x7AE));
+                    }
+                }
+                *(struct CRMTX_s *)((char *)obj + 0xC8) = mtx;
+                if (scale.x == 0.0f && scale.y == 0.0f && scale.z == 0.0f) {
+                    obj->drawResult = 0;
+                } else {
+                    obj->motionFlags ^= 0x800;
+                    obj->flagsF28 &= ~0x200;
+                    obj->drawMatrixEnabled = 0;
+                    if ((u8)obj->unk1064[0x1B] != 0 && *(f32 *)((char *)obj + 0x1040) != 2000000.0f &&
+                        *(f32 *)((char *)obj + 0x1048) < *(f32 *)(*(char **)((char *)lbl_80409410 + 0x1A8) + 0x88)) {
+                        obj->drawMatrixEnabled = fn_800CF9D8(&mtx, (u8)obj->unk1064[0x1B], &reflMtx, *(f32 *)((char *)obj + 0x1040));
+                        *(struct CRMTX_s *)((char *)obj + 0x148) = reflMtx;
+                    }
+                    if (obj->unk28F == 0 && *(f32 *)((char *)obj + 0x220) != 2000000.0f &&
+                        (obj->motionFlags & 0x40) && *(u16 *)((char *)obj->characterData->config + 0xBA) == 0) {
+                        NuMtxSetIdentity(&shadowMtx);
+                        if (*(u16 *)((char *)obj + 0x106C) != 0) {
+                            fn_8000E540(&shadowMtx, *(u16 *)((char *)obj + 0x106C));
+                        }
+                        if (*(u16 *)((char *)obj + 0x106A) != 0) {
+                            fn_8000E250(&shadowMtx, *(u16 *)((char *)obj + 0x106A));
+                        }
+                        shadowMtx.m[3][0] = obj->position[0];
+                        shadowMtx.m[3][1] = *(f32 *)((char *)obj + 0x220) + lbl_8040904C;
+                        shadowMtx.m[3][2] = obj->position[2];
+                        *(struct CRMTX_s *)((char *)obj + 0x108) = shadowMtx;
+                        obj->flagsF28 |= 0x200;
+                    }
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+struct creature_vec_s {
+    f32 x, y, z;
+};
+void NuVecRotateX(struct creature_vec_s *dst, struct creature_vec_s *src, u16 a);
+void NuVecRotateY(struct creature_vec_s *dst, struct creature_vec_s *src, u16 a);
+
+void CurrentStart(char *obj, s32 force, s32 tilt)
+{
+    struct creature_vec_s v;
+    s32 *tbl;
+    s8 idx;
+
+    *(f32 *)(*(char **)(obj + 0xEEC) + 0x730) = 0.0f;
+    idx = *(s8 *)(obj + 0x601);
+    if (idx != -1) {
+        tbl = *(s32 **)((char *)lbl_80409410 + 0x2DC);
+        if (tbl != NULL && *(f32 *)(*tbl + idx * 0x104 + 0x6C) != 0.0f
+            && (force != 0 || *(s8 *)(*(char **)(obj + 0xEEC) + 0x7E5) == 1
+                || *(s8 *)(*(char **)(obj + 0xEEC) + 0x7E5) == 4)) {
+            *(f32 *)(*(char **)(obj + 0xEEC) + 0x730) =
+                *(f32 *)(**(s32 **)((char *)lbl_80409410 + 0x2DC) + *(s8 *)(obj + 0x601) * 0x104 + 0x6C);
+            v.x = v.y = 0.0f;
+            if (*(u32 *)(obj + 0xF24) & 0x400) {
+                v.z = *(f32 *)(*(char **)(obj + 0xEEC) + 0x730) * *(f32 *)(obj + 0xF04);
+            } else {
+                v.z = *(f32 *)(*(char **)(obj + 0xEEC) + 0x730) * *(f32 *)(*(char **)(obj + 0xEEC) + 0x708);
+            }
+            if (tilt != 0) {
+                NuVecRotateX((struct creature_vec_s *)(obj + 0x78), &v, *(u16 *)(obj + 0x624));
+                NuVecRotateY((struct creature_vec_s *)(obj + 0x78), (struct creature_vec_s *)(obj + 0x78), *(u16 *)(obj + 0x626));
+            } else {
+                NuVecRotateY((struct creature_vec_s *)(obj + 0x78), (struct creature_vec_s *)(obj + 0x78), *(u16 *)(obj + 0x27E));
+            }
+            *(struct creature_vec_s *)(obj + 0xF3C) = *(struct creature_vec_s *)(obj + 0x78);
+            *(u32 *)(obj + 0x440) &= ~0x1000;
+        }
+    }
 }

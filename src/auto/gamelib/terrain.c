@@ -34,10 +34,13 @@ typedef struct {
 } HVQM4VideoQueue;
 
 typedef struct HVQM4DvdStream {
-    u8 fileInfo[0x3c];
+    u8 fileInfo[0x34];
+    u32 fileLength;
+    u8 unk38[4];
     void* buffer;
-    void* ringBuffer;
-    u8 unk44[8];
+    u8* ringBuffer;
+    u8* readPosition;
+    u8* readEnd;
     s32 driveStatus;
     s32 endOffset;
     s32 limitOffset;
@@ -823,6 +826,144 @@ HVQM4VideoNode* HVQM4BufvGetDisp(HVQM4VideoQueue* queue)
     }
     OSRestoreInterrupts(interrupts);
     return node;
+}
+
+static inline void unlinkFreeVideoNode(HVQM4VideoNode* node)
+{
+    node->prevFree->nextFree = node->nextFree;
+    node->nextFree->prevFree = node->prevFree;
+}
+
+HVQM4VideoNode* HVQM4BufvGetFree(HVQM4VideoQueue* queue)
+{
+    HVQM4VideoNode* result = NULL;
+    s32 interrupts = OSDisableInterrupts();
+    HVQM4VideoNode* node = queue->freeHead;
+
+    if (node != NULL) {
+        do {
+            if (node->busy == 0) {
+                result = node;
+                if (result == queue->freeHead) {
+                    if (result->nextFree == result) {
+                        queue->freeHead = NULL;
+                    } else {
+                        queue->freeHead = result->nextFree;
+                        unlinkFreeVideoNode(result);
+                    }
+                } else {
+                    unlinkFreeVideoNode(result);
+                }
+                node->prevFree = NULL;
+                node->nextFree = NULL;
+                break;
+            }
+            node = node->nextFree;
+        } while (node != queue->freeHead);
+    }
+    OSRestoreInterrupts(interrupts);
+    return result;
+}
+
+s32 fn_8004BC1C(HVQM4DvdStream* stream)
+{
+    s32 status;
+    void (*onStatusChange)(s32, s32, s32);
+    HVQM4DvdStream* state;
+    u8* fileInfo;
+    const void* commandBlock = stream;
+
+    for (;;) {
+        status = DVDGetCommandBlockStatus(commandBlock);
+        state = stream;
+        if (status != state->driveStatus) {
+            onStatusChange = state->onStatusChange;
+            state->driveStatus = status;
+            if (onStatusChange != NULL) {
+                onStatusChange(state->callbackArg0, state->callbackArg1, status);
+            }
+        }
+        fileInfo = state->fileInfo;
+        if (state->result != 0) {
+            break;
+        }
+        commandBlock = fileInfo;
+    }
+
+    DVDClose(fileInfo);
+    fn_80049A10(stream->buffer);
+    fn_80049A10(stream);
+    return lbl_80408388 == 0;
+}
+
+void* NuFmvNgc_Alloc(s32);
+void* memset();
+void DCFlushRange(void*, u32);
+s32 DVDOpen(const char*, void*);
+
+HVQM4DvdStream* fn_8004B79C(const char* path, void (*onStatusChange)(s32, s32, s32),
+                            s32 callbackArg0, s32 callbackArg1)
+{
+    HVQM4DvdStream* stream;
+    volatile HVQM4DvdStream* state;
+    s32 initial = lbl_80408388;
+    u8* readBase;
+    u32 fileLength;
+    s32 status;
+    void (*callback)(s32, s32, s32);
+
+    if (initial != 0) {
+        return NULL;
+    }
+    stream = NuFmvNgc_Alloc(0x80);
+    if (stream == NULL) {
+        return NULL;
+    }
+    stream->buffer = NuFmvNgc_Alloc(0x210080);
+    if (stream->buffer == NULL) {
+        goto freeStream;
+    }
+    stream->ringBuffer = (u8*)(((u32)stream->buffer + 0x40) & ~0x3f);
+    memset(stream->ringBuffer, 0, 0x210000);
+    DCFlushRange(stream->ringBuffer, 0x210000);
+    if (!DVDOpen(path, stream)) {
+        goto freeBuffer;
+    }
+    state = stream;
+    stream->driveStatus = initial;
+    state->limitOffset = initial;
+    readBase = stream->ringBuffer;
+    state->readOffset = initial;
+    fileLength = stream->fileLength;
+    state->nextOffset = initial;
+    state->seeking = initial;
+    stream->onStatusChange = onStatusChange;
+    stream->callbackArg0 = callbackArg0;
+    stream->callbackArg1 = callbackArg1;
+    stream->readEnd = readBase + 0x210000;
+    stream->result = 1;
+    stream->endOffset = fileLength;
+    stream->readPosition = readBase;
+    if (fn_8004B66C(stream)) {
+        goto poll;
+    }
+
+freeBuffer:
+    fn_80049A10(stream->buffer);
+freeStream:
+    fn_80049A10(stream);
+    return NULL;
+
+poll:
+    status = DVDGetCommandBlockStatus(stream);
+    if (status != stream->driveStatus) {
+        callback = stream->onStatusChange;
+        stream->driveStatus = status;
+        if (callback != NULL) {
+            callback(stream->callbackArg0, stream->callbackArg1, status);
+        }
+    }
+    return stream;
 }
 
 s32 fn_8005241C(terrainvec_s *p, f32 r) {
