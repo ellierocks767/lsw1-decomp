@@ -2880,3 +2880,11 @@ reason = "best 33/34: neg r5 scheduled before beq and a lands in r0 vs r3 unless
 [[parked]]
 function = "fn_800CE9DC"
 reason = "best 42/48: register allocation order (r26-r28 table pointers) differs; next: longer permuter run"
+
+[[parked]]
+function = "VaderAInit"
+reason = "best 42/44: store of AIPathFindLocator result scheduled before lis for f32 load (target after); next: permuter run"
+
+[[parked]]
+function = "InitSplinePosition"
+reason = "best 48/50: same store-after-call scheduling (stfs length before lis; target after) plus param copy order; next: permuter run"
