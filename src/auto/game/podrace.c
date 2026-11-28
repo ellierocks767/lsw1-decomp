@@ -1470,3 +1470,34 @@ void fn_8014FDC8(void) {
         } while (--i != 0);
     }
 }
+
+extern f32 lbl_801AFE14[];
+extern f32 lbl_801AFE18[];
+extern s32 lbl_8040B2DC;
+
+void fn_8014ECEC(void) {
+    s8 *p = (s8 *)lbl_80409C94;
+    u8 *q;
+
+    *(f32 *)(p + 0xB004) = lbl_801AFE14[0];
+    memset(p + 0xA600, 0, 0xA00);
+    lbl_80409C98 = 0;
+    lbl_8040A810 = -1;
+    switch (lbl_8040B108) {
+    case 1:
+        lbl_8040B068 = 3;
+        break;
+    case 2:
+        lbl_8040B068 = 6;
+        break;
+    case 3:
+        lbl_8040B068 = 9;
+        break;
+    }
+    lbl_80409C90 = 0;
+    memset(lbl_80407300, 0, 0x700);
+    q = (u8 *)lbl_80407300 - 0xC;
+    *(f32 *)(q + 0x710) = lbl_801AFE18[0];
+    *(f32 *)(q + 0x744) = lbl_801AFE14[0];
+    lbl_8040B2DC = 0;
+}
