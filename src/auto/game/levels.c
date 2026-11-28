@@ -5656,3 +5656,155 @@ void fn_800B203C(s32 *input)
         }
     }
 }
+
+extern s32 gDebugFpsDisplayEnabled;
+extern s32 gDebugLevelStreamingEnabled;
+extern s32 gDebugLiftPlayerEnabled;
+extern s32 gDebugPanelEnabled;
+extern s32 gDebugStreamingDisplayEnabled;
+extern u8 lbl_80408A57;
+extern f32 lbl_80408A84;
+extern f32 lbl_80408A94;
+extern s32 str_DebugMenu_BuyAllShopCharacters[];
+extern s32 str_DebugMenu_CollectAllCharacters[];
+extern s32 str_DebugMenu_CollectAllMinikits[];
+extern s32 str_DebugMenu_CollectAllSuperkitPieces[];
+extern s32 str_DebugMenu_CollectStoryCharacters[];
+extern s32 str_DebugMenu_Difficulty[];
+extern s32 str_DebugMenu_FpsDisplay[];
+extern s32 str_DebugMenu_FreePlay[];
+extern s32 str_DebugMenu_GameMode[];
+extern s32 str_DebugMenu_GoToDoor[];
+extern s32 str_DebugMenu_GoToLevel[];
+extern s32 str_DebugMenu_GoToScene[];
+extern s32 str_DebugMenu_LevelStreaming[];
+extern s32 str_DebugMenu_LiftPlayer[];
+extern s32 str_DebugMenu_OpenAllDoors[];
+extern s32 str_DebugMenu_OpenAllLevels[];
+extern s32 str_DebugMenu_Panel[];
+extern s32 str_DebugMenu_Restart[];
+extern s32 str_DebugMenu_Story[];
+extern s32 str_DebugMenu_StreamingDisplay[];
+extern s32 str_DebugMenu_UnlockAllCheats[];
+extern s32 str_FPS[];
+extern s32 str_Mode[];
+extern s32 str_On[];
+extern s32 str_Player[];
+
+void DebugMenu_BuildOptions(void *menu)
+{
+    s32 *modeLabel;
+    s32 *panelLabel;
+    s32 *liftLabel;
+    s32 *fpsLabel;
+    s32 *levelStreamingLabel;
+    s32 *streamingLabel;
+    s32 *optionLabel;
+    s32 option;
+    f32 menuScale;
+    s32 finalFlags;
+    s32 finalText;
+    u8 *flagsFps;
+    u8 *flagsStreaming;
+    u8 *itemFlags = &lbl_80408A57;
+
+    *(f32 *)((u8 *)menu + 0x9C) =
+        (f32)-(s32)*(s16 *)((u8 *)menu + 0xA) * lbl_80408A84 * *(f32 *)((u8 *)menu + 0x94);
+    fn_800769B4(menu, (s32) str_DebugMenu_GoToScene, *itemFlags);
+    fn_800769B4(menu, (s32) str_DebugMenu_GoToLevel, *itemFlags);
+    fn_800769B4(menu, (s32) str_DebugMenu_GoToDoor, *itemFlags);
+    fn_800769B4(menu, (s32) str_DebugMenu_Restart, *itemFlags);
+    fn_800769B4(menu, (s32) str_DebugMenu_OpenAllDoors, *itemFlags);
+
+    if (lbl_804091FC != 0) {
+        modeLabel = str_DebugMenu_FreePlay;
+    } else {
+        modeLabel = str_DebugMenu_Story;
+    }
+    sprintf(lbl_803E04F0, str_Mode, str_DebugMenu_GameMode, modeLabel);
+    fn_800769B4(menu, (s32) lbl_803E04F0, lbl_80408A57);
+
+    if (gDebugPanelEnabled != 0) {
+        panelLabel = str_Player;
+    } else {
+        panelLabel = str_FPS;
+    }
+    sprintf(lbl_803E04F0, str_Mode, str_DebugMenu_Panel, panelLabel);
+    fn_800769B4(menu, (s32) lbl_803E04F0, lbl_80408A57);
+
+    /* The single-iteration blocks reproduce ProDG's address and branch placement. */
+    do {
+        if (gDebugLiftPlayerEnabled != 0) {
+            liftLabel = str_FPS;
+        } else {
+            liftLabel = str_Player;
+        }
+        sprintf(lbl_803E04F0, str_Mode, str_DebugMenu_LiftPlayer, liftLabel);
+        fn_800769B4(menu, (s32) lbl_803E04F0, lbl_80408A57);
+    } while (0);
+
+    if (gDebugFpsDisplayEnabled != 0) {
+        fpsLabel = str_FPS;
+    } else {
+        fpsLabel = str_Player;
+    }
+    sprintf(lbl_803E04F0, str_Mode, str_DebugMenu_FpsDisplay, fpsLabel);
+    flagsFps = &lbl_80408A57;
+    fn_800769B4(menu, (s32) lbl_803E04F0, *flagsFps);
+    fn_800769B4(menu, (s32) str_DebugMenu_Difficulty, *flagsFps);
+
+    do {
+        if (gDebugLevelStreamingEnabled != 0) {
+            levelStreamingLabel = str_FPS;
+        } else {
+            levelStreamingLabel = str_Player;
+        }
+        sprintf(lbl_803E04F0, str_Mode, str_DebugMenu_LevelStreaming, levelStreamingLabel);
+        fn_800769B4(menu, (s32) lbl_803E04F0, lbl_80408A57);
+    } while (0);
+
+    if (gDebugStreamingDisplayEnabled != 0) {
+        streamingLabel = str_FPS;
+    } else {
+        streamingLabel = str_Player;
+    }
+    sprintf(lbl_803E04F0, str_Mode, str_DebugMenu_StreamingDisplay, streamingLabel);
+    flagsStreaming = &lbl_80408A57;
+    fn_800769B4(menu, (s32) lbl_803E04F0, *flagsStreaming);
+    fn_800769B4(menu, (s32) str_DebugMenu_OpenAllLevels, *flagsStreaming);
+    fn_800769B4(menu, (s32) str_DebugMenu_CollectAllMinikits, *flagsStreaming);
+    fn_800769B4(menu, (s32) str_DebugMenu_CollectAllSuperkitPieces, *flagsStreaming);
+    fn_800769B4(menu, (s32) str_DebugMenu_CollectStoryCharacters, *flagsStreaming);
+    fn_800769B4(menu, (s32) str_DebugMenu_CollectAllCharacters, *flagsStreaming);
+    fn_800769B4(menu, (s32) str_DebugMenu_UnlockAllCheats, *flagsStreaming);
+
+    itemFlags = (u8 *)lbl_803DED88;
+    NuStrCpy(lbl_803E04F0, *(s32 *)(itemFlags + 0xCE4));
+    NuStrCat(lbl_803E04F0, str_On);
+    option = DebugMenu_ToggleOption2();
+    do {
+        switch (option) {
+        case 0:
+            optionLabel = *(s32 **)(itemFlags + 0xB4C);
+            NuStrCat(lbl_803E04F0, optionLabel);
+            break;
+        case 1:
+            optionLabel = *(s32 **)(itemFlags + 0xCE8);
+            NuStrCat(lbl_803E04F0, optionLabel);
+            break;
+        case 2:
+            do {
+                NuStrCat(lbl_803E04F0, *(s32 **)(itemFlags + 0xCEC));
+            } while (0);
+            break;
+        }
+    } while (0);
+
+    itemFlags = &lbl_80408A57;
+    finalText = (s32)lbl_803E04F0;
+    menuScale = *(const volatile f32 *)((u8 *)menu + 0x94);
+    finalFlags = *(const volatile u8 *)itemFlags;
+    lbl_80408A94 = menuScale;
+    fn_800769B4(menu, finalText, finalFlags);
+    fn_800769B4(menu, (s32) str_DebugMenu_BuyAllShopCharacters, *itemFlags);
+}
