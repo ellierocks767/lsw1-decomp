@@ -1160,3 +1160,104 @@ zAxis:
         lbl_80409B5C = fn_8000C038() * lbl_801AF5F4[0] + lbl_801AF5F8[0];
     }
 }
+
+struct ChrisSplinePoint {
+    struct nuvec_s position;
+    f32 value;
+};
+
+struct ChrisFlightSpline {
+    struct ChrisSplinePoint points[64];
+    s32 count;
+};
+
+extern f32 lbl_801AF3B8[];
+extern f32 lbl_801AF3BC[];
+extern f32 lbl_801AF3C0[];
+extern f32 lbl_801AF3C4[];
+extern f32 lbl_801AF3C8[];
+
+void CalcSplinePoint(struct ChrisFlightSpline *spline, struct ChrisSplinePoint *result, f32 along)
+{
+    struct ChrisSplinePoint first, last, direction;
+    struct ChrisSplinePoint constant, linear, quadratic, cubic, scratch;
+    struct ChrisSplinePoint *previous, *current, *next, *following;
+    const s32 initialCount = spline->count;
+    s32 limit = initialCount - 1;
+    f32 scaled = along * limit;
+    s32 index = (s32)scaled;
+    f32 fraction = scaled - index;
+    f32 squared;
+
+    /* Extend the curve beyond the first point with its endpoint direction. */
+    if (index <= 0) {
+        index = 0;
+        NuVecSubPS(&direction, &spline->points[0], &spline->points[1]);
+        NuVecNorm(&direction.position, &direction.position);
+        NuVecScale(&direction.position, &direction.position, lbl_801AF3B8[0]);
+        NuVecAddPS(&first, &spline->points[0], &direction);
+        previous = &first;
+        first.value = spline->points[0].value;
+    } else {
+        if (index > limit)
+            index = initialCount;
+        previous = &spline->points[index - 1];
+    }
+
+    current = &spline->points[index];
+    next = &spline->points[index + 1];
+    /* Extend the curve beyond the last point the same way. */
+    if (index >= spline->count - 2) {
+        register u32 end asm("r11");
+        register u32 lastPoint asm("r9");
+        register u32 offset asm("r9");
+        offset = spline->count * sizeof(*current);
+        end = offset + (u32)spline;
+        lastPoint = end;
+        /* Preserve separate addresses for the two endpoint inputs. */
+        asm("" : "=b"(lastPoint), "=b"(end) : "0"(lastPoint), "1"(end));
+        lastPoint -= sizeof(*current);
+        end -= 2 * sizeof(*current);
+        NuVecSubPS(&direction, (struct ChrisSplinePoint *)lastPoint, (struct ChrisSplinePoint *)end);
+        NuVecNorm(&direction.position, &direction.position);
+        NuVecScale(&direction.position, &direction.position, lbl_801AF3B8[0]);
+        NuVecAddPS(&last, (void *)((spline->count << 4) + (u32)spline - 0x10), &direction);
+        following = &last;
+        last.value = *(f32 *)((u8 *)spline + ((spline->count - 1) << 4) + 0xC);
+    } else {
+        following = &spline->points[index + 2];
+    }
+
+    /* Evaluate the cubic for position and interpolate the fourth component linearly. */
+    NuVecAddPS(&constant, current, current);
+    NuVecSubPS(&linear, next, previous);
+    NuVecScale(&linear.position, &linear.position, fraction);
+    NuVecAddPS(&quadratic, previous, previous);
+    {
+        register struct nuvec_s *dest asm("r3");
+        register struct nuvec_s *scaledScratch asm("r30");
+        register struct nuvec_s *point asm("r4");
+        f32 factor;
+        dest = &scratch.position;
+        point = &current->position;
+        factor = lbl_801AF3BC[0];
+        /* Keep the scratch address live across both scale calls. */
+        NuVecScale(scaledScratch = dest, point, factor);
+        NuVecSubPS(&quadratic, &quadratic, scaledScratch);
+    }
+    NuVecScale(&scratch.position, &next->position, lbl_801AF3C0[0]);
+    NuVecAddPS(&quadratic, &quadratic, &scratch);
+    NuVecSubPS(&quadratic, &quadratic, following);
+    squared = fraction * fraction;
+    NuVecScale(&quadratic.position, &quadratic.position, squared);
+    NuVecSubPS(&cubic, current, next);
+    NuVecScale(&cubic.position, &cubic.position, lbl_801AF3C4[0]);
+    NuVecSubPS(&cubic, &cubic, previous);
+    NuVecAddPS(&cubic, &cubic, following);
+    NuVecScale(&cubic.position, &cubic.position, squared * fraction);
+    NuVecAddPS(result, &constant, &linear);
+    NuVecAddPS(result, result, &quadratic);
+    NuVecAddPS(result, result, &cubic);
+    NuVecScale(&result->position, &result->position, lbl_801AF3C8[0]);
+    result->value = fraction * (next->value - current->value) + current->value;
+}
