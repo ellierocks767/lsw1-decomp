@@ -6152,3 +6152,79 @@ next:
         position++;
     } while (i <= 2);
 }
+
+struct bolt_hit_flags_s {
+    u32 pad0 : 10;
+    u32 mode : 2;
+    u32 padC : 20;
+};
+
+s32 SmashForce(s32, s32, s32, void *, s32);
+s32 fn_800C03BC(void *);
+s32 fn_8012647C(s16);
+void fn_80140504(struct NUTURRET_s *, char *, void *, s32);
+char *fn_801408D4(struct NUTURRET_s *, s32);
+extern s32 lbl_801A17AC[];
+extern f32 lbl_801A17B8[];
+extern s32 lbl_804093AC;
+
+void BoltHitPlat(u8 *bolt) {
+    void *position;
+    u8 *object;
+    u8 *owner;
+    u8 *rumbleObject;
+    char *entry;
+    struct NUTURRET_s *turrets;
+    s32 controller;
+    s32 force;
+    u8 *player;
+    s32 platform;
+    u8 *record;
+    s32 count;
+
+    position = bolt + 0x84;
+    fn_8006DCD4(lbl_801A17AC, (s32)position);
+    object = *(u8 **)bolt;
+    if (object != NULL) {
+        ((struct bolt_hit_flags_s *)(object + 0xF24))->mode = 2;
+        (*(u8 **)bolt)[0x1081] = 0xFF;
+    }
+    entry = fn_801408D4(lbl_80409410->turrets, *(s16 *)(bolt + 0xE0));
+    if (entry != NULL) {
+        owner = *(u8 **)bolt;
+        turrets = lbl_80409410->turrets;
+        if (owner != NULL) {
+            controller = (s8)owner[0x284];
+        } else {
+            controller = -1;
+        }
+        fn_80140504(turrets, entry, position, controller);
+        return;
+    }
+
+    force = fn_8012647C(*(s16 *)(bolt + 0xE0));
+    if (force != 0) {
+        SmashForce(0, force, 1, bolt, -1);
+        rumbleObject = *(u8 **)bolt;
+        if (rumbleObject != NULL) {
+            player = *(u8 **)(rumbleObject + 0xEEC);
+            if (player != NULL) {
+                NewRumble(**(s32 **)(player + 0x61C), lbl_801A17B8[0]);
+            }
+        }
+    } else {
+        count = 0x11F;
+        record = &lbl_80409410->pad57C[0x1F0];
+        platform = *(s16 *)(bolt + 0xE0);
+        do {
+            if (*(s32 *)(record + 0xC) == platform) {
+                break;
+            }
+            record += 0x10;
+            count--;
+        } while (count != 0);
+        if (lbl_804093AC == 0x39) {
+            fn_800C03BC(bolt);
+        }
+    }
+}
