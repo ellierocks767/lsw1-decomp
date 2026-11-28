@@ -2756,3 +2756,15 @@ reason = "retried: best 376/391: literals + char[7] sda buffer + static inline d
 [[parked]]
 function = "fn_800B4834"
 reason = "best 64/80: the three-entry loop matches but initial material store scheduling, constant hoists and f0-to-f31 copy differ; next: expand a shared material initializer at both call sites and test whether it splits the first-store and loop opacity lifetimes"
+
+[[parked]]
+function = "SceneSelect_BuildOptions"
+reason = "best 66/100: float setup and flag stores match but menu versus row-offset register lifetimes and compare scheduling differ; next: split source-level row selection around the two copy calls so the default-name offset is rebuilt independently"
+
+[[parked]]
+function = "Menu_Unknown9_Enter"
+reason = "best 27/50: prefix table access matches structurally, but the first iteration loses its indexed short load and count and level registers differ; next: recover the short-scan loop with a shared count test and an explicitly retained table slot"
+
+[[parked]]
+function = "fn_800B4758"
+reason = "best 39/55: fallback scene and signed bounds are recovered, but the table-end setup, indexed output base and min-count reload differ; next: use the actual level output-array field and trace aliasing between it and the descriptor bounds"
