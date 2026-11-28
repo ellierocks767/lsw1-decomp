@@ -8132,3 +8132,34 @@ void fn_800C6094(void)
         fn_8011E9C4(0x54);
     }
 }
+
+void *fn_8008EFD0(f32 *, f32);
+void fn_8008F090(void *);
+extern f32 lbl_801A2C04[];
+extern struct nuhspecial_s lbl_803ED2C0[6];
+extern void *lbl_803ED308[6];
+extern f32 lbl_80409358;
+
+void fn_800C525C(void)
+{
+    struct nuinstanim_s *ia;
+    s32 i;
+
+    if (lbl_803EAF84[0] == 0 && ((s32 (*)(struct nuhspecial_s *))fn_800130F4)((struct nuhspecial_s *)lbl_803EAD24) != 0) {
+        ia = ((struct nuinstanim_s *(*)(struct nuhspecial_s *))fn_8001384C)((struct nuhspecial_s *)lbl_803EAD24);
+        if (ia != NULL && ia->flags >= 0 && ia->ltime > lbl_801A2C04[0]) {
+            lbl_803EAF84[1] = 1;
+            fn_8013F0AC(0);
+        }
+    }
+    for (i = 0; i < 6; i++) {
+        if (((s32 (*)(struct nuhspecial_s *))fn_800131B8)(&lbl_803ED2C0[i]) != 0) {
+            if (lbl_803ED308[i] == NULL) {
+                lbl_803ED308[i] = fn_8008EFD0(fn_80013380(&lbl_803ED2C0[i]), lbl_80409358);
+            }
+        } else if (lbl_803ED308[i] != NULL) {
+            fn_8008F090(lbl_803ED308[i]);
+            lbl_803ED308[i] = NULL;
+        }
+    }
+}
