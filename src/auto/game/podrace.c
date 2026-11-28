@@ -80,7 +80,7 @@ void fn_80146EF4(void) {
     fn_801451A4((*(s32 *)((s8 *)(lbl_80409410) + (0x1984))));
 }
 
-s32 PodraceCreateMine();
+void PodraceCreateMine(void);
 s32 (*fn_80009948(s32 *, s32))();
 void fn_8010BD90(void);
 s32 fn_80142BA8(s32, s32);
@@ -169,7 +169,7 @@ void fn_8014FFE8(void) {
     }
 }
 
-s32 PodraceCreateMine();
+void PodraceCreateMine(void);
 s32 (*fn_80009948(s32 *, s32))();
 #define fn_8010BD90 ((s32(*)(void))fn_8010BD90)
 #define fn_80142BA8 ((s32(*)(s32, s32))fn_80142BA8)
@@ -1500,4 +1500,49 @@ void fn_8014ECEC(void) {
     *(f32 *)(q + 0x710) = lbl_801AFE18[0];
     *(f32 *)(q + 0x744) = lbl_801AFE14[0];
     lbl_8040B2DC = 0;
+}
+
+s32 AISysFindArea(s32, void *);
+s16 FindGameDebris(s32, s32 *);
+s32 PARTLookupType(s32 *);
+f32 fn_80013764(void *);
+extern s32 str_Format_NoMine[];
+extern s32 str_Podrace_Mine[];
+extern s32 str_Podrace_MinePart[];
+extern s32 str_Podrace_MinePop[];
+
+typedef struct PodMineData {
+    u8 special[0x70C];
+    f32 unk70C;
+    f32 unk710;
+    s32 mines[10];
+    s16 mineCount;
+    s16 debris;
+    s32 part;
+    f32 unk744;
+} PodMineData;
+
+#define MINE ((PodMineData *)lbl_804072F4)
+void PodraceCreateMine(void) {
+    s32 *mines;
+    s32 i;
+    s32 r;
+    s32 buf[8];
+
+    memset(MINE, 0, 0x748);
+    r = NuSpecialFind(*(s32 *)((s8 *)lbl_80409410 + 0x1C8), MINE, str_Podrace_Mine, 1);
+    if (r != 0) {
+        MINE->unk70C = fn_80013764(MINE);
+        mines = MINE->mines;
+        for (i = 0; i <= 9; i++) {
+            sprintf(buf, str_Format_NoMine, i);
+            r = AISysFindArea(*(s32 *)((s8 *)lbl_80409410 + 0x2E8), buf);
+            mines[MINE->mineCount] = r;
+            if (mines != NULL) {
+                MINE->mineCount++;
+            }
+        }
+        MINE->debris = FindGameDebris(*(s32 *)((s8 *)lbl_80409410 + 0x1B8), str_Podrace_MinePop);
+        MINE->part = PARTLookupType(str_Podrace_MinePart);
+    }
 }
