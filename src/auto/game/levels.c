@@ -6348,3 +6348,24 @@ s32 fn_800B2F10(void) {
     }
     return *(s32 *)((s8 *)gRegisteredMenuDefinitions + id * 0x1C);
 }
+
+extern s32 lbl_803E04B8[];
+
+typedef struct {
+    s32 word0;
+    s32 word1;
+    s32 word2;
+} MenuResetWords;
+
+typedef struct {
+    s32 unk0;
+    MenuResetWords saved;
+} MenuResetPrefix;
+
+void Menu_Unknown4_Enter(void) {
+    if ((u32)fn_800B2F10() - 1U <= 1U) {
+        MenuResetPrefix *prefix = (MenuResetPrefix *)lbl_803E0298;
+
+        *(MenuResetWords *)lbl_803E04B8 = prefix->saved;
+    }
+}
