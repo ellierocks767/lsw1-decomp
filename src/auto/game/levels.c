@@ -8483,3 +8483,63 @@ void fn_800C5A10(s32 i)
         }
     }
 }
+
+struct levelstate_c6900_0_s {
+    u8 pad0[0x28];
+    f32 unk28;
+};
+
+/* Level state block at lbl_802E0BE4 as read by fn_800C6900. */
+struct levelstate_c6900_s {
+    struct levelstate_c6900_0_s *unk0;
+    void *unk4;                   /* nuvec_s at +0x10 */
+    u8 pad8[0x80 - 0x8];
+    s16 unk80[10];
+    u8 unk94;
+};
+
+s32 NuStrICmp(char *, char *);
+extern void *lbl_8040AE4C;
+extern const f32 lbl_801A2E88[];
+extern const f32 lbl_801A2E8C[];
+extern char lbl_801A2E7C[];
+
+#define LS ((struct levelstate_c6900_s *)lbl_802E0BE4)
+
+void fn_800C6900(void)
+{
+    struct lbl_80409410_240_s *e;
+    s32 i;
+    s32 j;
+    s16 id;
+    void *p0;
+
+    if (LS->unk0 != NULL && LS->unk0->unk28 == lbl_801A2E88[0] && LS->unk4 != NULL
+        && lbl_80409004 != NULL && *(s16 *)((s8 *)lbl_80409004 + 0x282) != -1) {
+        *(struct nuvec_s *)((s8 *)LS->unk4 + 0x10) = *(struct nuvec_s *)((s8 *)lbl_80409004 + 0x1AC);
+        p0 = (void *)gPlayer1Pointer[0];
+        for (i = 0; i < 10; i++) {
+            void *p;
+            if (p0 != NULL && LS->unk80[i] != -1 && *(u8 *)((s8 *)p0 + 0x285) != 0
+                && *(s16 *)((s8 *)p0 + 0x282) == LS->unk80[i]
+                && *(f32 *)((s8 *)p0 + 0x70) >= *(f32 *)((s8 *)*(void **)((s8 *)(*(s32 *)((s8 *)lbl_8040AE4C + 0x68) + *(s16 *)((s8 *)p0 + 0x282) * 0x6C) + 0x40) + 0x34)) {
+                LS->unk94 |= 1;
+            }
+            p = (void *)gPlayer1Pointer[1];
+            if (p != NULL && LS->unk80[i] != -1 && *(u8 *)((s8 *)p + 0x285) != 0
+                && *(s16 *)((s8 *)p + 0x282) == LS->unk80[i]
+                && *(f32 *)((s8 *)p + 0x70) >= *(f32 *)((s8 *)*(void **)((s8 *)(*(s32 *)((s8 *)lbl_8040AE4C + 0x68) + *(s16 *)((s8 *)p + 0x282) * 0x6C) + 0x40) + 0x34)) {
+                LS->unk94 |= 2;
+            }
+        }
+        if (lbl_802E0C78[0] == 3) {
+            LS->unk0->unk28 = lbl_801A2E8C[0];
+            for (j = 0, e = lbl_80409410->unk240; j < lbl_80409410->unk244; j++, e++) {
+                if (NuStrICmp((char *)e, lbl_801A2E7C) == 0) {
+                    fn_800C9648((s32)e, 1);
+                    break;
+                }
+            }
+        }
+    }
+}
