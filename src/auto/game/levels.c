@@ -9028,3 +9028,15 @@ s32 fn_800D01C4(struct nuvec_s *a, struct nuvec_s *plane, struct nuvec_s *dir, s
     }
     return 0;
 }
+s32 fn_800CFEE8(f32 *a, f32 *b, f32 f1, f32 f2, f32 f3, f32 f4)
+{
+    f32 dx = b[0] - a[0];
+    f32 dz = b[2] - a[2];
+    f32 dy = b[1] - a[1];
+    f32 r;
+    if (f1 != f2 || f3 != f4) {
+        dy *= (f1 + f3) / (f2 + f4);
+    }
+    r = f1 + f3;
+    return dx * dx + dy * dy + dz * dz <= r * r;
+}
