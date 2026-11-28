@@ -4398,6 +4398,54 @@ void fn_800CE43C(void) {
     }
 }
 
+/* AI path locator (OpenSaga AIPathFindLocator result): position, then a u16 direction. */
+struct ailocator_s {
+    u8 pad0[0x10];
+    struct nuvec_s position;
+    u8 pad1C[2];
+    u16 direction;
+};
+
+/* CruiserC level state (lbl_802E0B9C, cleared by fn_800CE408). */
+struct cruiserc_s {
+    f32 *dookuFight;              /* AI message "DookuFight" */
+    s32 countDooku;
+    f32 *freePalpatine;           /* AI message "FreePalpatine"; value at +0x28 */
+    s8 *palpatine;
+    struct ailocator_s *palpatineLocator;
+};
+
+#define cruiser_c (*(struct cruiserc_s *)lbl_802E0B9C)
+
+struct ailocator_s *AIPathFindLocator(s32, s32 *);
+extern s32 lbl_801A2B20[];
+extern s32 lbl_801A2B30[];
+extern f32 lbl_801A2B3C[];
+
+void CruiserCUpdate(void)
+{
+    if (cruiser_c.freePalpatine == NULL) {
+        cruiser_c.freePalpatine = (f32 *)CheckAIMessage(lbl_80408F58, lbl_801A2B20, 0);
+    }
+    if (cruiser_c.palpatine == NULL) {
+        cruiser_c.palpatine = (s8 *)fn_800D515C(0x64, 0, 1);
+    }
+    if (cruiser_c.palpatineLocator == NULL) {
+        cruiser_c.palpatineLocator = AIPathFindLocator(*(s32 *)((s8 *)lbl_80409410 + 0x2E8), lbl_801A2B30);
+    }
+    if (cruiser_c.dookuFight == NULL) {
+        cruiser_c.dookuFight = (f32 *)CheckAIMessage(lbl_80408F58, lbl_801A2AE4, 0);
+    }
+    if (cruiser_c.countDooku == 0) {
+        cruiser_c.countDooku = fn_800D515C(0xE, 1, 1);
+    }
+    if (lbl_804091F8 == 0 && cruiser_c.palpatine != NULL && cruiser_c.palpatineLocator != NULL &&
+        cruiser_c.freePalpatine != NULL && cruiser_c.freePalpatine[10] < lbl_801A2B3C[0]) {
+        *(struct nuvec_s *)(cruiser_c.palpatine + 0x6C) = cruiser_c.palpatineLocator->position;
+        *(u16 *)(cruiser_c.palpatine + 0x27E) = cruiser_c.palpatineLocator->direction;
+    }
+}
+
 s32 fn_800C8CE4();
 extern s32 lbl_8040B110;
 extern s32 lbl_8040B190;
