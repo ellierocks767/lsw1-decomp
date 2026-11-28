@@ -2768,3 +2768,19 @@ reason = "best 45/59: shared 'li r3,1; bne' tail with case0 cmp via lbz r11 (sep
 [[parked]]
 function = "Shop_DrawSubMenuTitle"
 reason = "best 55/61: branch chain matches (if/else idx, a=(s32)..., y local); only fmr f6,f5 chain + li/lfs scheduling differ; 180s permuter no zero; next: struct-typed float args or long permuter"
+
+[[parked]]
+function = "fn_8014D0A8"
+reason = "best 46/84 (9 candidates): loop CFG matches via goto form but target hoists base, base+0x18, base+0x1c into r29/r27/r28 and keeps spl in r31/i in r30; next: variant_search on index/pointer expression forms, permuter"
+
+[[parked]]
+function = "fn_8014D5A0"
+reason = "best 90/138 (12 candidates): CFG/stack match; arg0->r31/i->r30/pp->r29 allocation and f30 vs reloaded CE4 for e->scale differ; next: permuter/variant_search on pointer-walk forms (work/hc/pod_d5a0_b.c)"
+
+[[parked]]
+function = "fn_8014DB7C"
+reason = "best 151/156 (about 16 candidates + 180s permuter): only prologue mr r27,r4 vs mr r29,r5 order differs; same shape as chris.c fn_801435B8 (work/hc/pod_db7c_b.c); next: longer permuter or param/local pseudo ordering"
+
+[[parked]]
+function = "fn_8014D7C8"
+reason = "best 156/158: lis r23 (MINE base 0x804072F4@ha) scheduled after ble instead of before; next: restructure first loop / MINE base pointer (saved work/hc/pod_d7c8_best156.c)"
