@@ -5448,3 +5448,84 @@ void Menu_Unknown13_BuildOptions(void) {
     fn_800D6968(lbl_8040B0DA, lbl_804094DC, lbl_804094D0, lbl_801A03C0[0], 0xC8, lbl_804094D8, opacity, opacity, 1);
     fn_800D6C50(lbl_8040B0DC, -1, lbl_801A03BC[0], -1, 0x2C5, lbl_8040B0DD, -1, lbl_801A03BC[0], -1, 0x2C5);
 }
+
+void fn_8006E1EC(void);
+extern u8 lbl_803E029C[];
+extern f32 lbl_801A03D0[];
+extern f32 lbl_80409920;
+extern f32 lbl_8040B0E4;
+extern f32 lbl_8040B0E8;
+extern s32 str_Select[];
+
+void Menu_Unknown16_HandleSelection(void *menu) {
+    f32 triggerTimer;
+    f32 fade;
+    f32 timer;
+    f32 volume;
+    f32 previousTimer;
+    f32 progress;
+
+    volume = fn_800B9D44(lbl_803E029C);
+    previousTimer = lbl_8040B0E0;
+    if (lbl_8040B060[0] != 0) {
+        fn_8006DF68(0.0f);
+        timer = lbl_8040B0E0 + lbl_80408E9C;
+        lbl_8040B0E0 = timer;
+        switch (lbl_8040B060[0]) {
+        case 1:
+            if (previousTimer < 0.1f && timer >= 0.1f) {
+                fn_8006E1EC();
+            }
+            if (lbl_8040B0E0 >= 0.5f) {
+                lbl_8040B060[0] = 2;
+                fn_8006DCD4(str_Select, 0);
+                goto fullProgress;
+            } else {
+                progress = 2.0f * lbl_8040B0E0;
+            }
+            break;
+        case 2:
+            if (timer >= 4.0f) {
+                lbl_8040B060[0] = 3;
+                lbl_8040B0E0 = 0.0f;
+            }
+fullProgress:
+            progress = lbl_801A03D0[0];
+            break;
+        default:
+            if (lbl_8040B0E0 >= 0.6f) {
+                lbl_804093B0 = 0x7B;
+                fn_8006DF68(volume);
+            }
+            progress = 1.0f - 2.0f * lbl_8040B0E0;
+            if (progress < 0.0f) {
+                progress = 0.0f;
+            }
+            break;
+        }
+        lbl_8040B0E4 = NuSinApprox((s32) (progress * 16384.0f));
+        return;
+    }
+    if (lbl_80408F00 == -0.1f) {
+        lbl_8040B0E0 = previousTimer + lbl_80408E9C;
+    }
+    if (lbl_8040B0E8 > 0.0f) {
+        triggerTimer = lbl_8040B0E8 + lbl_80408E9C;
+        lbl_8040B0E8 = triggerTimer;
+        if (triggerTimer >= 1.1f) {
+            lbl_8040B0E4 = 0.0f;
+            lbl_8040B060[0] = 1;
+            lbl_8040B0E0 = 0.0f;
+        }
+        if (lbl_8040B0E4 > 0.0f) {
+            fade = lbl_8040B0E4 - lbl_80408E9C;
+            lbl_8040B0E4 = fade;
+            if (fade < 0.0f) {
+                lbl_8040B0E4 = 0.0f;
+            }
+        }
+    } else if ((*(s32 *)((u8 *)menu + 0x44) & 0x10) || lbl_8040B0E0 >= lbl_80409920) {
+        lbl_8040B0E8 = 0.001f;
+    }
+    fn_8006DF68(volume * lbl_8040B0E4);
+}
