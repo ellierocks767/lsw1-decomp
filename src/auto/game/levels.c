@@ -5658,3 +5658,74 @@ void fn_800ABDAC(void) {
     lbl_80313268[0x54 / 4] = old;
     NuCameraCalcFrustrumPlanes(lbl_80313268);
 }
+
+extern const f32 lbl_801A0120[];
+extern const f32 lbl_801A0124[];
+extern s32 lbl_803DF8DC[];
+extern s32 lbl_803DF8E4[];
+extern s32 lbl_803E029C[];
+extern u8 lbl_803E04B8[];
+extern u8 lbl_803E04C0[];
+extern u8 lbl_80408A57[1];
+extern f32 lbl_80408A98;
+extern s32 lbl_8040AF10;
+extern s32 str_Off[];
+extern s32 str_On[];
+
+struct levels_menu4_s {
+    u8 pad0[0xA];
+    s16 hA;
+    u8 padC[0x84];
+    s32 f90;
+    f32 f94;
+    u8 pad98[4];
+    f32 f9C;
+    u8 padA0[8];
+    f32 fA8;
+};
+
+void Menu_Unknown4_BuildOptions(struct levels_menu4_s *arg0) {
+    s32 dirty;
+
+    if (*(s32 *)((s8 *)lbl_80409410 + 0x198) == 0x7C) {
+        arg0->f94 = lbl_801A0120[0];
+        arg0->f9C = lbl_804090E8 - (arg0->fA8 * lbl_801A0120[0]);
+    } else {
+        arg0->f94 = lbl_801A0124[0];
+    }
+    NuStrCpy(lbl_803E04F0, (void *)lbl_803DED88[0xB64 / 4]);
+    NuStrCat(lbl_803E04F0, str_On);
+    NuStrCat(lbl_803E04F0, lbl_803E04B8[0] != 0 ? (s32 *)lbl_803DED88[0xB48 / 4] : (s32 *)lbl_803DED88[0xB4C / 4]);
+    lbl_80408A98 = arg0->f94;
+    fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
+
+    sprintf(lbl_803E04F0, str_Off, (void *)lbl_803DED88[0xD40 / 4], lbl_803E04B8[4], 10);
+    lbl_80408A98 = arg0->f94;
+    fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
+
+    NuStrCpy(lbl_803E04F0, (void *)lbl_803DED88[0xB78 / 4]);
+    NuStrCat(lbl_803E04F0, str_On);
+    NuStrCat(lbl_803E04F0, lbl_803E04B8[5] != 0 ? (s32 *)lbl_803DED88[0xB48 / 4] : (s32 *)lbl_803DED88[0xB4C / 4]);
+    lbl_80408A98 = arg0->f94;
+    fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
+
+    if (*(s32 *)((s8 *)lbl_80409410 + 0x19C) == 0xD) {
+        NuStrCpy(lbl_803E04F0, (void *)lbl_803DED88[0xD8 / 4]);
+        NuStrCat(lbl_803E04F0, str_On);
+        NuStrCat(lbl_803E04F0, lbl_803E04C0[0] != 0 ? (s32 *)lbl_803DED88[0xB34 / 4] : (s32 *)lbl_803DED88[0xB44 / 4]);
+        lbl_80408A98 = arg0->f94;
+        fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
+    }
+    dirty = memcmp(lbl_803E04B8, lbl_803E029C, 0xC) != 0;
+    if (arg0->hA == arg0->f90 || !dirty || lbl_8040AF10 == 0) {
+        if (dirty) {
+            NuStrCpy(lbl_803E04F0, (void *)lbl_803DF8DC[0]);
+        } else {
+            NuStrCpy(lbl_803E04F0, (void *)lbl_803DF8E4[0]);
+        }
+    } else {
+        *(s8 *)lbl_803E04F0 = 0;
+    }
+    lbl_80408A98 = arg0->f94;
+    fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
+}
