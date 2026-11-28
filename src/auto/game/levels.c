@@ -7528,3 +7528,47 @@ void KaminoCReset(void) {
         fn_80107A6C(lbl_802DA3A0.obstacle304, 0);
     }
 }
+
+extern f32 lbl_801D640C[];
+s32 fn_800D515C(s32, s32, s32);
+void TriggerObstacle(s32, s8 *);
+void fn_800D875C(s32, s32);
+s16 fn_800D99AC(void);
+void CancelHint(void);
+void fn_800D99C8(s32);
+
+void fn_800BC4FC(void) {
+    s32 i;
+    s32 j;
+    s8 *pl;
+    s8 *area;
+    s8 *other;
+    u64 mask;
+
+    for (i = 0; i < 4; i++) {
+        if (lbl_803EAE44[i] != 0) {
+            for (j = 0; j < 2 && *(u8 *)(lbl_803EAE44[i] + 0x1F) == 0; j++) {
+                pl = (s8 *)gPlayer1Pointer[j];
+                if (pl != NULL && (*(s32 *)(pl + 0x20C) & 0x01000000) && *(u8 *)(pl + 0x601) == 1 &&
+                    *(f32 *)(pl + 0x62C) > lbl_801D640C[i]) {
+                    TriggerObstacle(lbl_803EAE44[i], pl);
+                }
+            }
+        }
+    }
+    if (lbl_804091F8 == 0 && lbl_803EB004[0] != 0) {
+        if (*(u8 *)(lbl_803EAE44[0] + 0x1F) == 0) {
+            other = (s8 *)fn_800D515C(9, 0, 1);
+            if (other != NULL) {
+                area = (s8 *)lbl_803EB004[0];
+                mask = (u64)1 << *(u8 *)(other + 0x291);
+                if (*(u64 *)(area + 0x30) & mask) {
+                    fn_800D875C(0x275, 0);
+                }
+            }
+        } else if (fn_800D99AC() == 0x275) {
+            CancelHint();
+            fn_800D99C8(0x275);
+        }
+    }
+}
