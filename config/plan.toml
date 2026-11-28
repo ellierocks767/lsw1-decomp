@@ -2694,6 +2694,26 @@ function = "fn_8010A0D8"
 reason = "best 97/144 (work/hc/a/h7.c): clamp frac>1.0 folds 9C reuse (target reloads lbl_801AA09C after b stores), float reg alloc and a/b stack slots/f30-f31 swapped; next: decl-order search over a/b/c and f32 locals, then timeout 180 permuter burst"
 
 [[parked]]
+function = "fn_80040B4C"
+reason = "best 15/54: mismatch, target computes -align twice (no CSE) with size copied to r8; next: source form that blocks CSE of the two negs (separate block/helper with own params), permuter burst"
+
+[[parked]]
+function = "fn_800A45BC"
+reason = "best 70/100: regalloc/loop-hoist only (count-indexed stbx operand order idx,base; n in r31; lbl_8040B03C/AFBC bases not fully hoisted); structure matches (u32 bitfield for 0x20C bit 24, direct bool store to B03C, if/else AFBC); best body work/fn_800A45BC/best_70.c; next: permuter burst or test index typing/array-of-struct forms"
+
+[[parked]]
+function = "InitPlayerShadow"
+reason = "best 99/104: stfs f1 0x220 sched after lis, FB2C lfs/li order in else, tail FB34 reload; next: permuter on best.c"
+
+[[parked]]
+function = "ResetAICreatures"
+reason = "best 118/126: loop-bound lwz order, 0x20c store vs lwz sched, 454/mulli order; next: permuter on best.c"
+
+[[parked]]
+function = "fn_800A5A3C"
+reason = "best 104/138: 0xFFFF const CSE'd/buf base kept in reg, cr save, extsh/lha on s16 compare, frame +8; next: restructure sel loop (goto loop form), permuter on best.c"
+
+[[parked]]
 function = "ProcessSpaceLevel"
 reason = "best 100/174: extra floating-point save and different fighter-slot traversal; next: isolate zero comparison load and keep indexed enabled-field and base-fighter cursors independent"
 
@@ -2724,3 +2744,23 @@ reason = "best 59/94: r4/r5 preferred for a/b instead of r7/r8 with mr r11 copie
 [[parked]]
 function = "fn_800A76AC"
 reason = "best 0/1472: large 5888B function not attempted; next: split into sub-blocks after smaller creature.c functions"
+
+[[parked]]
+function = "MoveSubItemsRight"
+reason = "best 153/195 (was 104): lo/hi are rodata literals 0.0f/1.0f; clamp = MAX(0.0f, MIN(t, 1.0f)); lbl_802E9C1C is a 3-float struct; early-block store order [2],timer,C8,CC,[0],[1],scroll,C4 matched; post-loop temp reuses `one` (f31); remaining: t/hi f11<->f12 swap in loop and post-loop; next: different t/one variable roles or permuter burst on work/hc/MoveSubItemsRight.best.c, then mirror to Left"
+
+[[parked]]
+function = "MoveSubItemsLeft"
+reason = "retried: best 153/195: mirror of Right with literals, early block matches; final 4 lerps use clamp result f31 directly where target copies t=fmr f11,f31 and fmadds on f11 (6 insns short), loop clamp t/1.0 regs swapped; next: find clamp/lerp shape keeping t and clamp temp distinct (work/hc/MoveSubItemsLeft.best.c)"
+
+[[parked]]
+function = "CollideBoltStarFighter"
+reason = "best 187/199 (was 178): NuVecSubPS via static inline wrapper fixes first block; rodata labels are literals (0/4/2/1/2e6/4e4 floats, strings DogBits etc.); left: &step CSE-cached in r30 across NuVecScale (target rematerializes addi r1,0x28 at call and asm; tried inner-block/array/if-else-call), and dx/dy f12/f13 swap in dist-sq (all 18 decl/sum orders and an inline helper tried); next: NuVecAddPS as an inline function instead of macro, or permuter burst on work/hc/CollideBoltStarFighter.best.c"
+
+[[parked]]
+function = "DrawTopShelf"
+reason = "retried: best 312/340: 1.0f literal + static inline per-object helpers (DtsObjA/B, DtsSpecA/B, DtsSetup); left: scale-vector stfs/addi r3/li r4 scheduling around NuMtxSetIdentity..fn_8000E540, block 2 special address computed early, block 5 pos load reg swap; next: setup helper shape (sc as by-value/return, NuMtxScale arg form) (work/hc/DrawTopShelf.best.c)"
+
+[[parked]]
+function = "Shop_DrawCodes"
+reason = "retried: best 376/391: literals + char[7] sda buffer + static inline draw helpers (DcDraw/DcDrawAt) + pos=lbl_80401894 hoisted; left: target keeps clrlwi on the (u8)(c-0x30)<=9 test (gcc drops it in every spelling tried), base/t fsubs register order, scale-vector stfs/li r4 scheduling in the setup (same as DrawTopShelf); next: char test via inline helper/switch, setup helper shape (work/hc/Shop_DrawCodes.best.c)"

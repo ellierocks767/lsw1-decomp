@@ -232,6 +232,14 @@ def defined_at_base(unit: str, base: str | None = None) -> set[str]:
     return set(defined_functions(old.stdout)) if old.returncode == 0 else set()
 
 
+def source_paths(sources: list[str], unit: str | None) -> list[str] | None:
+    """Unit source files for diff accounting: every --source, else --unit when it is a file.
+    None when a --source does not exist."""
+    if sources:
+        return sources if all(_unit_path(s).is_file() for s in sources) else None
+    return [unit] if unit and _unit_path(unit).is_file() else []
+
+
 def matched_from_diff(unit: str, base: str | None = None) -> list[str]:
     """Non-static functions defined in UNIT now that were not defined there at the merge base."""
     before = defined_at_base(unit, base)
@@ -342,8 +350,12 @@ def main(argv=None) -> int:
                          f"{int(metrics.DEFAULT_IDLE_CAP)}; env {metrics.IDLE_CAP_ENV}); saved with the timer")
     ap.add_argument("--parked", action="append", default=[], metavar="FN=NOTE", help="parked function row")
     ap.add_argument("--unit", help="unit name for the record heading (a source path for --matched-from-diff)")
+    ap.add_argument("--source", action="append", default=[], metavar="PATH",
+                    help="unit source path(s) for --matched-from-diff and prior-match accounting "
+                         "(repeat for a plan item that spans units; default: --unit when it is a path)")
     ap.add_argument("--matched-from-diff", action="store_true",
-                    help="add the functions newly defined in --unit since the merge base with origin/main")
+                    help="add the functions newly defined in the --source files (or --unit) since the "
+                         "merge base with origin/main")
     ap.add_argument("--allow-behind", action="store_true",
                     help="record a baseline even when HEAD is behind origin/main")
     ap.add_argument("--queue", nargs="+", help="complete ordered sprint queue; saved with baseline")
@@ -391,12 +403,15 @@ def main(argv=None) -> int:
 
     if args.baseline:
         return record_baseline(args.queue or [], args.allow_behind, args.idle_cap)
+    sources = source_paths(args.source, args.unit)
+    if sources is None:
+        ap.error("--source must name existing unit source files")
+    parked_names = {p.partition("=")[0] for p in args.parked} | set(args.deferred)
     if args.matched_from_diff:
-        if not args.unit or not (Path(args.unit).is_file() or (ROOT / args.unit).is_file()):
-            ap.error("--matched-from-diff needs --unit as the unit's source path")
-        parked_names = {p.partition("=")[0] for p in args.parked} | set(args.deferred)
+        if not sources:
+            ap.error("--matched-from-diff needs --source (or --unit as the unit's source path)")
         args.functions = metrics.dedupe(args.functions + [
-            fn for fn in matched_from_diff(args.unit) if fn not in parked_names])
+            fn for src in sources for fn in matched_from_diff(src) if fn not in parked_names])
     if not args.functions and not args.parked and not args.deferred:
         ap.error("name the matched functions (or use --baseline)")
 
@@ -405,9 +420,10 @@ def main(argv=None) -> int:
         ap.error("finish requires --unit and the complete --queue")
     if args.unit:
         queue = metrics.dedupe(args.queue or (base or {}).get("queue", []))
-        if args.matched_from_diff:
+        if sources:
             named = set(args.functions) | parked_names
-            queue, dropped = drop_prior_matches(queue, named, defined_at_base(args.unit))
+            prior = set().union(*(defined_at_base(src) for src in sources))
+            queue, dropped = drop_prior_matches(queue, named, prior)
             if dropped:
                 print(f"queue: {', '.join(dropped)} already matched before this branch "
                       "(reverified while scoring, not progress); left out of accounting", file=sys.stderr)

@@ -47,6 +47,61 @@ void fn_800A20AC(void)
     fn_800B9D44(lbl_803E0298 + 4);
 }
 
+struct CRLEVEL_s {
+    char pad0[8];
+    s32 count;
+    char padC[0xC];
+    void *sets;
+    char pad1C[4];
+    char *defs;
+};
+extern struct CRLEVEL_s *lbl_80408DF0;
+
+struct CRANIMSET_s {
+    char pad0[4];
+    void *hgobj;
+    void **mtx;
+    void **anims;
+    char pad10[0x44];
+};
+struct CRROOTDATA_s {
+    char pad0[0x270];
+    f32 pos[3];
+    char pad27C[0x20];
+};
+void fn_800AC7AC();
+extern f32 lbl_8019FA7C[];
+void NuHGobjEvalAnim2Root(void *hgobj, void *anim, f32 time, s32 njanims, void *janim, void *mtx_array, void *rootfn, void *rootdata);
+
+void fn_800A2370(void)
+{
+    char mtx[0x4000];
+    struct CRROOTDATA_s root;
+    s32 i;
+    s32 j;
+    struct CRANIMSET_s *set = lbl_80408DF0->sets;
+    f32 zero;
+
+    for (i = 0; i <= 30; i++, set++) {
+        j = 0;
+        if (j < lbl_80408DF0->count) {
+            zero = lbl_8019FA7C[0];
+            do {
+                if (set != NULL && set->anims[j] != NULL && set->hgobj != NULL) {
+                    root.pos[0] = zero;
+                    root.pos[1] = zero;
+                    root.pos[2] = zero;
+                    NuHGobjEvalAnim2Root(set->hgobj, set->anims[j], zero, 0, 0, mtx, fn_800AC7AC, &root);
+                    *(f32 *)((char *)set->mtx[j] + 0x34) = root.pos[0];
+                    *(f32 *)((char *)set->mtx[j] + 0x38) = root.pos[1];
+                    *(f32 *)((char *)set->mtx[j] + 0x3C) = root.pos[2];
+                }
+                j++;
+            } while (j < lbl_80408DF0->count);
+        }
+    }
+}
+
 extern u8 NuTimeBar_DefaultColours[];
 extern u8 lbl_801D53C8[];
 extern s32 lbl_8040B044;
@@ -206,20 +261,39 @@ void GameLoadCharacterModels(s32 arg0, s32 arg1)
     APILoadCharacterModels(arg0, 0, &lbl_80408F7C, &sp8, 1);
 }
 
+s32 fn_8006F8B0();
+void fn_80071A70(s32, s32);
+void fn_80071B78(s32, f32, f32);
+void fn_80071C04(s32, f32 *, s32);
+extern struct NUGAMEOBJECT_s *gPlayer1Pointer[];
+extern f32 lbl_802DA01C[];
+
+void fn_800A474C(void)
+{
+    s32 i;
+    s32 id;
+
+    for (i = 0; i < 2; i++) {
+        if (gPlayer1Pointer[i] != NULL) {
+            *(s32 *)((char *)gPlayer1Pointer[i]->playerPacket + 0x820) = fn_8006F8B0();
+            id = *(s32 *)((char *)gPlayer1Pointer[i]->playerPacket + 0x820);
+            if (id != -1) {
+                lbl_802DA01C[0] = (u32)((u8 *)gPlayer1Pointer[i]->characterData->config)[0xC5] / 255.0f;
+                lbl_802DA01C[1] = (u32)((u8 *)gPlayer1Pointer[i]->characterData->config)[0xC6] / 255.0f;
+                lbl_802DA01C[2] = (u32)((u8 *)gPlayer1Pointer[i]->characterData->config)[0xC7] / 255.0f;
+                fn_80071A70(id, 2);
+                fn_80071C04(id, lbl_802DA01C, 0);
+                fn_80071B78(id, 0.0f, 1.25f);
+            }
+        }
+    }
+}
+
 u64 __lshrdi3();
 void fn_800868B4(void *, void *);
 s32 fn_8008F180(void *, u8, f32, f32, f32);
 void *fn_800A55D4(u8, s32);
 extern f32 lbl_8019FB9C[];
-struct CRLEVEL_s {
-    char pad0[8];
-    s32 count;
-    char padC[0xC];
-    void *sets;
-    char pad1C[4];
-    char *defs;
-};
-extern struct CRLEVEL_s *lbl_80408DF0;
 extern s32 lbl_80408FB4;
 
 void fn_800A4C78(char *arg0) {
@@ -274,6 +348,49 @@ void fn_800A4C78(char *arg0) {
             }
         }
         *(u32 *)(arg0 + 0x1378) &= ~0x8000;
+    }
+}
+
+s32 fn_800B9ED4(void);
+extern f32 lbl_80408E9C;
+void fn_800A5A3C(char *obj);
+
+static inline void creatureResetTimer(char *obj)
+{
+    *(s16 *)(obj + 0x50) = 1;
+    *(f32 *)(obj + 0x24) = 0.0f;
+    *(f32 *)(obj + 0x28) = (f32)fn_800B9ED4() * 1.5259022e-05f * 7.0f + 8.0f;
+    *(f32 *)(obj + 0x20) = 0.0f;
+}
+
+void fn_800A5C64(char *obj)
+{
+    f32 dt;
+    f32 a;
+    f32 b;
+    f32 lim;
+
+    if (*(s32 *)(obj + 0x60) != 0) {
+        if (*(s16 *)(obj + 0x4E) == 1) {
+            dt = lbl_80408E9C;
+            a = *(f32 *)(obj + 0x20);
+            b = *(f32 *)(obj + 0x24);
+            lim = *(f32 *)(obj + 0x28);
+            a += dt;
+            b += dt;
+            *(f32 *)(obj + 0x20) = a;
+            *(f32 *)(obj + 0x24) = b;
+            if (b >= lim) {
+                if (*(s16 *)(obj + 0x50) == 1) {
+                    fn_800A5A3C(obj);
+                } else {
+                    creatureResetTimer(obj);
+                }
+            }
+            *(s16 *)(obj + 0x4E) = *(s16 *)(obj + 0x50);
+        } else {
+            creatureResetTimer(obj);
+        }
     }
 }
 
@@ -332,7 +449,6 @@ void fn_800A30A8(char *obj, s32 unused) {
     *(f32 *)(obj + 0x77C) = 0.0f;
 }
 
-s32 fn_800B9ED4(void);
 
 void ResetPlayerContexts(void *arg) {
     char *obj = arg;
@@ -1021,4 +1137,43 @@ s32 fn_800A8FF4(void)
         }
     }
     return 0;
+}
+
+struct creature_vec_s {
+    f32 x, y, z;
+};
+void NuVecRotateX(struct creature_vec_s *dst, struct creature_vec_s *src, u16 a);
+void NuVecRotateY(struct creature_vec_s *dst, struct creature_vec_s *src, u16 a);
+
+void CurrentStart(char *obj, s32 force, s32 tilt)
+{
+    struct creature_vec_s v;
+    s32 *tbl;
+    s8 idx;
+
+    *(f32 *)(*(char **)(obj + 0xEEC) + 0x730) = 0.0f;
+    idx = *(s8 *)(obj + 0x601);
+    if (idx != -1) {
+        tbl = *(s32 **)((char *)lbl_80409410 + 0x2DC);
+        if (tbl != NULL && *(f32 *)(*tbl + idx * 0x104 + 0x6C) != 0.0f
+            && (force != 0 || *(s8 *)(*(char **)(obj + 0xEEC) + 0x7E5) == 1
+                || *(s8 *)(*(char **)(obj + 0xEEC) + 0x7E5) == 4)) {
+            *(f32 *)(*(char **)(obj + 0xEEC) + 0x730) =
+                *(f32 *)(**(s32 **)((char *)lbl_80409410 + 0x2DC) + *(s8 *)(obj + 0x601) * 0x104 + 0x6C);
+            v.x = v.y = 0.0f;
+            if (*(u32 *)(obj + 0xF24) & 0x400) {
+                v.z = *(f32 *)(*(char **)(obj + 0xEEC) + 0x730) * *(f32 *)(obj + 0xF04);
+            } else {
+                v.z = *(f32 *)(*(char **)(obj + 0xEEC) + 0x730) * *(f32 *)(*(char **)(obj + 0xEEC) + 0x708);
+            }
+            if (tilt != 0) {
+                NuVecRotateX((struct creature_vec_s *)(obj + 0x78), &v, *(u16 *)(obj + 0x624));
+                NuVecRotateY((struct creature_vec_s *)(obj + 0x78), (struct creature_vec_s *)(obj + 0x78), *(u16 *)(obj + 0x626));
+            } else {
+                NuVecRotateY((struct creature_vec_s *)(obj + 0x78), (struct creature_vec_s *)(obj + 0x78), *(u16 *)(obj + 0x27E));
+            }
+            *(struct creature_vec_s *)(obj + 0xF3C) = *(struct creature_vec_s *)(obj + 0x78);
+            *(u32 *)(obj + 0x440) &= ~0x1000;
+        }
+    }
 }

@@ -874,3 +874,293 @@ s32 BuyShopItem(ShopItem *items, s32 index, s32 charge)
     }
     return 1;
 }
+
+typedef struct { s32 id; f32 val; } ShopPair;
+typedef struct { char pad[0x63734]; s32 count; ShopPair pairs[256]; } ShopData;
+typedef struct { char pad[0x1984]; ShopData *shop; } ShopRoot;
+#define SHOP() (((ShopRoot *)lbl_80409410)->shop)
+#define ID (*(s32 *)(*(char **)((char *)arg0 + 0xD4) + 0x524))
+#define VAL (*(f32 *)((char *)arg0 + 0xF8))
+s32 fn_80146194(void *arg0) {
+    s32 i;
+    i = 0;
+    for (; i < SHOP()->count; i++) {
+        if (SHOP()->pairs[i].id == ID && SHOP()->pairs[i].val == VAL) return 0;
+    }
+    if (i <= 0xFF) {
+    SHOP()->pairs[i].id = ID; SHOP()->pairs[i].val = VAL; SHOP()->count++; return 1;
+    }
+    return 0;
+}
+
+typedef struct { s32 w[3]; } ShopIcon;
+extern ShopIcon atoz0to9icon[];
+extern char str_Format_ShopChar[];
+
+void Shop_InitCodeChars(void) {
+    char buf[16];
+    s8 c;
+    s32 i;
+
+    c = 'a';
+    i = 0;
+    for (; c <= 'z'; c++, i++) {
+        memset(buf, 0, 16);
+        sprintf(buf, str_Format_ShopChar, c);
+        NuSpecialFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), &atoz0to9icon[i], buf, 1);
+    }
+    for (c = '0'; c <= '9'; c++, i++) {
+        memset(buf, 0, 16);
+        sprintf(buf, str_Format_ShopChar, c);
+        NuSpecialFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), &atoz0to9icon[i], buf, 1);
+    }
+}
+
+typedef struct { s32 x, y, z; } BoltVec;
+typedef struct { char pad0[0xE0]; char obj[5][0x130]; } BoltRow;
+extern s32 CollideBoltStarFighter(void *, void *, void *, void *);
+
+s32 fn_80146F20(void *arg0, void *arg1) {
+    BoltVec b;
+    BoltVec a;
+    char *w;
+    s32 i;
+    s32 j;
+    if (*(s32 *)((s8 *)lbl_80409410 + 0x1980) != 0) {
+        w = *(char **)((s8 *)lbl_80409410 + 0x1984);
+        if (w != NULL && (*(u16 *)((s8 *)arg0 + 0xE8) & 1)) {
+            a = *(BoltVec *)((s8 *)arg1 + 0xC);
+            b = *(BoltVec *)((s8 *)arg0 + 0x9C);
+            for (i = 0; i < 8; i++) {
+                if (*(s32 *)(w + 0x708 + i * 0x680) != 0) {
+                    for (j = 0; j < 5; j++) {
+                        if (*(s32 *)(w + 0x1F0 + i * 0x680 + j * 0x130) != 0 &&
+                            CollideBoltStarFighter(arg0, w + 0xE0 + i * 0x680 + j * 0x130, &a, &b) != 0) {
+                            return 1;
+                        }
+                    }
+                }
+            }
+            for (j = 0; j < 96; j++) {
+                if (*(s32 *)(w + 0x565E0 + j * 0x130) != 0 &&
+                    CollideBoltStarFighter(arg0, w + 0x564D0 + j * 0x130, &a, &b) != 0) {
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+typedef struct { s16 count; s16 stride; s32 pad4; char *data; } ShopSpline;
+extern ShopSpline *NuSplineFind(void *, void *);
+extern s32 lbl_801AF754[];
+extern s32 lbl_801AF760[];
+extern s32 lbl_801AF770[];
+extern PodV12 lbl_80401810[];
+extern PodV12 lbl_80401864[];
+extern PodV12 lbl_80401894[];
+extern ShopSpline *lbl_8040A7EC;
+extern ShopSpline *lbl_8040A7F0;
+
+void Shop_InitShelfItemPositions(void) {
+    s16 n0;
+    s16 n1;
+    s16 n2;
+    s32 i;
+    lbl_8040A7E8 = NuSplineFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), lbl_801AF754);
+    lbl_8040A7EC = NuSplineFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), lbl_801AF760);
+    lbl_8040A7F0 = NuSplineFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), lbl_801AF770);
+    if (lbl_8040A7E8 != NULL && lbl_8040A7EC != NULL && lbl_8040A7F0 != NULL) {
+        n0 = ((ShopSpline *)lbl_8040A7E8)->count;
+        n1 = lbl_8040A7EC->count;
+        n2 = lbl_8040A7F0->count;
+        memset(lbl_80401810, 0, 0x54);
+        memset(lbl_80401864, 0, 0x30);
+        memset(lbl_80401894, 0, 0x48);
+        for (i = 0; i < n0; i++) {
+            lbl_80401864[i] = *(PodV12 *)(((ShopSpline *)lbl_8040A7E8)->data + i * ((ShopSpline *)lbl_8040A7E8)->stride);
+        }
+        for (i = 0; i < n1; i++) {
+            lbl_80401810[i] = *(PodV12 *)(lbl_8040A7EC->data + i * lbl_8040A7EC->stride);
+        }
+        for (i = 0; i < n2; i++) {
+            lbl_80401894[i] = *(PodV12 *)(lbl_8040A7F0->data + i * lbl_8040A7F0->stride);
+        }
+    }
+}
+
+extern s32 gShopBackPending;
+extern s32 gShopDrawCallbackDepth;
+extern s32 gShopDrawCallbackStack[];
+extern f32 gShopMenuTransitionTimer;
+extern s32 gShopPreviousSelection;
+extern s32 gShopUpdateCallbackDepth;
+extern s32 gShopUpdateCallbackStack[];
+extern f32 lbl_80409BE4;
+extern f32 lbl_80409BE8;
+extern f32 lbl_80409BFC;
+extern f32 lbl_8040A7DC;
+extern f32 lbl_8040A7E0;
+extern f32 lbl_8040B0D4;
+extern s32 Shop_DrawSubMenuTitle();
+
+s32 Shop_UpdateMenu(void) {
+    s32 z;
+    s32 r;
+    s32 d;
+    s32 n;
+    s32 o;
+
+    if (lbl_8040B0D4 < 1.0f) {
+        lbl_8040B0D4 += 2.0f * lbl_80408E9C;
+        if (lbl_8040B0D4 > 1.0f) lbl_8040B0D4 = 1.0f;
+    }
+    lbl_8040A7E0 = lbl_80409BE4;
+    lbl_8040A7DC = lbl_80409BE8;
+    z = gShopUpdateCallback;
+    if (z == 0) {
+        gShopDrawCallbackStack[z] = z;
+        gShopUpdateCallback = (s32)Shop_UpdateMainMenu;
+        gShopPreviousSelection = -1;
+        gShopMenuTransitionTimer = lbl_80409BFC;
+        gShopDrawCallback = Shop_DrawSubMenuTitle;
+        gShopUpdateCallbackStack[z] = z;
+        gShopCurrentCategory = z;
+        gShopUpdateCallbackDepth = z;
+        gShopDrawCallbackDepth = z;
+        gShopBackPending = z;
+    }
+    r = ((s32 (*)())gShopUpdateCallback)();
+    switch (r) {
+    case 5:
+        d = 1;
+        break;
+    case 6:
+        n = gShopUpdateCallbackDepth;
+        o = gShopUpdateCallbackStack[n];
+        gShopUpdateCallbackStack[n] = 0;
+        gShopUpdateCallbackDepth = n - 1;
+        gShopUpdateCallback = o;
+        if (gShopUpdateCallbackDepth < 0) gShopUpdateCallbackDepth = 0;
+        gShopDrawAltCallback = NULL;
+        n = gShopDrawCallbackDepth;
+        o = gShopDrawCallbackStack[n];
+        gShopDrawCallbackStack[n] = 0;
+        gShopDrawCallbackDepth = n - 1;
+        gShopDrawCallback = o;
+        if (gShopDrawCallbackDepth < 0) gShopDrawCallbackDepth = 0;
+    default:
+        d = 0;
+        break;
+    }
+    r = 1;
+    if (d == 0) r = 0;
+    return r;
+}
+
+void *fn_800AAD10(s32);
+s32 fn_800AAE44(s32);
+extern s32 gTotalStudsBalance[];
+
+s32 SelectShopItem(ShopItem *items, s32 index) {
+    s32 bought = 0;
+    ShopItem *item = (ShopItem *)((s32)(index * sizeof(ShopItem)) + (s32)items);
+
+    switch (item->type) {
+    case 0:
+        if (item->unlocked == 1) return 0;
+        if (gTotalStudsBalance[0] < item->price) return -1;
+        {
+            s32 id = item->id;
+            if (id >= 0) {
+                if (id <= 0x84) {
+                    if (!fn_800AAD10(id)) return -1;
+                    bought = fn_800AAE44(id);
+                }
+            }
+        }
+        break;
+    case 1:
+        if (item->unlocked == 1) return 1;
+        if (item->price == 0) return 1;
+        if (gTotalStudsBalance[0] < item->price) return -1;
+        bought = 1;
+        break;
+    case 3:
+        if (lbl_803E0298.studs < item->price) return -1;
+        if ((lbl_803E0298.extraPurchased >> item->id) & 1) return 0;
+        bought = 1;
+        lbl_803E0298.extraPurchased |= 1 << item->id;
+        break;
+    default:
+        return -1;
+    }
+    if (bought) BuyShopItem(items, index, 1);
+    return 1;
+}
+
+typedef struct ShopExtraDef { u16 nameIdx; u8 pad2[6]; s32 price; char *model; } ShopExtraDef;
+typedef struct ShopSpecial { s32 w[3]; } ShopSpecial;
+typedef struct ShopExtraItem {
+    char name[0x40];
+    char modelName[0x30];
+    u16 id;
+    u8 type;
+    u8 unlocked;
+    s32 price;
+    ShopSpecial special;
+    u8 pad[0x0c];
+} ShopExtraItem;
+extern ShopExtraItem ExtraItems[];
+extern ShopExtraItem GameMenu[];
+extern ShopExtraDef lbl_801D5994[];
+extern char *lbl_803DED88[];
+extern ShopSpecial lbl_804021DC[];
+extern s32 NuStrCpy(char *, char *);
+extern void NuStrCat(char *, const char *);
+
+void Shop_InitExtras(void) {
+    char buf[32];
+    s32 i;
+
+    for (i = 0; i <= 9; i++) {
+        NuStrCpy(ExtraItems[i].name, lbl_803DED88[lbl_801D5994[i].nameIdx]);
+        NuStrCpy(ExtraItems[i].modelName, lbl_801D5994[i].model);
+        NuSpecialFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), &ExtraItems[i].special, ExtraItems[i].modelName, 1);
+        ExtraItems[i].id = i;
+        ExtraItems[i].type = 3;
+        ExtraItems[i].unlocked = 0;
+        if ((lbl_803E0298.extraUnlocked >> i) & 1) {
+            ExtraItems[i].unlocked = 1;
+            lbl_803E0298.extraPurchased |= 1 << i;
+        }
+        ExtraItems[i].price = lbl_801D5994[i].price;
+    }
+    gShopExtraItemCount = 10;
+    for (i = 0; i < gShopExtraItemCount; i++) {
+        NuStrCpy(buf, GameMenu[i].name);
+        NuStrCat(buf, "b");
+        NuSpecialFind(*(void **)((s8 *)lbl_80409410 + 0x1C0), &lbl_804021DC[i], buf, 1);
+    }
+}
+
+typedef struct SplineKnots { u8 pad[0x400]; s32 n; u8 pad2[0xc]; f32 len; f32 knots[1]; } SplineKnots;
+s32 CalcSplinePoint(void *, f32);
+void fn_80146B8C(SplineKnots *s, f32 t) {
+    s32 i;
+    f32 lo;
+    if (t >= s->len) {
+        t = 1.0f;
+    } else {
+        for (i = 0; i < s->n; i++) {
+            if (t < s->knots[i]) {
+                if (i == 0) lo = 0.0f; else lo = s->knots[i - 1];
+                t = (t - lo) / (s->knots[i] - lo);
+                t = ((f32)i + t) / (f32)s->n;
+                break;
+            }
+        }
+    }
+    CalcSplinePoint(s, t);
+}
