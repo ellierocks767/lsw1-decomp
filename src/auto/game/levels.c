@@ -664,7 +664,7 @@ void MaulBInit(void) {
 s32 NewRumbleAllPlayers(f32, f32);
 s32 UpdatePulses(s32 *);
 void fn_800CC3FC();
-s32 fn_800CCA04(s32, s32 *);
+void *fn_800CCA04(struct lbl_80409410_s *, char *);
 extern void *gPlayerPointers[];
 extern s32 lbl_801A29B8[];
 extern f32 lbl_801A29C8[];
@@ -8805,4 +8805,111 @@ void fn_800CC450(void) {
     if (lbl_8040AF64 != -1) {
         lbl_8040AF94 = 1;
     }
+}
+
+struct fn_800CC6FC_ent {
+    u8 flag;
+    u8 pad1[7];
+};
+struct fn_800CC6FC_row {
+    u8 pad0[4];
+    s8 ids[8];
+    u8 count;
+    u8 pad0D[3];
+};
+extern struct fn_800CC6FC_row lbl_801DC9C4[];
+extern struct fn_800CC6FC_ent lbl_803E03A8[];
+
+s32 fn_800CC6FC(s32 row)
+{
+    s32 n = 0;
+    s32 i = 0;
+    struct fn_800CC6FC_row *r = &lbl_801DC9C4[row];
+    s32 cnt = r->count;
+    s8 *p;
+
+    if (n < cnt) {
+        p = lbl_801DC9C4[row].ids;
+        do {
+            if (lbl_803E03A8[*p++].flag != 0) {
+                n++;
+            }
+            i++;
+        } while (i < cnt);
+    }
+    return n;
+}
+
+extern struct fn_800CC6FC_ent lbl_803E03A9[];
+
+s32 fn_800CC764(s32 row)
+{
+    s32 i = 0;
+    struct fn_800CC6FC_row *r = &lbl_801DC9C4[row];
+    s32 cnt = r->count - 1;
+    s8 *p;
+
+    if (i < cnt) {
+        p = lbl_801DC9C4[row].ids;
+        do {
+            if (lbl_803E03A9[*p++].flag == 0) {
+                return 0;
+            }
+            i++;
+        } while (i < cnt);
+    }
+    return 1;
+}
+
+struct fn_800CCA04_ent {
+    char name[0x80];
+    s16 level;
+    u8 pad82;
+    u8 flags;
+    u8 pad84[0x94 - 0x84];
+};
+extern s32 NuStrICmp(char *, char *);
+
+void *fn_800CCA04(struct lbl_80409410_s *obj, char *name)
+{
+    struct fn_800CCA04_ent *e = (struct fn_800CCA04_ent *)obj->unk240;
+    s32 i;
+
+    if (e != NULL) {
+        for (i = 0; i < obj->unk244; i++, e++) {
+            if (NuStrICmp(name, e->name) == 0) {
+                return e;
+            }
+        }
+    }
+    return NULL;
+}
+
+struct fn_800CCA80_area {
+    u8 pad0[4];
+    u32 flags;
+    u8 pad8[0x3C];
+    s8 key;
+    s8 chapter;
+    u8 pad46[0xA8 - 0x46];
+};
+extern struct fn_800CCA80_area lbl_801D68E0[];
+
+void *fn_800CCA80(struct lbl_80409410_s *obj, s32 key)
+{
+    struct fn_800CCA04_ent *e = (struct fn_800CCA04_ent *)obj->unk240;
+    struct fn_800CCA80_area *a;
+    s32 n;
+    s32 i;
+    if (e == NULL) {
+        return NULL;
+    }
+    for (i = 0; i < obj->unk244; i++, e++) {
+        if ((e->flags & 8) || e->level == -1) continue;
+        a = &lbl_801D68E0[e->level];
+        if (a->key == key) {
+            return e;
+        }
+    }
+    return NULL;
 }
