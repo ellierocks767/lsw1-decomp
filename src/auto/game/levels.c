@@ -664,7 +664,7 @@ void MaulBInit(void) {
 s32 NewRumbleAllPlayers(f32, f32);
 s32 UpdatePulses(s32 *);
 void fn_800CC3FC();
-s32 fn_800CCA04(s32, s32 *);
+void *fn_800CCA04(struct lbl_80409410_s *, char *);
 extern void *gPlayerPointers[];
 extern s32 lbl_801A29B8[];
 extern f32 lbl_801A29C8[];
@@ -4965,7 +4965,7 @@ void fn_800ABD50(void *arg0) {
     }
 }
 
-s32 fn_800CFD80(void *, s32, s32);
+s32 fn_800CFD80(struct nuvec_s *, s16 *, s16 *);
 extern f32 lbl_801A50F0[];
 extern f32 lbl_801A50F4[];
 extern f32 lbl_801A50F8[];
@@ -7289,7 +7289,7 @@ void fn_800BB7CC(void)
 }
 
 f32 fn_8000CB50(struct nuvec_s *);
-s32 fn_800D02E4(void *, void *, void *, f32);
+s32 fn_800D02E4(struct nuvec_s *, struct nuvec_s *, struct nuvec_s *, f32);
 
 void *fn_800B99D0(s32 arg0, s32 arg1, s32 arg2, f32 farg0, f32 farg1)
 {
@@ -7319,7 +7319,7 @@ void *fn_800B99D0(s32 arg0, s32 arg1, s32 arg2, f32 farg0, f32 farg1)
                 lim *= lim;
                 dist = fn_8000CD08(obj + 0x30, arg1, NULL);
                 if (dist < lim &&
-                    fn_800D02E4(obj + 0x30, &dir, (void *)arg1, radSq) != 0) {
+                    fn_800D02E4((struct nuvec_s *)(obj + 0x30), &dir, (struct nuvec_s *)arg1, radSq) != 0) {
                     bestDist = dist;
                     best = obj;
                 }
@@ -8754,5 +8754,339 @@ void fn_800C6430(void)
             lbl_8040B060[0] = 2;
         }
         break;
+    }
+}
+
+s32 fn_800CC558(void) {
+    s32 ret = 0;
+
+    if (lbl_80409410->unk19C == 7) {
+        switch (lbl_80409410->unk198) {
+        case 0x36:
+            if (lbl_8040AFAC != 0 || (s8)lbl_803E0199[0] == 5 || (s8)lbl_803E0199[0] == 6) {
+                ret = 1;
+            }
+            break;
+        case 0x39:
+            if (lbl_8040AFAC == 0 && lbl_803E0199[0] != 0x1E) {
+                ret = 1;
+            }
+            break;
+        }
+    }
+    return ret;
+}
+
+void fn_800CC450(void) {
+    struct episode_s *area;
+    s32 i;
+    s32 n;
+
+    lbl_80408F2C = 1;
+    lbl_804093B0 = 0x7B;
+    if (lbl_80408FE0 == 0 && (area = (struct episode_s *)lbl_80409410->unk1AC) != NULL) {
+        i = 0;
+        n = -1;
+        if (i < area->count) {
+            do {
+                n = area->levels[i];
+                if (!(lbl_801D68E4[n * 0xA8 / 4] & 0x4000)) {
+                    n = -1;
+                    i++;
+                }
+            } while (i < area->count && n == -1);
+        }
+        if (n != -1) {
+            lbl_804093B0 = n;
+        }
+    } else {
+        lbl_804093B0 = 0x7E;
+    }
+    if (lbl_8040AF64 != -1) {
+        lbl_8040AF94 = 1;
+    }
+}
+
+struct fn_800CC6FC_ent {
+    u8 flag;
+    u8 pad1[7];
+};
+struct fn_800CC6FC_row {
+    u8 pad0[4];
+    s8 ids[8];
+    u8 count;
+    u8 pad0D[3];
+};
+extern struct fn_800CC6FC_row lbl_801DC9C4[];
+extern struct fn_800CC6FC_ent lbl_803E03A8[];
+
+s32 fn_800CC6FC(s32 row)
+{
+    s32 n = 0;
+    s32 i = 0;
+    struct fn_800CC6FC_row *r = &lbl_801DC9C4[row];
+    s32 cnt = r->count;
+    s8 *p;
+
+    if (n < cnt) {
+        p = lbl_801DC9C4[row].ids;
+        do {
+            if (lbl_803E03A8[*p++].flag != 0) {
+                n++;
+            }
+            i++;
+        } while (i < cnt);
+    }
+    return n;
+}
+
+extern struct fn_800CC6FC_ent lbl_803E03A9[];
+
+s32 fn_800CC764(s32 row)
+{
+    s32 i = 0;
+    struct fn_800CC6FC_row *r = &lbl_801DC9C4[row];
+    s32 cnt = r->count - 1;
+    s8 *p;
+
+    if (i < cnt) {
+        p = lbl_801DC9C4[row].ids;
+        do {
+            if (lbl_803E03A9[*p++].flag == 0) {
+                return 0;
+            }
+            i++;
+        } while (i < cnt);
+    }
+    return 1;
+}
+
+struct fn_800CCA04_ent {
+    char name[0x80];
+    s16 level;
+    u8 pad82;
+    u8 flags;
+    u8 pad84[0x94 - 0x84];
+};
+extern s32 NuStrICmp(char *, char *);
+
+void *fn_800CCA04(struct lbl_80409410_s *obj, char *name)
+{
+    struct fn_800CCA04_ent *e = (struct fn_800CCA04_ent *)obj->unk240;
+    s32 i;
+
+    if (e != NULL) {
+        for (i = 0; i < obj->unk244; i++, e++) {
+            if (NuStrICmp(name, e->name) == 0) {
+                return e;
+            }
+        }
+    }
+    return NULL;
+}
+
+struct fn_800CCA80_area {
+    u8 pad0[4];
+    u32 flags;
+    u8 pad8[0x3C];
+    s8 key;
+    s8 chapter;
+    u8 pad46[0xA8 - 0x46];
+};
+extern struct fn_800CCA80_area lbl_801D68E0[];
+
+void *fn_800CCA80(struct lbl_80409410_s *obj, s32 key)
+{
+    struct fn_800CCA04_ent *e = (struct fn_800CCA04_ent *)obj->unk240;
+    struct fn_800CCA80_area *a;
+    s32 n;
+    s32 i;
+    if (e == NULL) {
+        return NULL;
+    }
+    for (i = 0; i < obj->unk244; i++, e++) {
+        if ((e->flags & 8) || e->level == -1) continue;
+        a = &lbl_801D68E0[e->level];
+        if (a->key == key) {
+            return e;
+        }
+    }
+    return NULL;
+}
+s16 fn_800CC830(s16 level)
+{
+    s32 ep = lbl_801D68E0[level].key;
+    s32 i = lbl_801D68E0[level].chapter;
+    s32 n;
+    s16 *p;
+    s16 l;
+    s32 t;
+    struct episode_s *e;
+
+    if (ep != -1) {
+        e = (struct episode_s *)((u8 *)lbl_801DC074 + ep * 0x68);
+        n = e->count - 1;
+        if (i < n) {
+            p = (s16 *)(i * 2 + (s32)e->levels);
+            do {
+                t = *p++;
+                ep = t;
+                l = ep;
+                if (!(lbl_801D68E0[l].flags & 0x1000)) {
+                    return l;
+                }
+                i++;
+            } while (i < n);
+        }
+    }
+    return level;
+}
+extern f32 lbl_801A4FC8[];
+s32 fn_800D02E4(struct nuvec_s *p, struct nuvec_s *v, struct nuvec_s *q, f32 lim)
+{
+    struct nuvec_s d;
+    f32 dot;
+    f32 len;
+
+    d.x = q->x - p->x;
+    d.y = q->y - p->y;
+    d.z = q->z - p->z;
+    dot = v->x * d.x + v->y * d.y + v->z * d.z;
+    if (dot < lbl_801A4FC8[0]) {
+        return 0;
+    }
+    len = d.x * d.x + d.y * d.y + d.z * d.z - dot * dot;
+    return len <= lim;
+}
+extern f32 lbl_801A4FB0[];
+
+struct pathlen_s {
+    s16 count;
+    s16 stride;
+    s32 pad4;
+    u8 *data;
+};
+
+f32 fn_800D0030(struct pathlen_s *path, s32 open)
+{
+    struct nuvec_s d;
+    f32 total;
+    s32 n;
+    s32 i;
+    s32 next;
+    s32 idx;
+    u8 *prev;
+    u8 *cur;
+
+    if (path == NULL || path->count <= 1) {
+        return lbl_801A4FB0[0];
+    }
+    n = path->count - 1;
+    if (open != 0) {
+        n = path->count;
+    }
+    total = lbl_801A4FB0[0];
+    prev = path->data;
+    i = 0;
+    for (; i < n; i = next) {
+        next = i + 1;
+        idx = next;
+        if (i == path->count - 1) {
+            idx = 0;
+        }
+        cur = path->data + idx * path->stride;
+        NuVecSub(&d, (struct nuvec_s *)cur, (struct nuvec_s *)prev);
+        total += fn_8000CB50(&d);
+        prev = cur;
+    }
+    return total;
+}
+extern f32 lbl_801A4FB8[];
+extern f32 lbl_801A4FBC[];
+
+s32 fn_800D01C4(struct nuvec_s *a, struct nuvec_s *plane, struct nuvec_s *dir, struct nuvec_s *out, f32 *outDot, f32 t)
+{
+    struct nuvec_s p;
+    f32 dot;
+
+    if (t == lbl_801A4FB8[0]) {
+        p = *a;
+    } else {
+        NuVecScale(&p, dir, t);
+        NuVecAdd(&p, &p, a);
+    }
+    dot = (p.x - plane->x) * dir->x + (p.y - plane->y) * dir->y + (p.z - plane->z) * dir->z;
+    if (outDot != NULL) {
+        *outDot = dot;
+    }
+    if (dot <= lbl_801A4FB8[0]) {
+        if (out != NULL) {
+            NuVecScale(out, dir, -(dot - lbl_801A4FBC[0]));
+            NuVecAdd(out, out, a);
+        }
+        return 1;
+    }
+    return 0;
+}
+s32 fn_800CFEE8(f32 *a, f32 *b, f32 f1, f32 f2, f32 f3, f32 f4)
+{
+    f32 dx = b[0] - a[0];
+    f32 dz = b[2] - a[2];
+    f32 dy = b[1] - a[1];
+    f32 r;
+    if (f1 != f2 || f3 != f4) {
+        dy *= (f1 + f3) / (f2 + f4);
+    }
+    r = f1 + f3;
+    return dx * dx + dy * dy + dz * dz <= r * r;
+}
+
+void fn_800CE080(void)
+{
+    s16 *h;
+    s32 *s;
+    s32 off;
+    s16 z;
+    u8 *base = (u8 *)lbl_801D6648;
+
+    if (*(s32 *)base != 0) {
+        z = 0; s = lbl_803EAD24; h = (s16 *)base + 9; off = 0;
+        do {
+            NuSpecialFind(lbl_80409410->unk1C0, s, *(s32 **)((s32)off + (s32)base), 1);
+            if (fn_800130F4(s) != 0) {
+                fn_80013200(s, 0);
+                *h = z;
+            }
+            off += 0x14;
+            h += 10;
+            s += 3;
+        } while (*(s32 *)((s32)off + (s32)base) != 0);
+    }
+}
+
+struct fn_800CD608_p_s {
+    u8 pad0[0x1084];
+    u8 b1084;
+    s8 b1085;
+};
+extern f32 lbl_801A4EC8[];
+
+void fn_800CD608(void)
+{
+    struct fn_800CD608_p_s *p;
+    u8 a;
+    s8 b;
+    s32 other;
+
+    p = (struct fn_800CD608_p_s *)fn_800D515C(8, 1, 1);
+    if (p != NULL && lbl_80409238 != 0 && *(f32 *)(lbl_80409238 + 0x28) == lbl_801A4EC8[0] && (other = lbl_8040923C) != 0) {
+        f32 v = *(f32 *)(other + 0x28);
+        a = p->b1084;
+        b = p->b1085;
+        p->b1084 = 3;
+        p->b1085 = (u8)(s32)v;
+        fn_800D95B8(p);
+        p->b1085 = b;
+        p->b1084 = a;
     }
 }

@@ -2856,3 +2856,51 @@ reason = "best 139/151 (work/fn_800BFF08/best3.c): fn_801268CC loop exit test bl
 [[parked]]
 function = "UpdatePulses"
 reason = "best 186/230: target stores the 0x80/0x78 zeros through a GPR (mine uses an FPR) and else-branch loads schedule differently; 32 candidates; next: check the 180 s permuter output (score 1080, work/permute/UpdatePulses) for semantic validity, signature is void UpdatePulses(s32 *)"
+
+[[parked]]
+function = "fn_800CC284"
+reason = "best 21/30: compiler hoists lbl_801D63A4 lis and merges [0]/[1] access; target reloads lis for [0] and sets var=1/0 on separate paths; next: permuter on tbl access form"
+
+[[parked]]
+function = "fn_800CC628"
+reason = "best 33/39: insns identical, r31 vs r30 (target stmw r30 saves an extra unused r31); next: find second callee-saved pseudo"
+
+[[parked]]
+function = "fn_800CC31C"
+reason = "best 48/56: only reg alloc in first vec copy (r8/r7/r10/r6 vs r10/r8/r6/r7); next: permuter on copy form"
+
+[[parked]]
+function = "fn_800CC8BC"
+reason = "best 27/45: ctr loop with hoisted flag in cr7 and separate ids pointer vs count pointer; next: separate inline helper sharing fn_800CC764 shape, or longer permuter"
+
+[[parked]]
+function = "fn_800CFD80"
+reason = "best 33/34: neg r5 scheduled before beq and a lands in r0 vs r3 unless a separate neg local is used; permuter 'unused s32 local' result was a false positive (strict 30/34); next: longer permuter run or fn_8000ABDC u16 return prototype"
+
+[[parked]]
+function = "fn_800CE9DC"
+reason = "best 42/48: register allocation order (r26-r28 table pointers) differs; next: longer permuter run"
+
+[[parked]]
+function = "VaderAInit"
+reason = "best 42/44: store of AIPathFindLocator result scheduled before lis for f32 load (target after); next: permuter run"
+
+[[parked]]
+function = "InitSplinePosition"
+reason = "best 48/50: same store-after-call scheduling (stfs length before lis; target after) plus param copy order; next: permuter run"
+
+[[parked]]
+function = "fn_800CA388"
+reason = "best 57/73: base+4 / base+0x10 table offset not folded into reloc in target; ~18 candidates; next: find source form leaving base+4 separate"
+
+[[parked]]
+function = "fn_800D04BC"
+reason = "best 52/73 (~28 cands, permuter 200s no zero): target do-while has no ctr/lwzu, mine does; next: loop form blocking doloop"
+
+[[parked]]
+function = "fn_800CFBFC"
+reason = "best 27/84 (~20 cands + 170s permuter, no zero): target needs 7 saved FPRs (frame 0x60 vs 0x58), sp locals loaded early; next: different expression grouping"
+
+[[parked]]
+function = "fn_800CC0F8"
+reason = "best 91/99 (~30 cands + 175s permuter, no zero): target has extra mr r11,r10 copy before lbl_80409410==lbl_803DB158 compare; next: source form creating that pointer copy"
