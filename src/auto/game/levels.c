@@ -8120,3 +8120,15 @@ void fn_800C5174(void) {
         }
     }
 }
+
+extern f32 lbl_801A2D2C[];
+DEFINE_INTRO_UPDATE(IntroUpdate_800C6094, lbl_801A2D2C)
+
+void fn_800C6094(void)
+{
+    if (lbl_804091F8 != 0) {
+        fn_800BB20C(0, 0, 1, lbl_801A2D2C[0]);
+    } else if (IntroUpdate_800C6094(1, lbl_801A2D2C[0])) {
+        fn_8011E9C4(0x54);
+    }
+}
