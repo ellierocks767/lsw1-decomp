@@ -953,3 +953,82 @@ s32 QuickBolt_Add(struct ChrisBoltPool *pool, struct numtx_s *transform, struct 
     }
     return 0;
 }
+
+struct ChrisPoolNode {
+    u8 payload[0x78];
+    struct ChrisPoolNode *next;
+    struct ChrisPoolNode *previous;
+};
+
+struct ChrisPool {
+    u16 capacity;
+    u16 count;
+    struct ChrisPoolNode *nodes;
+    struct ChrisPoolNode *free;
+    struct ChrisPoolNode *head;
+    struct ChrisPoolNode *tail;
+};
+
+extern struct ChrisPoolNode **lbl_80409A60;
+
+void fn_801409B4(struct ChrisPool **pool, u32 *arena, s32 unused, s32 capacity)
+{
+    struct ChrisPool *header;
+    struct ChrisPoolNode *nodes;
+    u32 bytes;
+    u32 index;
+
+    header = (struct ChrisPool *)((*arena + 3) & ~3u);
+    *arena = (u32)header + sizeof(*header);
+    *pool = header;
+    if (capacity < 0)
+        capacity = 0;
+    if (capacity > 64)
+        capacity = 64;
+    header->capacity = capacity;
+    (*pool)->count = 0;
+
+    capacity = (*pool)->capacity;
+    nodes = (struct ChrisPoolNode *)((*arena + 0x7F) & ~0x7Fu);
+    bytes = capacity * sizeof(*nodes);
+    *arena = (u32)nodes + bytes;
+    if (nodes != NULL) {
+        /* Keep the ring size and the loop count live in separate retail registers. */
+        register u32 ringBytes asm("r9") = bytes;
+        register s32 lastIndex asm("r10") = capacity - 1;
+        struct ChrisPoolNode *last;
+
+        if (lastIndex > 1) {
+            struct ChrisPoolNode *prev = nodes;
+            struct ChrisPoolNode *next = nodes + 2;
+            struct ChrisPoolNode *cur = nodes + 1;
+            s32 remaining = lastIndex - 1;
+            do {
+                cur->next = next;
+                cur->previous = prev;
+                ++next;
+                ++prev;
+                ++cur;
+            } while (--remaining != 0);
+        }
+        {
+            u32 lastOffset, previousOffset;
+            lastOffset = ringBytes - sizeof(*nodes);
+            previousOffset = ringBytes - 2 * sizeof(*nodes);
+            ringBytes += (u32)nodes;
+            nodes->next = nodes + 1;
+            last = (struct ChrisPoolNode *)(ringBytes - sizeof(*nodes));
+            nodes->previous = (struct ChrisPoolNode *)((u32)nodes + lastOffset);
+            last->previous = (struct ChrisPoolNode *)((u32)nodes + previousOffset);
+            last->next = nodes;
+        }
+    }
+
+    index = (*arena + 3) & ~3u;
+    *arena = index + capacity * sizeof(u32);
+    lbl_80409A60 = (struct ChrisPoolNode **)index;
+    (*pool)->nodes = nodes;
+    (*pool)->free = (*pool)->nodes;
+    (*pool)->head = NULL;
+    (*pool)->tail = NULL;
+}
