@@ -7768,3 +7768,100 @@ s32 fn_800C03BC(void *arg0) {
     return 0;
 #undef t
 }
+
+extern const f32 lbl_801A2868[];
+extern f32 lbl_801A286C[];
+extern f32 lbl_801A2870[];
+extern f32 lbl_802E0B74[];
+struct c2d14_ent { char pad[0x5C]; u32 flags; };
+struct c2d14_s {
+    struct c2d14_ent ents[0x108];
+    s16 count;
+    s16 unk6302;
+    s16 state;
+    s16 unk6306;
+    f32 timer;
+    char pad630C[0x63B0 - 0x630C];
+    f32 *unk63B0;
+    f32 *unk63B4;
+    char pad63B8[0x63D0 - 0x63B8];
+    u8 done[6];
+    char pad63D6[2];
+    s8 *unk63D8;
+    f32 unk63DC;
+};
+
+void fn_800C2D14(void) {
+#define p ((struct c2d14_s *)lbl_802DA798)
+    s32 ok;
+    s32 i;
+    s32 n;
+    struct c2d14_ent *e;
+    s32 *fl;
+    s32 cnt;
+
+    ok = 0;
+    p->timer += lbl_80408E9C;
+    switch (p->state) {
+    case 1:
+    case 2:
+    case 3:
+        p->unk63B4[10] = (f32) p->unk6302;
+        if (p->unk63B0[10] == lbl_801A2868[0]) {
+            ok = 1;
+        }
+        break;
+    case 4:
+    case 5:
+    case 6:
+        ok = 1;
+        for (i = 0; i < 6; i++) {
+            if (p->done[i] == 0) {
+                ok = 0;
+                break;
+            }
+        }
+        p->unk63DC += lbl_80408E9C;
+        if (p->unk63DC > lbl_801A286C[0]) {
+            cnt = p->count;
+            i = 0;
+            n = -1;
+            if (i < cnt && !(p->ents[0].flags & 0x08000000)) {
+                fl = &p->ents[0].flags;
+                do {
+                    if (*fl & 0x10000000) {
+                        n = i;
+                    }
+                    i++;
+                    fl += 0x18;
+                    if (i >= cnt) {
+                        break;
+                    }
+                    if (*fl & 0x08000000) {
+                        n = -1;
+                        break;
+                    }
+                } while (1);
+            }
+            if (n != -1) {
+                e = &p->ents[n];
+                e->flags |= 0x08000000;
+            }
+            lbl_802E0B74[0] = lbl_801A2870[0];
+        }
+        break;
+    case 7:
+        if (p->unk63D8 == NULL && (p->unk63D8 = (s8 *) fn_800D515C(7, 1, 1)) == NULL) {
+            break;
+        }
+        if (p->unk63D8[0x28F] != 0 || p->unk63D8[0x1085] == 0) {
+            ok = 1;
+        }
+        break;
+    }
+    if (ok) {
+        p->timer = lbl_801A2870[0];
+        p->unk6306 = 2;
+    }
+#undef p
+}
