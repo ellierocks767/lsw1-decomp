@@ -6369,3 +6369,32 @@ void Menu_Unknown4_Enter(void) {
         *(MenuResetWords *)lbl_803E04B8 = prefix->saved;
     }
 }
+
+void fn_800AC384(void);
+void fn_800E32F8(s32);
+extern u8 lbl_801DC9C8[];
+extern s32 lbl_80409074[];
+extern s32 lbl_8040B100;
+
+void fn_800B43F0(void) {
+    MenuResetPrefix *prefix = (MenuResetPrefix *)lbl_803E0298;
+    MenuToggle *toggle;
+    s32 i;
+
+    *(MenuResetWords *)lbl_803E04B8 = prefix->saved;
+    memset(lbl_803E0298, 0, 0x210);
+    prefix->saved = *(MenuResetWords *)lbl_803E04B8;
+    fn_800E32F8(lbl_8040B100);
+    ((u8 *)prefix)[1] = 5;
+    ((DMH1Tbl *)prefix)->e[(s8)lbl_801DC9C8[0]].a = 1;
+    ((s32 *)prefix)[0x1D8 / sizeof(s32)] |= 0x18;
+    fn_800AC384();
+    lbl_80409074[0] = 3;
+    lbl_80409074[1] = 4;
+    i = 10;
+    lbl_804093E0 = 0;
+    toggle = (MenuToggle *)lbl_801D5994;
+    do {
+        toggle[i - 1].on = 0;
+    } while (--i != 0);
+}
