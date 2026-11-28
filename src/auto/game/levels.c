@@ -5808,3 +5808,19 @@ void DebugMenu_BuildOptions(void *menu)
     fn_800769B4(menu, finalText, finalFlags);
     fn_800769B4(menu, (s32) str_DebugMenu_BuyAllShopCharacters, *itemFlags);
 }
+
+extern s32 str_DebugMenu_DifficultyValue[];
+extern s32 str_menuMove[];
+
+void Menu_Unknown11_BuildOptions(void *menu)
+{
+    s32 difficulty = 1;
+    u8 *flags;
+
+    do {
+        sprintf(lbl_803E04F0, str_menuMove, str_DebugMenu_DifficultyValue, difficulty);
+        difficulty++;
+        flags = &lbl_80408A57;
+        fn_800769B4(menu, (s32) lbl_803E04F0, *flags);
+    } while (difficulty <= 10);
+}
