@@ -5946,3 +5946,76 @@ void PauseMenu_BuildOptions(void *menu)
         fn_800769B4(menu, (s32) str_PauseMenu_LegoOptions, *flags);
     }
 }
+
+void Player_UpdateState(s32, s32);
+
+void PauseMenu_HandleSelection(void *menu)
+{
+    s32 destination;
+    s32 option;
+    s32 selection;
+    s32 idx;
+    s32 remaining;
+    s32 bothPlayers;
+    s32 nextIndex;
+    s32 *players;
+    s32 mode;
+    s32 confirm;
+    s32 player;
+
+    if (*(s32 *)((u8 *) menu + 0x68) != 0) {
+        confirm = PauseMenu_HandleEntry1(str_Confirm);
+        selection = *(s32 *)((u8 *) menu + 0x34);
+        *(s32 *)((u8 *) menu + 0x50) = confirm;
+        if (selection == 0) {
+            Menu_CleanupAndReset();
+            return;
+        }
+        nextIndex = 2;
+        if (selection == 1) {
+            destination = 4;
+            option = -1;
+            goto openMenu;
+        }
+        if ((mode = lbl_80408FE0) == 0) {
+            nextIndex = 3;
+            if (selection == 2) {
+                destination = 5;
+                option = -1;
+                goto openMenu;
+            }
+        }
+        idx = *(s32 *)((u8 *) menu + 0x34);
+        if (idx == nextIndex++) {
+            bothPlayers = 0;
+            if (gPlayer1Pointer[0] != 0 &&
+                (*(u32 *)(gPlayer1Pointer[0] + 0x20C) & 0x01000000) &&
+                gPlayer1Pointer[1] != 0 &&
+                (*(u32 *)(gPlayer1Pointer[1] + 0x20C) & 0x01000000)) {
+                bothPlayers = 1;
+            }
+            if (bothPlayers != 0) {
+                Player_UpdateState(lbl_80408F98, 1);
+                remaining = 8;
+                players = gPlayer1Pointer;
+                do {
+                    player = *players;
+                    players += 1;
+                    if (player != 0) {
+                        *(u32 *)(player + 0xF28) &= ~0x20u;
+                    }
+                    remaining -= 1;
+                } while (remaining != 0);
+                return;
+            }
+            destination = 6;
+            option = 1;
+openMenu:
+            Menu_Open(destination, option, -1);
+            return;
+        }
+        if (gLegoOptionsMenuEnabled != 0 && lbl_80408FE0 == 0 && idx == nextIndex) {
+            Menu_Open(7, -1, -1);
+        }
+    }
+}
