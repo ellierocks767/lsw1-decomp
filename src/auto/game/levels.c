@@ -8060,3 +8060,35 @@ void fn_800C4A8C(void) {
         lbl_80409334 = lbl_8040A6A0->ltime;
     }
 }
+
+struct gameaiscript_level_s {
+    u8 unk0[0x1D0];
+    u32 beenTo : 1;
+    u32 unk1D0 : 31;
+    u8 unk1D4[4];
+};
+
+extern s32 lbl_801A2B48[];
+extern f32 lbl_801A2B54[];
+extern struct gameaiscript_level_s lbl_803EB190[];
+
+void fn_800C4978(void) {
+    lbl_8040A690 = (struct aimessage_s *)CheckAIMessage(lbl_80408F58, lbl_801A2B48, 0);
+    if (fn_800130F4((s32 *)&lbl_802E0BB0) != 0 && lbl_8040A6A0 != NULL) {
+        if (!lbl_803EB190[lbl_8040A69C].beenTo) {
+            lbl_80409334 = lbl_8040A6A0->ltime = lbl_801A2B54[0];
+            lbl_80409338 = 1;
+            lbl_8040A6A0->tfactor = lbl_8040932C;
+            lbl_8040A6A0->flags |= 0x80000000;
+        } else if (lbl_80409338 >= 0) {
+            lbl_8040A6A0->ltime = lbl_802E0BB0.scene->instanim_data[lbl_8040A6A0->anim_ix][0];
+            lbl_8040A6A0->tfactor = lbl_8040932C;
+            lbl_8040A6A0->flags &= 0x7FFFFFFF;
+        } else {
+            lbl_8040A6A0->tfactor = -lbl_8040932C;
+            lbl_8040A6A0->ltime = lbl_80409334;
+            lbl_8040A6A0->flags |= 0x80000000;
+        }
+    }
+    lbl_80409330 = 0;
+}
