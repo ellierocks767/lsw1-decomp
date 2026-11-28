@@ -1133,7 +1133,7 @@ s32 fn_8003F1A0(s32 *);
 void CUT_FindCharacters(struct CutSceneCharacters *);
 extern s32 fn_8011C4B8[];
 extern s32 fn_8011D30C[];
-extern s32 fn_8011EF88[];
+void fn_8011EF88(void *);
 extern s32 fn_8011EFE4[];
 extern s32 lbl_801E0CE0[];
 
@@ -1142,7 +1142,7 @@ void fn_8011E864(void) {
     fn_8003F178(fn_8011C4B8);
     fn_8003F188(CUT_FindCharacters);
     fn_8003F198(CUT_CreateCharacterInstance);
-    fn_8003F190(fn_8011EF88);
+    fn_8003F190((s32 *)fn_8011EF88);
     fn_8003F180(fn_8011EFE4);
     fn_8003F1A0(fn_8011D30C);
 }
@@ -1813,5 +1813,112 @@ void fn_8011EC88(CutSceneState *scene)
         fn_80025C38(0, 0, 0x2800, height, 0x80000000u, lbl_8040AF70);
         fn_80025C38(0, fullHeight - height, 0x2800, height, 0x80000000u, lbl_8040AF70);
         fn_80027564();
+    }
+}
+
+typedef struct {
+    u8 pad0[0x64];
+    f32 unk64;
+    u8 pad68[0x10];
+    f32 unk78;
+    u8 pad7C[0x10];
+    f32 unk8C;
+    f32 unk90;
+    f32 unk94;
+} CutLightState;
+
+typedef struct {
+    u8 pad0[0x6C];
+    f32 unk6C;
+    u8 pad70[0x20];
+    f32 unk90;
+    u8 pad94[0x5C];
+    f32 unkF0;
+    f32 unkF4;
+    f32 unkF8;
+    u8 padFC[0x8];
+} CutLightEntry;
+
+typedef struct {
+    CutLightEntry *entries;
+} CutLightList;
+
+typedef struct {
+    u8 pad0[0x2DC];
+    CutLightList *list;
+} CutLightHolder;
+
+void fn_8011AA30(f32 farg0)
+{
+    s32 i;
+
+    ((CutLightState *)lbl_8040B250)->unk64 = farg0;
+    if (((CutLightHolder *)lbl_8040B254)->list != NULL) {
+        for (i = 0; i < 0x20; i++) {
+            ((CutLightHolder *)lbl_8040B254)->list->entries[i].unk6C = ((CutLightState *)lbl_8040B250)->unk64;
+        }
+    }
+}
+
+void fn_8011AC98(f32 farg0)
+{
+    s32 i;
+
+    ((CutLightState *)lbl_8040B250)->unk78 = fn_8000ED40(farg0);
+    if (((CutLightHolder *)lbl_8040B254)->list != NULL) {
+        for (i = 0; i < 0x20; i++) {
+            ((CutLightHolder *)lbl_8040B254)->list->entries[i].unk90 = ((CutLightState *)lbl_8040B250)->unk78;
+        }
+    }
+}
+
+void fn_8011ADF4(f32 farg0)
+{
+    s32 i;
+
+    ((CutLightState *)lbl_8040B250)->unk8C = fn_8000ED40(farg0);
+    if (((CutLightHolder *)lbl_8040B254)->list != NULL) {
+        for (i = 0; i < 0x20; i++) {
+            ((CutLightHolder *)lbl_8040B254)->list->entries[i].unkF0 = ((CutLightState *)lbl_8040B250)->unk8C;
+        }
+    }
+}
+
+void fn_8011AE5C(f32 farg0)
+{
+    s32 i;
+
+    ((CutLightState *)lbl_8040B250)->unk90 = fn_8000ED40(farg0);
+    if (((CutLightHolder *)lbl_8040B254)->list != NULL) {
+        for (i = 0; i < 0x20; i++) {
+            ((CutLightHolder *)lbl_8040B254)->list->entries[i].unkF4 = ((CutLightState *)lbl_8040B250)->unk90;
+        }
+    }
+}
+
+void fn_8011AEC4(f32 farg0)
+{
+    s32 i;
+
+    ((CutLightState *)lbl_8040B250)->unk94 = fn_8000ED40(farg0);
+    if (((CutLightHolder *)lbl_8040B254)->list != NULL) {
+        for (i = 0; i < 0x20; i++) {
+            ((CutLightHolder *)lbl_8040B254)->list->entries[i].unkF8 = ((CutLightState *)lbl_8040B250)->unk94;
+        }
+    }
+}
+
+void fn_8011EF88(void *arg0)
+{
+    s32 i;
+    s8 *entry;
+    s8 *sub = *(s8 **)(*(s8 **)((s8 *)arg0 + 0x58) + 0x18);
+    s32 **arr = *(s32 ***)((s8 *)arg0 + 0xA4);
+
+    for (i = 0; i < *(u16 *)(sub + 4); i++) {
+        entry = (s8 *)(*arr) + i * 0x18;
+        *(f32 *)(entry + 4) = 0.0f;
+        *(u8 *)(entry + 0x14) = 0;
+        *(u8 *)(entry + 0x15) = 0xFF;
     }
 }
