@@ -7328,3 +7328,33 @@ void fn_800BB3FC(s32 arg0, s32 arg1, f32 farg0)
         }
     }
 }
+
+extern s32 lbl_801A2208[];
+extern u8 lbl_8040A680[4];
+
+void fn_800BE8E8(void) {
+    s32 i;
+    s32 p;
+    s32 *q;
+    s32 n;
+
+    n = 4;
+    i = 0;
+    q = lbl_803EAEC4;
+    do {
+        if ((*(u16 *)(q[0] + 0x20) & 1) && (*(u16 *)(q[1] + 0x20) & 1) && lbl_8040A680[i] == 1) {
+            lbl_8040A680[i] = 0;
+        }
+        q += 2;
+        i++;
+    } while (--n != 0);
+    i = 0;
+    p = (s32)lbl_803EAEC4;
+    do {
+        if (lbl_8040A680[i] != 0) {
+            fn_8006DCD4(lbl_801A2208, fn_800133FC((s32 *)(*(s32 *)p + 4)) + 0x30);
+        }
+        do { p += 8; } while (0);
+        i++;
+    } while (p <= (s32)(lbl_803EAEC4 + 7));
+}
