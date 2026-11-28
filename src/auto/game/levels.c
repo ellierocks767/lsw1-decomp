@@ -2618,7 +2618,7 @@ void fn_800D4C88(void) {
     lbl_8040B058 = 0;
 }
 
-s32 fn_800AB8C8();
+void fn_800AB8C8(void);
 s32 fn_80105C74(s32);
 s32 fn_801205AC(s32);
 s32 fn_8013DE58(s32, ...);
@@ -5394,5 +5394,467 @@ void fn_800B00B8(struct levels_fade_s *o, f32 a, f32 b) {
         o->f138 = zero;
         o->f13C = a;
         o->b178 = o->b175;
+    }
+}
+
+void fn_8002A3A8(void *);
+
+struct levels_ac698_s {
+    u8 pad0[0x1CC];
+    void *p1CC;
+    u8 pad1D0[0x8];
+    void *p1D8;
+    u8 pad1DC[0x8];
+    void *p1E4;
+    u8 pad1E8[0x8];
+    void *p1F0;
+    u8 pad1F4[0x8];
+    void *p1FC;
+};
+
+void fn_800AC698(struct levels_ac698_s *arg0) {
+    if (arg0->p1FC != NULL) {
+        fn_8002A3A8(arg0->p1FC);
+    }
+    arg0->p1FC = NULL;
+    if (arg0->p1F0 != NULL) {
+        fn_8002A3A8(arg0->p1F0);
+    }
+    arg0->p1F0 = NULL;
+    if (arg0->p1E4 != NULL) {
+        fn_8002A3A8(arg0->p1E4);
+    }
+    arg0->p1E4 = NULL;
+    if (arg0->p1D8 != NULL) {
+        fn_8002A3A8(arg0->p1D8);
+    }
+    arg0->p1D8 = NULL;
+    if (arg0->p1CC != NULL) {
+        fn_8002A3A8(arg0->p1CC);
+    }
+    arg0->p1CC = NULL;
+}
+
+extern f32 lbl_8019FF18[];
+extern s32 lbl_80409000;
+
+struct levels_ac7ac_s {
+    u8 pad0[0x270];
+    f32 x;
+    f32 y;
+    f32 z;
+};
+
+void fn_800AC7AC(void *arg0, struct levels_ac7ac_s *arg1, struct nuvec_s *arg2) {
+    arg1->x = arg2->x;
+    arg1->y = 0.0f;
+    arg1->z = arg2->z;
+    if ((fn_8000ED40(arg2->x) > 0.1f) || (fn_8000ED40(arg2->z) > 0.1f)) {
+        lbl_80409000 += 1;
+    }
+    if ((arg1->x == 0.0f) && (arg1->z == 0.0f)) {
+        arg1->x = lbl_8019FF18[0];
+    }
+}
+
+s32 fn_800AAE44(s32);
+extern s32 lbl_803E0470[];
+extern s32 lbl_8040B044;
+
+void fn_800AC384(void) {
+    s32 i;
+
+    lbl_8040B044 = 0;
+    NuTimeBar_DefaultColours[lbl_8040B044] = 0xFF;
+    for (i = 0; i <= 0x84; i++) {
+        if (((u32)lbl_803E0470[i / 32] >> (i & 0x1F)) & 1) {
+            fn_800AAE44(i);
+        }
+    }
+    for (lbl_8040B044 = 0; lbl_8040B044 < 0x3F && NuTimeBar_DefaultColours[lbl_8040B044] != 0xFF; lbl_8040B044++) {
+    }
+}
+
+s32 APILoadCharacterModels(void *, s32, void *, void *, s32);
+extern s32 lbl_80408DF4;
+extern s32 lbl_8040907C;
+extern u8 lbl_8040907F;
+extern s32 lbl_80409080;
+
+struct levels_ac85c_s {
+    u8 b0;
+    u8 b1;
+    s16 h2;
+};
+
+void fn_800AC85C(void) {
+    s32 sp8;
+    s32 *p = &sp8;
+    struct levels_ac85c_s spC;
+    s32 tmp;
+
+    spC.b0 = lbl_8040907F;
+    spC.h2 = -0x100;
+    spC.b1 = 1;
+    lbl_80408DF4 = 1;
+    *p = lbl_80408F80;
+    APILoadCharacterModels(&spC, 0, &lbl_80408F7C, p, 1);
+    tmp = lbl_8040907C;
+    lbl_8040907C = -1;
+    lbl_80409080 = tmp;
+}
+
+void AISysGetCharacterPathPos(void *, void *, void *, s32, s32);
+extern const f32 lbl_8019FE9C[];
+
+struct levels_abb94_s {
+    u8 pad0[0x2A0];
+    u8 path2A0[0xA0];
+    s16 h340;
+    s16 h342;
+    s16 h344;
+    u8 pad346[0x66];
+    u8 arr3AC[0x18];
+    u8 pad3C4[0x14];
+    s32 f3D8;
+    u8 pad3DC[0x8];
+    s32 f3E4;
+    s32 f3E8;
+    u8 pad3EC[0x1E];
+    u8 b40A;
+    u8 b40B;
+    u8 pad40C[0x34];
+    u32 f440;
+    u8 pad444[0xC];
+    s32 f450;
+    u8 pad454[0xAD4];
+    u32 bfF28_0 : 26;
+    u32 bfF28_26 : 1;
+    u32 bfF28_27 : 5;
+    s32 fF2C;
+    u8 padF30[0x15A];
+    u8 b108A;
+    u8 b108B;
+    f32 f108C;
+};
+
+void fn_800ABB94(struct levels_abb94_s *arg0) {
+    arg0->f3E4 = 0;
+    arg0->f3E8 = 0;
+    arg0->h342 = -1;
+    arg0->h344 = -1;
+    arg0->f3D8 = 0;
+    arg0->b108A = 0;
+    arg0->b108B = 0;
+    arg0->f450 = 0;
+    arg0->fF2C = 0;
+    arg0->f440 &= ~0x06000000;
+    arg0->f108C = lbl_8019FE9C[0];
+    arg0->f440 &= ~0x00400000;
+    arg0->bfF28_26 = 0;
+    memset(arg0->arr3AC, 0, 0x18);
+    arg0->b40B = 0;
+    arg0->b40A = 0xFF;
+    arg0->h340 = -1;
+    AISysGetCharacterPathPos(*(void **)((s8 *)lbl_80409410 + 0x2E8), arg0, arg0->path2A0, 0xFF, 1);
+}
+
+struct levels_turretmask_s {
+    u8 pad0[8];
+    u64 mask;
+};
+
+void fn_800AB8C8(void) {
+    struct levels_turretmask_s *m = *(struct levels_turretmask_s **)((s8 *)lbl_80409410 + 0x1B4);
+    if (m != NULL) {
+        s8 *p = (s8 *)lbl_80409430;
+        s32 i;
+        m->mask = 0;
+        for (i = 0; i < lbl_8040B058; i++, p += 0x1098) {
+            if (*(s32 *)(p + 0x20C) < 0 && (*(s32 *)(p + 0x208) & 0x400) && *(u8 *)(p + 0x40C) == 3) {
+                (*(struct levels_turretmask_s **)((s8 *)lbl_80409410 + 0x1B4))->mask |= (1ULL << i);
+            }
+        }
+    }
+}
+
+extern const f32 lbl_8019FF84[];
+extern void *lbl_804093A8;
+
+void fn_800ACAF8(void *arg0, struct nuvec_s *arg1, struct nuvec_s *arg2) {
+    f32 dist[2];
+    f32 h;
+    f32 t;
+    struct nuvec_s *target;
+    void *sub;
+
+    h = (*(f32 *)((s8 *)arg0 + 0x1014) + *(f32 *)((s8 *)arg0 + 0x1018))
+        * *(f32 *)(*(s8 **)((s8 *)arg0 + 0x64) + 0x38)
+        * lbl_8019FF84[0];
+    sub = *(void **)((s8 *)arg0 + 0xEEC);
+    if (sub != NULL
+        && (*(s8 *)((s8 *)arg0 + 0x28F) != 0 || *(u8 *)((s8 *)sub + 0x7D5) != 0)
+        && !(*(s32 *)((s8 *)lbl_804093A8 + 4) & 0x20)) {
+        if (*(s8 *)((s8 *)arg0 + 0x28F) != 0) {
+            *arg1 = *(struct nuvec_s *)((s8 *)arg0 + 0x6C);
+        } else {
+            *arg1 = *(struct nuvec_s *)((s8 *)arg0 + 0x1D0);
+        }
+        arg1->y += h;
+        return;
+    }
+    target = NULL;
+    arg1->x = *(f32 *)((s8 *)arg0 + 0x6C);
+    arg1->y = *(f32 *)((s8 *)arg0 + 0x70) + h;
+    arg1->z = *(f32 *)((s8 *)arg0 + 0x74);
+    {
+        s8 *sub2 = *(s8 **)((s8 *)arg0 + 0xEEC);
+        switch (*(s8 *)(sub2 + 0x7DF)) {
+        case 9:
+            target = (struct nuvec_s *)(*(s8 **)(sub2 + 0x620) + 0x78);
+            break;
+        case 31: {
+            s8 *p = *(s8 **)(sub2 + 0x678);
+            if (p != NULL) {
+                target = (struct nuvec_s *)(p + 0x90);
+            }
+            break;
+        }
+        case 33: {
+            s8 *p = *(s8 **)(sub2 + 0x64C);
+            if (p != NULL && *(s32 *)(p + 0x128) < 0) {
+                target = (struct nuvec_s *)(p + 0x30);
+            }
+            break;
+        }
+        }
+    }
+    if (target != NULL) {
+        dist[0] = NuVecDist(arg2, arg1, NULL);
+        dist[1] = NuVecDist(arg2, target, NULL);
+        t = dist[0] / (dist[0] + dist[1]);
+        arg1->x += (target->x - arg1->x) * t;
+        arg1->y += (target->y - arg1->y) * t;
+        arg1->z += (target->z - arg1->z) * t;
+    }
+}
+
+s32 NuCameraCalcFrustrumPlanes(void *);
+s32 fn_800AA92C(void);
+extern f32 lbl_80313268[];
+extern f32 lbl_80408FF8;
+extern f32 lbl_80408FFC;
+extern s32 lbl_8040AFB8;
+
+void fn_800ABDAC(void) {
+    f32 old = lbl_80313268[0x54 / 4];
+
+    lbl_80313268[0x54 / 4] = (lbl_8040AFB8 != 0) ? lbl_80408FFC : lbl_80408FF8;
+    if (lbl_80313268[0x54 / 4] > old) {
+        lbl_80313268[0x54 / 4] = old;
+    }
+    NuCameraCalcFrustrumPlanes(lbl_80313268);
+    fn_800AA92C();
+    lbl_80313268[0x54 / 4] = old;
+    NuCameraCalcFrustrumPlanes(lbl_80313268);
+}
+
+extern const f32 lbl_801A0120[];
+extern const f32 lbl_801A0124[];
+extern s32 lbl_803DF8DC[];
+extern s32 lbl_803DF8E4[];
+extern s32 lbl_803E029C[];
+extern u8 lbl_803E04B8[];
+extern u8 lbl_803E04C0[];
+extern u8 lbl_80408A57[1];
+extern f32 lbl_80408A98;
+extern s32 lbl_8040AF10;
+extern s32 str_Off[];
+extern s32 str_On[];
+
+struct levels_menu4_s {
+    u8 pad0[0xA];
+    s16 hA;
+    u8 padC[0x84];
+    s32 f90;
+    f32 f94;
+    u8 pad98[4];
+    f32 f9C;
+    u8 padA0[8];
+    f32 fA8;
+};
+
+void Menu_Unknown4_BuildOptions(struct levels_menu4_s *arg0) {
+    s32 dirty;
+
+    if (*(s32 *)((s8 *)lbl_80409410 + 0x198) == 0x7C) {
+        arg0->f94 = lbl_801A0120[0];
+        arg0->f9C = lbl_804090E8 - (arg0->fA8 * lbl_801A0120[0]);
+    } else {
+        arg0->f94 = lbl_801A0124[0];
+    }
+    NuStrCpy(lbl_803E04F0, (void *)lbl_803DED88[0xB64 / 4]);
+    NuStrCat(lbl_803E04F0, str_On);
+    NuStrCat(lbl_803E04F0, lbl_803E04B8[0] != 0 ? (s32 *)lbl_803DED88[0xB48 / 4] : (s32 *)lbl_803DED88[0xB4C / 4]);
+    lbl_80408A98 = arg0->f94;
+    fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
+
+    sprintf(lbl_803E04F0, str_Off, (void *)lbl_803DED88[0xD40 / 4], lbl_803E04B8[4], 10);
+    lbl_80408A98 = arg0->f94;
+    fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
+
+    NuStrCpy(lbl_803E04F0, (void *)lbl_803DED88[0xB78 / 4]);
+    NuStrCat(lbl_803E04F0, str_On);
+    NuStrCat(lbl_803E04F0, lbl_803E04B8[5] != 0 ? (s32 *)lbl_803DED88[0xB48 / 4] : (s32 *)lbl_803DED88[0xB4C / 4]);
+    lbl_80408A98 = arg0->f94;
+    fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
+
+    if (*(s32 *)((s8 *)lbl_80409410 + 0x19C) == 0xD) {
+        NuStrCpy(lbl_803E04F0, (void *)lbl_803DED88[0xD8 / 4]);
+        NuStrCat(lbl_803E04F0, str_On);
+        NuStrCat(lbl_803E04F0, lbl_803E04C0[0] != 0 ? (s32 *)lbl_803DED88[0xB34 / 4] : (s32 *)lbl_803DED88[0xB44 / 4]);
+        lbl_80408A98 = arg0->f94;
+        fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
+    }
+    dirty = memcmp(lbl_803E04B8, lbl_803E029C, 0xC) != 0;
+    if (arg0->hA == arg0->f90 || !dirty || lbl_8040AF10 == 0) {
+        if (dirty) {
+            NuStrCpy(lbl_803E04F0, (void *)lbl_803DF8DC[0]);
+        } else {
+            NuStrCpy(lbl_803E04F0, (void *)lbl_803DF8E4[0]);
+        }
+    } else {
+        *(s8 *)lbl_803E04F0 = 0;
+    }
+    lbl_80408A98 = arg0->f94;
+    fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
+}
+
+s32 fn_80059C44(struct nuvec_s *, struct nuvec_s *, f32, void *);
+extern struct nuvec_s gCameraState[];
+extern f32 lbl_804090D4;
+
+struct levels_skin_p_s {
+    u8 pad0[0x90];
+    struct nuvec_s pos90;
+    u8 pad9C[0x150];
+    f32 f1EC;
+    f32 f1F0;
+    u8 pad1F4[0x18];
+    s32 f20C;
+    u8 pad210[0x7F];
+    u8 b28F;
+    u8 pad290[0xC5C];
+    void *pEEC;
+    u8 padEF0[0x30];
+    f32 fF20;
+    u8 padF24[4];
+    u32 bf_top : 24;
+    u32 bf_bit7 : 1;
+    u32 bf_bit6 : 1;
+    u32 bf_low : 6;
+};
+
+struct levels_water_s {
+    f32 f0;
+    s32 f4;
+    s32 f8;
+    s32 fC;
+};
+
+void NuPs2CreateSkinNorm(void) {
+    struct nuvec_s sp8;
+    struct nuvec_s sp18;
+    s32 i;
+
+    if (lbl_8040AFB8 == 0 && *(s32 *)((s8 *)lbl_80409410 + 0x198) != 0x31) {
+        for (i = 0; i < 2; i++) {
+            struct levels_skin_p_s *p = (struct levels_skin_p_s *)gPlayer1Pointer[i];
+            if (p != NULL && (p->f20C & 0x01000000)) {
+                if (lbl_80408F00 != -0.1f
+                    || p->b28F != 0
+                    || *(u8 *)((s8 *)p->pEEC + 0x7D5) != 0
+                    || *(f32 *)((s8 *)p->pEEC + 0x6F8) > 0.0f
+                    || fn_800B2ED4() != -1
+                    || *(u8 *)((s8 *)p->pEEC + 0x7DF) == 0x12) {
+                    *(u32 *)((s8 *)p + 0xF28) &= ~0xC0;
+                    *(f32 *)((s8 *)p + 0xF20) = 0.0f;
+                } else {
+                    s32 prev = p->bf_bit7;
+                    if ((((struct levels_water_s *)NuRndrHackWaterLevel)->fC & 1) == i) {
+                        sp8.y = 0.0f;
+                        sp8.x = 0.0f;
+                        sp8.z = (f32)(s32)fn_800B9ED4() * (1.0f / 65535.0f) * p->f1EC;
+                        NuVecRotateX(&sp8, &sp8, (s32)((f32)(s32)fn_800B9ED4() * (1.0f / 65535.0f) * -16384.0f));
+                        sp8.y *= p->f1F0 / p->f1EC;
+                        NuVecRotateY(&sp8, &sp8, fn_800B9ED4());
+                        NuVecAdd(&sp8, &sp8, &p->pos90);
+                        NuVecSub(&sp18, &sp8, gCameraState);
+                        p->bf_bit7 = fn_80059C44(gCameraState, &sp18, 0.0f, NULL);
+                    }
+                    if ((s32)p->bf_bit7 == prev) {
+                        if (p->fF20 < lbl_804090D4) {
+                            p->fF20 += lbl_80408E9C;
+                            if (p->fF20 >= lbl_804090D4) {
+                                p->fF20 = lbl_804090D4;
+                                p->bf_bit6 = p->bf_bit7;
+                            }
+                        }
+                    } else {
+                        p->fF20 = 0.0f;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void fn_800AC534(s32 arg0, s32 *arg1, s32 *arg2, s32 arg3) {
+    switch (arg0) {
+    case 3:
+    case 0xF:
+    case 0x6D:
+    case 0x70:
+        *arg1 = 1;
+        *arg2 = 0xEC;
+        break;
+    case 4:
+    case 5:
+    case 0xD:
+    case 0x5B:
+    case 0x5C:
+    case 0x61:
+    case 0x6E:
+    case 0x6F:
+        *arg1 = 2;
+        *arg2 = 0xF0;
+        break;
+    case 0x75:
+        if (arg3 != 0) {
+            *arg1 = 1;
+            *arg2 = 0xEC;
+        } else {
+            *arg1 = 2;
+            *arg2 = 0xF0;
+        }
+        break;
+    case 6:
+    case 8:
+    case 0xE:
+    case 0x4A:
+    case 0x4E:
+        *arg1 = 0;
+        *arg2 = 0xEE;
+        break;
+    case 0x23:
+    case 0x53:
+    case 0x71:
+        *arg1 = 3;
+        *arg2 = 0xF2;
+        break;
+    default:
+        *arg1 = -1;
+        *arg2 = -1;
+        break;
     }
 }

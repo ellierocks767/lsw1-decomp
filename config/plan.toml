@@ -2682,6 +2682,26 @@ function = "fn_8010A0D8"
 reason = "best 97/144 (work/hc/a/h7.c): clamp frac>1.0 folds 9C reuse (target reloads lbl_801AA09C after b stores), float reg alloc and a/b stack slots/f30-f31 swapped; next: decl-order search over a/b/c and f32 locals, then timeout 180 permuter burst"
 
 [[parked]]
+function = "fn_8011C090"
+reason = "best 39/43: first byte load folds to lbzu instead of addi plus lbzx; next: test a shared indexed read at loop entry and latch without constant-folding the initial index"
+
+[[parked]]
+function = "fn_8011BCBC"
+reason = "best 43/49: loop entry folds addi plus lbzx into lbzu and the cursor limit becomes bgt 30; next: test a shared inline quoted-token scanner that seeds the index at its entry and explicitly enforces the signed 31-byte limit"
+
+[[parked]]
+function = "fn_8011BD80"
+reason = "best 43/49: same initial lbzu and bgt 30 as fn_8011BCBC; next: retry the shared scanner after fn_8011BCBC matches and retain the 0xBE halfword destination"
+
+[[parked]]
+function = "fn_8011E1EC"
+reason = "best 47/71: path-table float reads fold into one record pointer and the reload/product schedule differs; next: expose independent float field bases through an inline helper, then tune the post-store reload separately"
+
+[[parked]]
+function = "fn_8011AC30"
+reason = "best 22/26: ProDG coalesces both loop-entry pointer copies or reloads globals and shifts the guard; next: type both owning global declarations and check whether ProDG retains the preheader copies"
+
+[[parked]]
 function = "fn_80040B4C"
 reason = "best 23/54 (hc-20261127-023020, PR #222): narrow stride changes allocation width; full-width 21/54 merges the two masks and shifts the node loop registers; in-tree source scores 15/54: target computes -align twice (no CSE) with size copied to r8; next: separate inline alignment helpers (blocks CSE of the two negs), inspect ProDG RTL before tuning the node loop, permuter burst"
 
