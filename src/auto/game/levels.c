@@ -9063,3 +9063,30 @@ void fn_800CE080(void)
         } while (*(s32 *)((s32)off + (s32)base) != 0);
     }
 }
+
+struct fn_800CD608_p_s {
+    u8 pad0[0x1084];
+    u8 b1084;
+    s8 b1085;
+};
+extern f32 lbl_801A4EC8[];
+
+void fn_800CD608(void)
+{
+    struct fn_800CD608_p_s *p;
+    u8 a;
+    s8 b;
+    s32 other;
+
+    p = (struct fn_800CD608_p_s *)fn_800D515C(8, 1, 1);
+    if (p != NULL && lbl_80409238 != 0 && *(f32 *)(lbl_80409238 + 0x28) == lbl_801A4EC8[0] && (other = lbl_8040923C) != 0) {
+        f32 v = *(f32 *)(other + 0x28);
+        a = p->b1084;
+        b = p->b1085;
+        p->b1084 = 3;
+        p->b1085 = (u8)(s32)v;
+        fn_800D95B8(p);
+        p->b1085 = b;
+        p->b1084 = a;
+    }
+}
