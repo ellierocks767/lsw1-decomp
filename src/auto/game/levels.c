@@ -6019,3 +6019,67 @@ openMenu:
         }
     }
 }
+
+void Menu_Unknown9_HandleSelection(void *menu)
+{
+    u8 *state = (u8 *) menu;
+    u8 *table = (u8 *) lbl_801DC074;
+    u8 *entry;
+    u8 *selectedEntry;
+    u8 count;
+    u16 origin;
+    u32 adjusted;
+    u32 base;
+    s32 row;
+    s32 column;
+    s32 offset;
+    s32 selectedOffset;
+    s32 selectedRow;
+    s32 selectedColumn;
+    s16 value;
+
+    row = *(s16 *)(state + 8) - *(s16 *)(state + 0xC);
+    offset = row * 0x68;
+    if (*(s32 *)(table + offset) != 0) {
+        origin = *(u16 *)(state + 0xE);
+        entry = offset + (u8 *) lbl_801DC074;
+        count = entry[0x3A];
+        column = *(s16 *)(state + 0xA) - (s16) origin;
+        if (column >= count) {
+            /* Preserve the wide adjustment before the halfword store. */
+            adjusted = ((u32) count & 0xFFFFu) | 0x10000u;
+            adjusted--;
+            *(s16 *)(state + 0xA) = (s16) (origin + adjusted);
+        }
+    } else {
+        column = 0;
+    }
+    *(s32 *)(state + 0x34) = row;
+    *(s32 *)(state + 0x38) = column;
+
+    if (*(s32 *)(state + 0x68) != 0) {
+        selectedRow = *(s16 *)(state + 8) - *(s16 *)(state + 0xC);
+        base = (u32) lbl_801DC074;
+        selectedOffset = selectedRow * 0x68;
+        *(s32 *)(state + 0x34) = selectedRow;
+        if (*(s32 *)(base + selectedOffset) != 0) {
+            selectedEntry = (u8 *)(selectedOffset + base);
+            if (selectedEntry[0x3A] != 0) {
+                selectedColumn = *(s16 *)(state + 0xA) - (s16) *(u16 *)(state + 0xE);
+                *(s32 *)(state + 0x38) = selectedColumn;
+                if (selectedColumn < selectedEntry[0x3A]) {
+                    value = *(s16 *)(selectedColumn * 2 + *(s32 *)(base + selectedOffset));
+                    if (lbl_8040AFF8 == 0) {
+                        lbl_8040AFF0 = 1;
+                        lbl_8040AFF8 = 1;
+                    }
+                    SceneSelect_HandleEntry();
+                    lbl_804093B0 = value;
+                    lbl_804090E0 = 1;
+                }
+            }
+        }
+    } else if (*(s32 *)(state + 0x6C) != 0) {
+        Menu_CloseCurrent();
+    }
+}
