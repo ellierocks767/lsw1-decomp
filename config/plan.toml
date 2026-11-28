@@ -2876,3 +2876,7 @@ reason = "best 27/45: ctr loop with hoisted flag in cr7 and separate ids pointer
 [[parked]]
 function = "fn_800CFD80"
 reason = "best 33/34: neg r5 scheduled before beq and a lands in r0 vs r3 unless a separate neg local is used; permuter 'unused s32 local' result was a false positive (strict 30/34); next: longer permuter run or fn_8000ABDC u16 return prototype"
+
+[[parked]]
+function = "fn_800CE9DC"
+reason = "best 42/48: register allocation order (r26-r28 table pointers) differs; next: longer permuter run"
