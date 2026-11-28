@@ -5638,3 +5638,23 @@ void fn_800ACAF8(void *arg0, struct nuvec_s *arg1, struct nuvec_s *arg2) {
         arg1->z += (target->z - arg1->z) * t;
     }
 }
+
+s32 NuCameraCalcFrustrumPlanes(void *);
+s32 fn_800AA92C(void);
+extern f32 lbl_80313268[];
+extern f32 lbl_80408FF8;
+extern f32 lbl_80408FFC;
+extern s32 lbl_8040AFB8;
+
+void fn_800ABDAC(void) {
+    f32 old = lbl_80313268[0x54 / 4];
+
+    lbl_80313268[0x54 / 4] = (lbl_8040AFB8 != 0) ? lbl_80408FFC : lbl_80408FF8;
+    if (lbl_80313268[0x54 / 4] > old) {
+        lbl_80313268[0x54 / 4] = old;
+    }
+    NuCameraCalcFrustrumPlanes(lbl_80313268);
+    fn_800AA92C();
+    lbl_80313268[0x54 / 4] = old;
+    NuCameraCalcFrustrumPlanes(lbl_80313268);
+}
