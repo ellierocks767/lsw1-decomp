@@ -6398,3 +6398,19 @@ void fn_800B43F0(void) {
         toggle[i - 1].on = 0;
     } while (--i != 0);
 }
+
+void fn_8007BE20(char *, f32, f32, f32, f32, f32, f32, s32, u8, u8, u8);
+extern f32 lbl_801A041C[], lbl_801A0420[], lbl_801A0424[], lbl_801A0428[];
+extern char *lbl_803DF930[];
+extern f32 lbl_80409120;
+
+void Menu_Main_BuildOptions(void) {
+    if (NuRndrHackWaterLevel[0] >= lbl_801A041C[0]) {
+        f32 scale = lbl_801A0420[0];
+
+        if (NuRndrHackWaterLevel[0] >= scale && NuRndrHackWaterLevel[2] < lbl_801A0424[0]) {
+            fn_8007BE20(lbl_803DF930[0], lbl_801A0428[0], lbl_80409120, scale,
+                         0.5f, 0.5f, 0.5f, 0, 0xFF, 0xFF, 0xFF);
+        }
+    }
+}
