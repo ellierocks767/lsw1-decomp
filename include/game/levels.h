@@ -77,7 +77,9 @@ struct lbl_80409410_s {
     s32 unk244;
     u8 pad248[0x2DC - 0x248];
     struct CHRISLEVELENTRY_s **unk2DC; /* fn_80145F18 updates entry 0 at +0x6C */
-    u8 pad2E0[0x578 - 0x2E0];
+    u8 pad2E0[0x2E8 - 0x2E0];
+    s32 unk2E8;                   /* first argument of AIPathFindLocator */
+    u8 pad2EC[0x578 - 0x2EC];
     struct NUTURRET_s *turrets;
     u8 pad57C[0x1974 - 0x57C];
     struct nugspline_s *unk1974;  /* fn_800CCDE4 family */
@@ -94,7 +96,9 @@ extern struct lbl_80409410_s *lbl_80409410;
  * with `lbz 0x5c` where the donor has a u16. `flags` < 0 (bit 31, the donor's `playing`
  * bitfield) while the animation runs. Consumers: the Retake_D/Retake_E callbacks. */
 struct nuinstanim_s {
-    u8 pad0[0x4C];
+    u8 pad0[0x40];
+    f32 tfactor;                  /* playback rate; negated to run backwards */
+    u8 pad44[0x4C - 0x44];
     f32 ltime;                    /* current frame */
     s32 flags;                    /* < 0: playing */
     u8 pad54[0x5C - 0x54];

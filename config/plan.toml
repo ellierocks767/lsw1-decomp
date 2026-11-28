@@ -2884,3 +2884,7 @@ reason = "best 133/211: group loops and matrix setup keep an extra nonvolatile r
 [[parked]]
 function = "fn_80143828"
 reason = "best 111/139: frame and length match with the spline type and signed model ID; next: stage the initial point copy around the paired-single subtraction"
+
+[[parked]]
+function = "UpdatePulses"
+reason = "best 186/230: target stores the 0x80/0x78 zeros through a GPR (mine uses an FPR) and else-branch loads schedule differently; 32 candidates; next: check the 180 s permuter output (score 1080, work/permute/UpdatePulses) for semantic validity, signature is void UpdatePulses(s32 *)"
