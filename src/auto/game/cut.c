@@ -2030,3 +2030,192 @@ void fn_8011D30C(void *arg0, void *arg1, struct numtx_s *arg2)
         }
     }
 }
+
+void fn_8000DDD0(struct numtx_s *, u16);
+void NuMtxTranslate(struct numtx_s *, struct nuvec_s *);
+s32 fn_800130F4(s32 *);
+void fn_80013200(s32 *, s32);
+void fn_8003ABC4(void *);
+void fn_8003AEA4(void *);
+void fn_8006CF50(s32, s32, void *);
+void fn_8006DCD4(char *, s32);
+void fn_8006DEE4(s32);
+void fn_8006E288(void *, s32);
+void fn_800D97BC(void);
+void fn_80108A34(s32, s32);
+void instNuGCutSceneEnd(void *, struct nuvec_s *);
+void instNuGCutSceneSetEndCallback(void *, struct numtx_s *);
+void instNuGCutSceneStart(void *, s32);
+
+extern struct nuvec_s lbl_801DF480[];
+extern struct nuvec_s lbl_801DF48C[];
+extern struct nuvec_s lbl_801DF498[];
+extern struct nuvec_s lbl_801DF4A4[];
+extern struct nuvec_s lbl_801DF4B0[];
+extern s32 lbl_803EAD24[];
+extern s32 lbl_803EAE20[];
+extern s32 lbl_803EAE44[];
+extern u8 lbl_803ED44C[];
+extern s32 lbl_80408EFC;
+extern s32 lbl_80409938;
+extern u16 lbl_80409950;
+extern u16 lbl_80409952;
+extern u16 lbl_80409954;
+extern u16 lbl_80409956;
+extern u16 lbl_80409958;
+extern s32 lbl_8040A76C;
+
+s32 fn_8011E308(s32 arg0)
+{
+    struct nuvec_s pos;
+    struct numtx_s mtx;
+    s32 result = 0;
+
+    if (arg0 != -1) {
+        CutSceneState *state = (CutSceneState *)lbl_80409410;
+        s32 slotIdx = state->indices[arg0];
+        if (slotIdx != -1) {
+            CutSceneSlot *slot = &state->slots[slotIdx];
+            if (slot->owner != NULL) {
+                CutScenePathEntry *entry;
+                u16 rot;
+                struct nuvec_s *vec;
+
+                fn_8003AD00((gcut_instance_view *)slot->owner);
+                entry = (CutScenePathEntry *)slot->pathEntry;
+                if (*(u16 *)((s8 *)entry + 0xA) != 0) {
+                    fn_8000DDD0(&mtx, *(u16 *)((s8 *)entry + 0xA));
+                    instNuGCutSceneSetEndCallback(slot->owner, &mtx);
+                } else if (arg0 == 0x1E || arg0 == 0x1F) {
+                    s32 level = ((CutSceneState *)lbl_80409410)->unk198;
+                    if (level == 0x1D) {
+                        rot = (u16)((lbl_80409950 << 16) / 360);
+                        vec = lbl_801DF480;
+                    } else if (level == 0x1B) {
+                        rot = (u16)((lbl_80409952 << 16) / 360);
+                        vec = lbl_801DF48C;
+                    } else {
+                        rot = (u16)((lbl_80409954 << 16) / 360);
+                        vec = lbl_801DF498;
+                    }
+                    goto apply_mtx;
+                } else if (arg0 == 0x3A) {
+                    if (((CutSceneState *)lbl_80409410)->unk198 == 0x4C) {
+                        rot = (u16)((lbl_80409956 << 16) / 360);
+                        vec = lbl_801DF4A4;
+                    } else {
+                        rot = (u16)((lbl_80409958 << 16) / 360);
+                        vec = lbl_801DF4B0;
+                    }
+                apply_mtx:
+                    fn_8000DDD0(&mtx, rot);
+                    NuMtxTranslate(&mtx, vec);
+                    instNuGCutSceneSetEndCallback(slot->owner, &mtx);
+                } else if (entry->unk3C & 8) {
+                    pos.z = 0.0f;
+                    pos.x = 0.0f;
+                    pos.y = (f32)slotIdx * 100.0f + 1000.0f;
+                    instNuGCutSceneEnd(slot->owner, &pos);
+                }
+
+                slot->owner->unk98 = slot->unkC * lbl_80408E9C;
+                fn_8003AEA4(slot->owner);
+                if (((CutScenePathEntry *)slot->pathEntry)->unk3C & 0x2000) {
+                    *(s32 *)((s8 *)slot->owner + 0x88) |= 0x10000000;
+                } else {
+                    *(s32 *)((s8 *)slot->owner + 0x88) &= ~0x10000000;
+                }
+
+                entry = (CutScenePathEntry *)slot->pathEntry;
+                if (*(s16 *)((s8 *)entry + 4) != -1) {
+                    s32 kind = (*(u16 *)((s8 *)entry + 6) != 0) ? 0xD : 0xB;
+                    fn_8006CF50(*(s16 *)((s8 *)entry + 4), kind, slot->owner);
+                    slot->owner->unk98 = 0.0f;
+                    if (((CutScenePathEntry *)slot->pathEntry)->unk3C & 1) {
+                        lbl_8040AFB4 = 1;
+                        fn_8006DEE4(0);
+                        lbl_8040A770 = 1;
+                    } else {
+                        lbl_8040A770 = 0;
+                    }
+                } else {
+                    fn_8006DEE4(0);
+                    fn_8006E288(slot->owner, (*(u16 *)((s8 *)slot->pathEntry + 6) != 0) ? 0xD : 0xB);
+                    slot->owner->unk98 = slot->unkC * lbl_80408E9C;
+                    if (((CutScenePathEntry *)slot->pathEntry)->unk3C & 1) {
+                        lbl_8040AFB4 = 0;
+                        lbl_8040A770 = 0;
+                    }
+                }
+
+                if (((CutScenePathEntry *)slot->pathEntry)->unk3C & 1) {
+                    s32 i;
+                    fn_800D97BC();
+                    lbl_8040A76C = 0;
+                    if (lbl_803ED44C[arg0] < 0xFF) {
+                        lbl_803ED44C[arg0]++;
+                    }
+                    if (lbl_803EACC4[arg0] < 0xFF) {
+                        lbl_803EACC4[arg0]++;
+                    }
+                    for (i = 0; i < ((CutSceneState *)lbl_80409410)->instanceCount; i++) {
+                        CutSceneState *st = (CutSceneState *)lbl_80409410;
+                        CutSceneFixupOwner *own = st->slots[i].owner;
+                        if (*(s32 *)((s8 *)own + 0x88) & 0x40000000) {
+                            if (i != slotIdx && own != NULL &&
+                                (((CutScenePathEntry *)st->slots[i].pathEntry)->unk3C & 1)) {
+                                own->unk98 = 0.0f;
+                                fn_8003ABC4(st->slots[i].owner);
+                            } else {
+                                ((CutSceneState *)lbl_80409410)->slots[i].owner->unk98 = 0.0f;
+                                instNuGCutSceneStart(((CutSceneState *)lbl_80409410)->slots[i].owner, 1);
+                            }
+                        }
+                    }
+                    fn_8011D6A4((u8 *)slot);
+                    lbl_80409938 = 1;
+                    lbl_8040993C = 1.0f;
+                    if (((CutScenePathEntry *)slot->pathEntry)->unk3C & 0x20) {
+                        lbl_8040B268 = 1;
+                    } else {
+                        lbl_8040B268 = 0;
+                    }
+                    lbl_8040B25C = arg0;
+                    lbl_80409944 = 0;
+                }
+
+                result = 1;
+                switch (arg0) {
+                case 5:
+                    fn_8006DCD4("SaberOn", 0);
+                    break;
+                case 0x50:
+                    lbl_80408EFC &= ~4;
+                    break;
+                case 0x45:
+                    if (fn_800130F4(lbl_803EAD24) != 0) {
+                        fn_80013200(lbl_803EAD24, 0);
+                    }
+                    break;
+                case 0x54:
+                    lbl_80408EFC &= ~0x18;
+                    break;
+                case 0x5B:
+                case 37:
+                    lbl_80408EFC &= ~2;
+                    break;
+                case 49:
+                    lbl_80408EFC &= ~0x10;
+                    break;
+                case 0x3B:
+                    if (fn_800130F4(lbl_803EAE20) != 0) {
+                        fn_80013200(lbl_803EAE20, 0);
+                    }
+                    fn_80108A34(lbl_803EAE44[0], 0);
+                    break;
+                }
+            }
+        }
+    }
+    return result;
+}
