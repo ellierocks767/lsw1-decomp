@@ -94,7 +94,9 @@ extern struct lbl_80409410_s *lbl_80409410;
  * with `lbz 0x5c` where the donor has a u16. `flags` < 0 (bit 31, the donor's `playing`
  * bitfield) while the animation runs. Consumers: the Retake_D/Retake_E callbacks. */
 struct nuinstanim_s {
-    u8 pad0[0x4C];
+    u8 pad0[0x40];
+    f32 tfactor;                  /* playback rate; negated to run backwards */
+    u8 pad44[0x4C - 0x44];
     f32 ltime;                    /* current frame */
     s32 flags;                    /* < 0: playing */
     u8 pad54[0x5C - 0x54];

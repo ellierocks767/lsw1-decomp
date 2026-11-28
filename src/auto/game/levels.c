@@ -7967,7 +7967,7 @@ extern struct nuhspecial_s lbl_802E0BB0;
 extern s32 lbl_8040A694;
 extern s32 lbl_8040A698;
 extern s32 lbl_8040A69C;
-extern void *lbl_8040A6A0;
+extern struct nuinstanim_s *lbl_8040A6A0;
 
 void fn_800C48A4(void) {
     s32 i;
@@ -8004,5 +8004,59 @@ void fn_800C4C4C(void)
         if (lbl_8040AF64 != -1) {
             lbl_8040AF94 = 1;
         }
+    }
+}
+
+struct aimessage_s {
+    u8 links[8];
+    char name[0x20];
+    f32 value;
+};
+
+f32 *fn_80013380(struct nuhspecial_s *);
+void fn_800D3054(s32, s32);
+extern s32 lbl_801A2B58[];
+extern f32 lbl_801A2B6C[];
+extern f32 lbl_801A2B78[];
+extern f32 lbl_8040932C;
+extern s32 lbl_80409330;
+extern f32 lbl_80409334;
+extern s32 lbl_80409338;
+extern struct aimessage_s *lbl_8040A690;
+
+void fn_800C4A8C(void) {
+    s32 i;
+    s32 p;
+    f32 *sp;
+
+    lbl_80409330 = 0;
+    if (fn_800130F4((s32 *)&lbl_802E0BB0) != 0 && lbl_8040A6A0 != NULL && lbl_8040A690 != NULL) {
+        lbl_8040A690->value = lbl_801A2B6C[0];
+        if (lbl_80409338 >= 0 && lbl_803EAE44[0] != 0 && (*(s32 *)(lbl_803EAE44[0] + 0x18) & 0x1000)) {
+            lbl_80409338 = -1;
+            lbl_8040A6A0->tfactor = -lbl_8040932C;
+            lbl_8040A6A0->flags |= 0x80000000;
+        }
+        if (lbl_8040A6A0->flags < 0) {
+            if (lbl_8040A694 != -1) {
+                if ((f32)lbl_80409338 >= lbl_801A2B6C[0]) {
+                    lbl_80409330 = 1;
+                    lbl_8040A690->value = lbl_801A2B78[0];
+                }
+                sp = fn_80013380(&lbl_802E0BB0);
+                for (i = 0; i < 8; i++) {
+                    p = gPlayer1Pointer[i];
+                    if (p != 0 && *(u8 *)(p + 0x28F) == 0
+                        && (*(s16 *)(p + 0x282) == lbl_8040A694 || *(f32 *)(p + 0x98) > sp[2])) {
+                        fn_800D3054(p, 2);
+                    }
+                }
+            }
+            if (lbl_8040A6A0->flags < 0) {
+                sp = fn_80013380(&lbl_802E0BB0);
+                fn_8006DCD4(lbl_801A2B58, (s32)sp);
+            }
+        }
+        lbl_80409334 = lbl_8040A6A0->ltime;
     }
 }
