@@ -8092,3 +8092,31 @@ void fn_800C4978(void) {
     }
     lbl_80409330 = 0;
 }
+
+void fn_800D963C(s16 *, u8 *, s32);
+extern f32 lbl_801A2BE8[];
+
+void fn_800C5174(void) {
+    s16 ids[3] = {0x63, 0x63, 0x63};
+    u8 flags[3] = {1, 1, 1};
+    s32 n;
+    s32 m;
+    s32 i;
+
+    if (lbl_8040934C != 0 && ((struct aimessage_s *)lbl_8040934C)->value > lbl_801A2BE8[0]) {
+        n = ((struct aimessage_s *)lbl_8040934C)->value;
+        if (n > 3) {
+            n = 3;
+        }
+        if (lbl_80409350 != 0 && ((struct aimessage_s *)lbl_80409350)->value > lbl_801A2BE8[0]) {
+            m = ((struct aimessage_s *)lbl_80409350)->value;
+            if (m > 3) {
+                m = 3;
+            }
+            for (i = 0; i < m; i++) {
+                flags[i] = 0;
+            }
+            fn_800D963C(ids, flags, n);
+        }
+    }
+}
