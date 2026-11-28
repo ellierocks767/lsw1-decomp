@@ -2760,3 +2760,11 @@ reason = "best 77/79: arg load order swapped for fn_800203A4/fn_8007BD64 (target
 [[parked]]
 function = "fn_8014C8B0"
 reason = "best 125/142: srwi+cmpwi r11 (target) vs srwi. record form, f11/f12 swap in neg-limit branch; next: permuter burst, helper-approach inline"
+
+[[parked]]
+function = "fn_8014BBE0"
+reason = "best 45/59: shared 'li r3,1; bne' tail with case0 cmp via lbz r11 (separate from lbl r0 tail); next: other switch/ret shapes, permuter w/ focus markers"
+
+[[parked]]
+function = "Shop_DrawSubMenuTitle"
+reason = "best 55/61: branch chain matches (if/else idx, a=(s32)..., y local); only fmr f6,f5 chain + li/lfs scheduling differ; 180s permuter no zero; next: struct-typed float args or long permuter"
