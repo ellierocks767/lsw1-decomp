@@ -7358,3 +7358,123 @@ void fn_800BE8E8(void) {
         i++;
     } while (p <= (s32)(lbl_803EAEC4 + 7));
 }
+
+extern f32 lbl_801A1E84[];
+extern f32 lbl_801A1E88[];
+
+void fn_800BCFAC(void) {
+    f32 temp_f0;
+    s16 *var_r10;
+    s16 var_r11;
+    s32 var_r8;
+    u8 temp_r0;
+    u8 temp_r11;
+    void *temp_r9;
+    struct episode_s *area;
+    s32 i;
+    s32 n;
+
+    temp_r11 = *lbl_8040B060;
+    switch ((s32) temp_r11) {                       /* irregular */
+    case 0:
+        if (((s32) *lbl_803EAE44 != 0) && ((*(s32 *)((s8 *)(*lbl_803EAE44) + (0x18))) & 0x20)) {
+            *lbl_8040B060 = 1;
+            lbl_8040B0C8 = lbl_801A1E84[0];
+            return;
+        }
+        return;
+    case 1:
+        temp_f0 = lbl_8040B0C8 + lbl_80408E9C;
+        lbl_8040B0C8 = temp_f0;
+        if (temp_f0 >= lbl_801A1E88[0]) {
+            *lbl_8040B060 = 2;
+            if ((s32) lbl_804091F8 != 0) {
+                lbl_80408F2C = (s32) temp_r11;
+                lbl_804093B0 = 0x7B;
+                if (lbl_80408FE0 == 0 && (area = (struct episode_s *)lbl_80409410->unk1AC) != NULL) {
+                    i = 0;
+                    n = -1;
+                    if (i < area->count) {
+                        do {
+                            n = area->levels[i];
+                            if (!(lbl_801D68E4[n * 0xA8 / 4] & 0x4000)) {
+                                n = -1;
+                                i++;
+                            }
+                        } while (i < area->count && n == -1);
+                    }
+                    if (n != -1) {
+                        lbl_804093B0 = n;
+                    }
+                } else {
+                    lbl_804093B0 = 0x7E;
+                }
+                if ((s32) lbl_8040AF64 != -1) {
+                    lbl_8040AF94 = 1;
+                    return;
+                }
+            } else {
+                lbl_804093B0 = 0x2A;
+                lbl_80408F2C = (s32) temp_r11;
+                if ((s32) lbl_8040AF64 != -1) {
+                    lbl_8040AF94 = (s32) temp_r11;
+                    return;
+                }
+            }
+        }
+        break;
+    }
+}
+
+extern f32 lbl_801A2874[];
+extern f32 lbl_801A2878[];
+extern s32 lbl_802DA798[];
+typedef struct { char pad[0x6304]; s16 a; s16 b; f32 c; } C2F20Tbl;
+
+void fn_800C2F20(void) {
+#define t ((C2F20Tbl *)lbl_802DA798)
+    struct episode_s *area;
+    s32 i;
+    s32 n;
+
+    if (t->c < lbl_801A2874[0]) {
+        t->c = (f32) (t->c + lbl_80408E9C);
+        return;
+    }
+    if (t->a > 6) {
+        if ((s32) lbl_804091F8 == 0) {
+            lbl_804093B0 = 0x4A;
+            lbl_80408F2C = 1;
+            if ((s32) lbl_8040AF64 != -1) {
+                lbl_8040AF94 = 1;
+            }
+        } else {
+            lbl_80408F2C = 1;
+            lbl_804093B0 = 0x7B;
+            if (lbl_80408FE0 == 0 && (area = (struct episode_s *)lbl_80409410->unk1AC) != NULL) {
+                i = 0;
+                n = -1;
+                if (i < area->count) {
+                    do {
+                        n = area->levels[i];
+                        if (!(lbl_801D68E4[n * 0xA8 / 4] & 0x4000)) {
+                            n = -1;
+                            i++;
+                        }
+                    } while (i < area->count && n == -1);
+                }
+                if (n != -1) {
+                    lbl_804093B0 = n;
+                }
+            } else {
+                lbl_804093B0 = 0x7E;
+            }
+            if ((s32) lbl_8040AF64 != -1) {
+                lbl_8040AF94 = 1;
+            }
+        }
+    }
+    t->c = lbl_801A2878[0];
+    t->b = 0;
+}
+#undef t
