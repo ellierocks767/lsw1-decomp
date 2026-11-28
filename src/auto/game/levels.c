@@ -7572,3 +7572,85 @@ void fn_800BC4FC(void) {
         }
     }
 }
+
+extern f32 lbl_801A2734[];
+extern f32 lbl_801A2738[];
+extern f32 lbl_801A273C[];
+extern f32 lbl_801A2740[];
+f32 NuFsqrt(f32);
+f32 fn_8005A470(struct nuvec_s *, s32, f32, f32);
+void fn_8008B4D8(void *, struct nuvec_s *, void *, s32, s32);
+
+/* Circular blocker in the AI system: x, z and radius used. */
+struct jedib_blocker_s {
+    f32 x;
+    f32 y;
+    f32 z;
+    f32 radius;
+    u8 pad10[0x4C - 0x10];
+};
+
+struct jedib_locator_s {
+    u8 pad0[0x10];
+    struct nuvec_s pos;
+    s32 id;
+    struct {
+        void *path;
+        void *cnx;
+        u8 direction;
+        u8 pad9[3];
+        u32 next : 16;
+        u32 onpath : 1;
+        u32 pad : 15;
+    } info;
+    u8 pad30[0x3C - 0x30];
+};
+
+s32 JediBInitLocator(struct nuvec_s *pos, s32 id, struct jedib_locator_s *loc, f32 range) {
+    s8 *sys;
+    struct jedib_blocker_s *b;
+    s32 i;
+    s32 n;
+    f32 dx;
+    f32 dz;
+    f32 d2;
+    f32 s;
+    f32 r;
+    f32 y;
+
+    sys = *(s8 **)((s8 *)lbl_80409410 + 0x2E8);
+    if (sys != NULL) {
+        n = *(s32 *)(sys + 0x1370);
+        b = *(struct jedib_blocker_s **)(sys + 0x1374);
+        for (i = 0; i < n; i++, b++) {
+            if (b->radius != lbl_801A2734[0]) {
+                dx = pos->x - b->x;
+                dz = pos->z - b->z;
+                d2 = dx * dx + dz * dz;
+                r = b->radius + lbl_801A2738[0];
+                if (d2 < r * r) {
+                    s = r / NuFsqrt(d2);
+                    dx *= s;
+                    dz *= s;
+                    pos->x = dx + b->x;
+                    pos->z = dz + b->z;
+                    break;
+                }
+            }
+        }
+    }
+    memset(loc, 0, sizeof(*loc));
+    if (pos->x * pos->x + pos->z * pos->z < range * range) {
+        y = fn_8005A470(pos, 0, lbl_801A2734[0], lbl_801A273C[0]);
+        if (y != lbl_801A2740[0]) {
+            pos->y = y;
+        }
+        fn_8008B4D8(*(void **)((s8 *)lbl_80409410 + 0x2E8), pos, &loc->info, 0, 0xFF);
+        if (loc->info.onpath) {
+            loc->pos = *pos;
+            loc->id = id;
+            return 1;
+        }
+    }
+    return 0;
+}
