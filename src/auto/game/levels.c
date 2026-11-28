@@ -5729,3 +5729,132 @@ void Menu_Unknown4_BuildOptions(struct levels_menu4_s *arg0) {
     lbl_80408A98 = arg0->f94;
     fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
 }
+
+s32 fn_80059C44(struct nuvec_s *, struct nuvec_s *, f32, void *);
+extern struct nuvec_s gCameraState[];
+extern f32 lbl_804090D4;
+
+struct levels_skin_p_s {
+    u8 pad0[0x90];
+    struct nuvec_s pos90;
+    u8 pad9C[0x150];
+    f32 f1EC;
+    f32 f1F0;
+    u8 pad1F4[0x18];
+    s32 f20C;
+    u8 pad210[0x7F];
+    u8 b28F;
+    u8 pad290[0xC5C];
+    void *pEEC;
+    u8 padEF0[0x30];
+    f32 fF20;
+    u8 padF24[4];
+    u32 bf_top : 24;
+    u32 bf_bit7 : 1;
+    u32 bf_bit6 : 1;
+    u32 bf_low : 6;
+};
+
+struct levels_water_s {
+    f32 f0;
+    s32 f4;
+    s32 f8;
+    s32 fC;
+};
+
+void NuPs2CreateSkinNorm(void) {
+    struct nuvec_s sp8;
+    struct nuvec_s sp18;
+    s32 i;
+
+    if (lbl_8040AFB8 == 0 && *(s32 *)((s8 *)lbl_80409410 + 0x198) != 0x31) {
+        for (i = 0; i < 2; i++) {
+            struct levels_skin_p_s *p = (struct levels_skin_p_s *)gPlayer1Pointer[i];
+            if (p != NULL && (p->f20C & 0x01000000)) {
+                if (lbl_80408F00 != -0.1f
+                    || p->b28F != 0
+                    || *(u8 *)((s8 *)p->pEEC + 0x7D5) != 0
+                    || *(f32 *)((s8 *)p->pEEC + 0x6F8) > 0.0f
+                    || fn_800B2ED4() != -1
+                    || *(u8 *)((s8 *)p->pEEC + 0x7DF) == 0x12) {
+                    *(u32 *)((s8 *)p + 0xF28) &= ~0xC0;
+                    *(f32 *)((s8 *)p + 0xF20) = 0.0f;
+                } else {
+                    s32 prev = p->bf_bit7;
+                    if ((((struct levels_water_s *)NuRndrHackWaterLevel)->fC & 1) == i) {
+                        sp8.y = 0.0f;
+                        sp8.x = 0.0f;
+                        sp8.z = (f32)(s32)fn_800B9ED4() * (1.0f / 65535.0f) * p->f1EC;
+                        NuVecRotateX(&sp8, &sp8, (s32)((f32)(s32)fn_800B9ED4() * (1.0f / 65535.0f) * -16384.0f));
+                        sp8.y *= p->f1F0 / p->f1EC;
+                        NuVecRotateY(&sp8, &sp8, fn_800B9ED4());
+                        NuVecAdd(&sp8, &sp8, &p->pos90);
+                        NuVecSub(&sp18, &sp8, gCameraState);
+                        p->bf_bit7 = fn_80059C44(gCameraState, &sp18, 0.0f, NULL);
+                    }
+                    if ((s32)p->bf_bit7 == prev) {
+                        if (p->fF20 < lbl_804090D4) {
+                            p->fF20 += lbl_80408E9C;
+                            if (p->fF20 >= lbl_804090D4) {
+                                p->fF20 = lbl_804090D4;
+                                p->bf_bit6 = p->bf_bit7;
+                            }
+                        }
+                    } else {
+                        p->fF20 = 0.0f;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void fn_800AC534(s32 arg0, s32 *arg1, s32 *arg2, s32 arg3) {
+    switch (arg0) {
+    case 3:
+    case 0xF:
+    case 0x6D:
+    case 0x70:
+        *arg1 = 1;
+        *arg2 = 0xEC;
+        break;
+    case 4:
+    case 5:
+    case 0xD:
+    case 0x5B:
+    case 0x5C:
+    case 0x61:
+    case 0x6E:
+    case 0x6F:
+        *arg1 = 2;
+        *arg2 = 0xF0;
+        break;
+    case 0x75:
+        if (arg3 != 0) {
+            *arg1 = 1;
+            *arg2 = 0xEC;
+        } else {
+            *arg1 = 2;
+            *arg2 = 0xF0;
+        }
+        break;
+    case 6:
+    case 8:
+    case 0xE:
+    case 0x4A:
+    case 0x4E:
+        *arg1 = 0;
+        *arg2 = 0xEE;
+        break;
+    case 0x23:
+    case 0x53:
+    case 0x71:
+        *arg1 = 3;
+        *arg2 = 0xF2;
+        break;
+    default:
+        *arg1 = -1;
+        *arg2 = -1;
+        break;
+    }
+}
