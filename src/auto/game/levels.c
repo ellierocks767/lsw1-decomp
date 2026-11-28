@@ -5903,3 +5903,46 @@ cancel:
         *(s32 *)((u8 *) menu + 0x50) = PauseMenu_HandleEntry1(str_Cancel);
     }
 }
+
+extern s32 gLegoOptionsMenuEnabled;
+extern s32 lbl_803DEE64[];
+extern s32 lbl_803DF89C[];
+extern s32 lbl_803DF8B8[];
+extern s32 lbl_803DFA54[];
+extern s32 str_PauseMenu_LegoOptions[];
+
+void PauseMenu_BuildOptions(void *menu)
+{
+    s32 bothPlayers;
+    s32 label;
+    s8 *labels = (s8 *) lbl_803DED88;
+    u8 *firstFlags = &lbl_80408A57;
+    u8 *flags;
+
+    fn_800769B4(menu, *(s32 *)(labels + 0xB08), *firstFlags);
+    fn_800769B4(menu, *(s32 *)(labels + 0xB20), *firstFlags);
+    flags = firstFlags;
+    if (lbl_80408FE0 == 0) {
+        fn_800769B4(menu, *(s32 *)(labels + 0xA5C), *flags);
+    }
+    bothPlayers = 0;
+    if (gPlayer1Pointer[0] != 0 &&
+        (*(u32 *)(gPlayer1Pointer[0] + 0x20C) & 0x01000000) &&
+        gPlayer1Pointer[1] != 0 &&
+        (*(u32 *)(gPlayer1Pointer[1] + 0x20C) & 0x01000000)) {
+        bothPlayers = 1;
+    }
+    if (bothPlayers != 0) {
+        label = lbl_803DFA54[0];
+    } else if (lbl_804093C8 == 0x15) {
+        label = lbl_803DF8B8[0];
+    } else if (lbl_80408FE0 != 0) {
+        label = lbl_803DF89C[0];
+    } else {
+        label = lbl_803DEE64[0];
+    }
+    fn_800769B4(menu, label, lbl_80408A57);
+    if (gLegoOptionsMenuEnabled != 0 && lbl_80408FE0 == 0) {
+        fn_800769B4(menu, (s32) str_PauseMenu_LegoOptions, *flags);
+    }
+}
