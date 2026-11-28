@@ -8776,3 +8776,33 @@ s32 fn_800CC558(void) {
     }
     return ret;
 }
+
+void fn_800CC450(void) {
+    struct episode_s *area;
+    s32 i;
+    s32 n;
+
+    lbl_80408F2C = 1;
+    lbl_804093B0 = 0x7B;
+    if (lbl_80408FE0 == 0 && (area = (struct episode_s *)lbl_80409410->unk1AC) != NULL) {
+        i = 0;
+        n = -1;
+        if (i < area->count) {
+            do {
+                n = area->levels[i];
+                if (!(lbl_801D68E4[n * 0xA8 / 4] & 0x4000)) {
+                    n = -1;
+                    i++;
+                }
+            } while (i < area->count && n == -1);
+        }
+        if (n != -1) {
+            lbl_804093B0 = n;
+        }
+    } else {
+        lbl_804093B0 = 0x7E;
+    }
+    if (lbl_8040AF64 != -1) {
+        lbl_8040AF94 = 1;
+    }
+}
