@@ -3765,7 +3765,7 @@ void PartKill(void *arg0, s32 arg1) {
 f32 NuCosApprox(s32);
 f32 fn_8000CD08(void *, s32, struct nuvec_s *);
 extern s32 PartKill_ForceThrow[];
-extern s32 fn_800C5640[];
+void fn_800C5640(void *);
 extern const f32 lbl_801A19D4[];
 extern const f32 lbl_801A19D8[];
 extern s32 lbl_80408888;
@@ -8161,5 +8161,58 @@ void fn_800C525C(void)
             fn_8008F090(lbl_803ED308[i]);
             lbl_803ED308[i] = NULL;
         }
+    }
+}
+
+/* Kashyyyk_D thrown part: lbl_803ED320[i] are the three live parts, each following
+ * special lbl_803EAD24[i] (instance animation lbl_802DA1E8[i]). */
+struct forcepart_s {
+    struct numtx_s mtx;           /* row 3 is the position */
+    u8 pad40[0x80 - 0x40];
+    struct nuvec_s vel;
+    u8 pad8C[0xFC - 0x8C];
+    f32 unkFC;
+    u8 pad100[0x128 - 0x100];
+    s32 unk128;
+};
+
+void fn_80074880(void *, s32);
+extern s32 lbl_801A2C6C[];
+extern const f32 lbl_801A2C7C[];
+extern struct nuvec_s lbl_801D5964;
+extern struct nuvec_s lbl_803ED32C[3];
+
+void fn_800C5640(void *arg0)
+{
+    struct forcepart_s *p = arg0;
+    f32 k;
+    struct nuinstanim_s *ia;
+    s32 i;
+
+    if (arg0 == (void *)lbl_803ED320[0]) {
+        i = 0;
+    } else if (arg0 == (void *)lbl_803ED320[1]) {
+        i = 1;
+    } else if (arg0 == (void *)lbl_803ED320[2]) {
+        i = 2;
+    } else {
+        fn_80074880(arg0, 0);
+        return;
+    }
+    lbl_803ED32C[i] = *(struct nuvec_s *)&p->mtx._30;
+    p->mtx = *(struct numtx_s *)fn_800133FC(&lbl_803EAD24[i * 3]);
+    k = lbl_801A2C7C[0];
+    if (p->unkFC < k) {
+        p->vel = lbl_801D5964;
+    } else {
+        NuVecSub(&p->vel, (struct nuvec_s *)&p->mtx._30, &lbl_803ED32C[i]);
+        NuVecScale(&p->vel, &p->vel, k / lbl_80408E9C);
+    }
+    ia = (struct nuinstanim_s *)lbl_802DA1E8[i];
+    if (ia->ltime > lbl_801A2C7C[0] && ia->flags >= 0) {
+        fn_80074880(arg0, 0);
+    }
+    if (p->unk128 < 0) {
+        fn_8006DCD4(lbl_801A2C6C, (s32)&p->mtx._30);
     }
 }
