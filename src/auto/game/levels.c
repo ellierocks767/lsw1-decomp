@@ -5678,10 +5678,10 @@ extern const f32 lbl_801A0120[];
 extern const f32 lbl_801A0124[];
 extern s32 lbl_803DF8DC[];
 extern s32 lbl_803DF8E4[];
-extern s32 lbl_803E029C[];
+extern u8 lbl_803E029C[];
 extern u8 lbl_803E04B8[];
 extern u8 lbl_803E04C0[];
-extern u8 lbl_80408A57[1];
+extern u8 lbl_80408A57;
 extern f32 lbl_80408A98;
 extern s32 lbl_8040AF10;
 extern s32 str_Off[];
@@ -5701,6 +5701,7 @@ struct levels_menu4_s {
 
 void Menu_Unknown4_BuildOptions(struct levels_menu4_s *arg0) {
     s32 dirty;
+    u8 *flags;
 
     if (*(s32 *)((s8 *)lbl_80409410 + 0x198) == 0x7C) {
         arg0->f94 = lbl_801A0120[0];
@@ -5711,25 +5712,26 @@ void Menu_Unknown4_BuildOptions(struct levels_menu4_s *arg0) {
     NuStrCpy(lbl_803E04F0, (void *)lbl_803DED88[0xB64 / 4]);
     NuStrCat(lbl_803E04F0, str_On);
     NuStrCat(lbl_803E04F0, lbl_803E04B8[0] != 0 ? (s32 *)lbl_803DED88[0xB48 / 4] : (s32 *)lbl_803DED88[0xB4C / 4]);
+    flags = &lbl_80408A57;
     lbl_80408A98 = arg0->f94;
-    fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
+    fn_800769B4(arg0, (s32)lbl_803E04F0, *flags);
 
     sprintf(lbl_803E04F0, str_Off, (void *)lbl_803DED88[0xD40 / 4], lbl_803E04B8[4], 10);
     lbl_80408A98 = arg0->f94;
-    fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
+    fn_800769B4(arg0, (s32)lbl_803E04F0, *flags);
 
     NuStrCpy(lbl_803E04F0, (void *)lbl_803DED88[0xB78 / 4]);
     NuStrCat(lbl_803E04F0, str_On);
     NuStrCat(lbl_803E04F0, lbl_803E04B8[5] != 0 ? (s32 *)lbl_803DED88[0xB48 / 4] : (s32 *)lbl_803DED88[0xB4C / 4]);
     lbl_80408A98 = arg0->f94;
-    fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
+    fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57);
 
     if (*(s32 *)((s8 *)lbl_80409410 + 0x19C) == 0xD) {
         NuStrCpy(lbl_803E04F0, (void *)lbl_803DED88[0xD8 / 4]);
         NuStrCat(lbl_803E04F0, str_On);
         NuStrCat(lbl_803E04F0, lbl_803E04C0[0] != 0 ? (s32 *)lbl_803DED88[0xB34 / 4] : (s32 *)lbl_803DED88[0xB44 / 4]);
         lbl_80408A98 = arg0->f94;
-        fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
+        fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57);
     }
     dirty = memcmp(lbl_803E04B8, lbl_803E029C, 0xC) != 0;
     if (arg0->hA == arg0->f90 || !dirty || lbl_8040AF10 == 0) {
@@ -5742,7 +5744,7 @@ void Menu_Unknown4_BuildOptions(struct levels_menu4_s *arg0) {
         *(s8 *)lbl_803E04F0 = 0;
     }
     lbl_80408A98 = arg0->f94;
-    fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57[0]);
+    fn_800769B4(arg0, (s32)lbl_803E04F0, lbl_80408A57);
 }
 
 s32 fn_80059C44(struct nuvec_s *, struct nuvec_s *, f32, void *);
@@ -5927,7 +5929,6 @@ void Menu_Unknown13_BuildOptions(void) {
 }
 
 void fn_8006E1EC(void);
-extern u8 lbl_803E029C[];
 extern f32 lbl_801A03D0[];
 extern f32 lbl_80409920;
 extern f32 lbl_8040B0E4;
@@ -6139,7 +6140,6 @@ extern s32 gDebugLevelStreamingEnabled;
 extern s32 gDebugLiftPlayerEnabled;
 extern s32 gDebugPanelEnabled;
 extern s32 gDebugStreamingDisplayEnabled;
-extern u8 lbl_80408A57;
 extern f32 lbl_80408A84;
 extern f32 lbl_80408A94;
 extern s32 str_DebugMenu_BuyAllShopCharacters[];
@@ -6826,7 +6826,6 @@ s32 fn_800B2F10(void) {
     return *(s32 *)((s8 *)gRegisteredMenuDefinitions + id * 0x1C);
 }
 
-extern s32 lbl_803E04B8[];
 
 typedef struct {
     s32 word0;
