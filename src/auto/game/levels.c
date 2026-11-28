@@ -8169,6 +8169,77 @@ void fn_800C5174(void) {
     }
 }
 
+struct c38e8_ent {
+    char pad0[0x12];
+    s16 id;
+    s32 obj;
+    char pad18[0x60 - 0x18];
+};
+struct c38e8_s {
+    char pad0[0x6000];
+    struct c38e8_ent ents[8];
+    char pad6300[2];
+    s16 count;
+    s16 state;
+    s16 mode;
+    char pad6308[0x63C4 - 0x6308];
+    s16 ids[6];
+    u8 done[6];
+    char pad63D6[2];
+    s8 *unk63D8;
+};
+
+void fn_800C38E8(void)
+{
+#define p ((struct c38e8_s *)lbl_802DA798)
+    s16 ids[8];
+    u8 flags[8] = {0};
+    s32 n;
+    s32 i;
+
+    if (p->mode == 1) {
+        switch (p->state) {
+        case 1:
+        case 2:
+        case 3:
+            n = p->count;
+            if (n != 0) {
+                if (n > 8) {
+                    n = 8;
+                }
+                for (i = 0; i < n; i++) {
+                    ids[i] = p->ents[i].id;
+                    if (p->ents[i].obj == 0) {
+                        flags[i] = 1;
+                    }
+                }
+            } else {
+                n = 1;
+                if (p->state == 1) {
+                    ids[0] = 0x16;
+                } else if (p->state == 2) {
+                    ids[0] = 0xD;
+                } else if (p->state == 3) {
+                    ids[0] = 5;
+                }
+            }
+            fn_800D963C(ids, flags, n);
+            break;
+        case 4:
+        case 5:
+        case 6:
+            fn_800D963C(p->ids, p->done, 6);
+            break;
+        case 7:
+            if (p->unk63D8 != NULL) {
+                fn_800D95B8(p->unk63D8);
+            }
+            break;
+        }
+    }
+#undef p
+}
+
 extern f32 lbl_801A2D2C[];
 DEFINE_INTRO_UPDATE(IntroUpdate_800C6094, lbl_801A2D2C)
 
