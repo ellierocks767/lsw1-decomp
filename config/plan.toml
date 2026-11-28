@@ -2888,3 +2888,11 @@ reason = "best 42/44: store of AIPathFindLocator result scheduled before lis for
 [[parked]]
 function = "InitSplinePosition"
 reason = "best 48/50: same store-after-call scheduling (stfs length before lis; target after) plus param copy order; next: permuter run"
+
+[[parked]]
+function = "fn_800CA388"
+reason = "best 57/73: base+4 / base+0x10 table offset not folded into reloc in target; ~18 candidates; next: find source form leaving base+4 separate"
+
+[[parked]]
+function = "fn_800D04BC"
+reason = "best 52/73 (~28 cands, permuter 200s no zero): target do-while has no ctr/lwzu, mine does; next: loop form blocking doloop"
