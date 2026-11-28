@@ -8303,3 +8303,64 @@ void fn_800C582C(void *arg0)
         lbl_803ED320[idx] = 0;
     }
 }
+
+/* Part spawn template (gameaiscript.c's gameaiscript_part_s, lbl_801BB478). */
+struct levelpart_s {
+    void *mtx;
+    u32 unk4;
+    void *dir;
+    u32 unkC;
+    u32 unk10;
+    f32 unk14;
+    f32 unk18;
+    f32 unk1C;
+    u32 unk20;
+    void *special;
+    s32 unk28;
+    u32 unk2C;
+    s32 unk30;
+    u32 unk34;
+    void (*update)(void *);
+    u32 unk3C[2];
+    void *collide;
+    void (*kill)(void *);
+    u32 unk4C[16];
+    f32 unk8C;
+    u32 unk90[5];
+};
+
+s32 fn_80072410(struct levelpart_s *);
+extern s32 PartCollide[];
+extern struct levelpart_s lbl_801BB478;
+extern s32 lbl_801B0F08[];
+extern const f32 lbl_801A2CA4[];
+extern f32 lbl_80409360;
+
+void fn_800C5A10(s32 i)
+{
+    struct levelpart_s part;
+    s32 o;
+
+    if (fn_800130F4(&lbl_803EAD24[i * 3]) != 0 && lbl_802DA1E8[i] != 0) {
+        fn_800BA244(&lbl_803EAD24[i * 3]);
+        fn_800BA1E8((s32)&lbl_803EAD24[i * 3]);
+        part = lbl_801BB478;
+        part.mtx = lbl_801B0F08;
+        part.dir = &lbl_801D5964;
+        part.unk18 = lbl_80409360;
+        part.unk14 = lbl_80409360;
+        part.unk1C = lbl_801A2CA4[0];
+        part.special = &lbl_803EAD24[i * 3];
+        part.unk30 = 0x80861A;
+        part.unk28 = 0;
+        part.unkC = 0;
+        part.update = fn_800C5640;
+        part.collide = PartCollide;
+        part.kill = fn_800C582C;
+        part.unk8C = lbl_80408E9C;
+        o = fn_80072410(&part);
+        if (o != 0) {
+            lbl_803ED320[i] = o;
+        }
+    }
+}
