@@ -2848,3 +2848,7 @@ reason = "best 43/61: frame/stack right via 12-byte struct assign for sp8 and me
 [[parked]]
 function = "fn_800C2F20"
 reason = "best 68/77 (work/fn_800C2F20/try3.c form): struct at lbl_802DA798+0x6304 and search loop right, only loop regalloc/entry differ (target keeps n in r0 copy r7, id r11, ptr r10); next: permuter burst on loop, for-loop with u8 n"
+
+[[parked]]
+function = "fn_800BCFAC"
+reason = "best 77/85 (work/fn_800BCFAC/try.c): switch and >= fixed; only shared search-loop regalloc differs as in fn_800C2F20 (target n in r0 + copy r7, id r11, ptr r10; mine id r10, ptr r11); next: longer permuter or loop shape discovered for fn_800C2F20"
