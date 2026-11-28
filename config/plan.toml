@@ -2856,3 +2856,15 @@ reason = "best 139/151 (work/fn_800BFF08/best3.c): fn_801268CC loop exit test bl
 [[parked]]
 function = "UpdatePulses"
 reason = "best 186/230: target stores the 0x80/0x78 zeros through a GPR (mine uses an FPR) and else-branch loads schedule differently; 32 candidates; next: check the 180 s permuter output (score 1080, work/permute/UpdatePulses) for semantic validity, signature is void UpdatePulses(s32 *)"
+
+[[parked]]
+function = "fn_800CC284"
+reason = "best 21/30: compiler hoists lbl_801D63A4 lis and merges [0]/[1] access; target reloads lis for [0] and sets var=1/0 on separate paths; next: permuter on tbl access form"
+
+[[parked]]
+function = "fn_800CC628"
+reason = "best 33/39: insns identical, r31 vs r30 (target stmw r30 saves an extra unused r31); next: find second callee-saved pseudo"
+
+[[parked]]
+function = "fn_800CC31C"
+reason = "best 48/56: only reg alloc in first vec copy (r8/r7/r10/r6 vs r10/r8/r6/r7); next: permuter on copy form"
