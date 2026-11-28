@@ -872,3 +872,84 @@ void InitMiniKit(struct CHRISMINIKIT_s *kit, u32 *cursor, u32 *limit)
         kit->level = -1;
     }
 }
+
+struct ChrisBolt {
+    struct numtx_s transform;
+    struct CHRISVEC4_s velocity;
+    f32 duration;
+    u8 pad54[4];
+    s32 owner;
+    u8 pad5C[4];
+};
+
+struct ChrisBoltPool {
+    struct ChrisBolt *bolts;
+    s32 count;
+    s32 next;
+};
+
+extern struct numtx_s lbl_80313268;
+extern char lbl_801AF364[];
+extern char lbl_801AF378[];
+extern char lbl_801AF390[];
+extern f32 lbl_801AF3A4[];
+extern f32 lbl_801AF3A8[];
+
+void fn_8006DCD4(const char *name, void *pos);
+void *memset();
+
+static inline struct ChrisBolt *ChrisBolt_Allocate(struct ChrisBoltPool *pool)
+{
+    struct ChrisBolt *start, *end, *bolt, *base;
+
+    start = pool->bolts + pool->next;
+    end = pool->bolts + pool->count;
+    for (bolt = start; bolt < end; ++bolt) {
+        if (bolt->duration == lbl_801AF3A4[0])
+            goto found;
+    }
+    base = pool->bolts;
+    for (bolt = base; bolt < start; ++bolt) {
+        if (bolt->duration == lbl_801AF3A4[0])
+            goto found;
+    }
+    return NULL;
+found:
+    pool->next = bolt - pool->bolts;
+    memset(bolt, 0, sizeof(*bolt));
+    return bolt;
+}
+
+s32 QuickBolt_Add(struct ChrisBoltPool *pool, struct numtx_s *transform, struct CHRISVEC4_s *velocity,
+                  f32 duration, s32 owner, s32 sound)
+{
+    struct ChrisBolt *bolt = ChrisBolt_Allocate(pool);
+    if (bolt != NULL) {
+        f32 dy = transform->_31 - lbl_80313268._31;
+        f32 dx = transform->_30 - lbl_80313268._30;
+        f32 xy = dx * dx + dy * dy;
+        f32 dz = transform->_32 - lbl_80313268._32;
+        if (dz * dz + xy < lbl_801AF3A8[0]) {
+            switch (sound) {
+            case -279:
+                fn_8006DCD4(lbl_801AF364, &transform->_30);
+                break;
+            case -277:
+            case -276:
+                fn_8006DCD4(lbl_801AF378, &transform->_30);
+                break;
+            case -278:
+                fn_8006DCD4(lbl_801AF390, &transform->_30);
+                break;
+            }
+        }
+
+        bolt->duration = duration;
+        bolt->transform = *transform;
+        fn_8000E318(&bolt->transform, 0x4000);
+        bolt->velocity = *velocity;
+        bolt->owner = owner;
+        return 1;
+    }
+    return 0;
+}
