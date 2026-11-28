@@ -2848,3 +2848,7 @@ reason = "best 115/116: only fmr f2,f30 (1.0f arg) scheduled after li r9 instead
 [[parked]]
 function = "KaminoEReset"
 reason = "best 145/150: stwx base/index operand order in turret/door loop, 3rd SetAIMessage arg scheduling, final-loop add operand order; next: permuter burst on work/KaminoEReset/best5.c"
+
+[[parked]]
+function = "fn_800BFF08"
+reason = "best 139/151 (work/fn_800BFF08/best3.c): fn_801268CC loop exit test ble base+0x14 vs blt base+0x18, lbl_803EAEC4@ha hoisted to entry and ptr/value reg swap in all-forces loop; next: loop count from an inline param or a permuter burst"
