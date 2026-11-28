@@ -2852,3 +2852,7 @@ reason = "best 145/150: stwx base/index operand order in turret/door loop, 3rd S
 [[parked]]
 function = "fn_800BFF08"
 reason = "best 139/151 (work/fn_800BFF08/best3.c): fn_801268CC loop exit test ble base+0x14 vs blt base+0x18, lbl_803EAEC4@ha hoisted to entry and ptr/value reg swap in all-forces loop; next: loop count from an inline param or a permuter burst"
+
+[[parked]]
+function = "UpdatePulses"
+reason = "best 186/230: target stores the 0x80/0x78 zeros through a GPR (mine uses an FPR) and else-branch loads schedule differently; 32 candidates; next: check the 180 s permuter output (score 1080, work/permute/UpdatePulses) for semantic validity, signature is void UpdatePulses(s32 *)"

@@ -3765,7 +3765,7 @@ void PartKill(void *arg0, s32 arg1) {
 f32 NuCosApprox(s32);
 f32 fn_8000CD08(void *, s32, struct nuvec_s *);
 extern s32 PartKill_ForceThrow[];
-extern s32 fn_800C5640[];
+void fn_800C5640(void *);
 extern const f32 lbl_801A19D4[];
 extern const f32 lbl_801A19D8[];
 extern s32 lbl_80408888;
@@ -4172,7 +4172,7 @@ void fn_800D4E70(void *arg0) {
     fn_800AC020(**(s32 **)(*(s8 **)((s8 *)arg0 + 0xEEC) + 0x61C), lbl_801A5244[0]);
 }
 
-s32 VaderAStartCollapseStage();
+void VaderAStartCollapseStage(void);
 s32 fn_800D7ED8(s32, s32, s32);
 extern s32 lbl_802E0BBC[];
 void fn_800CEEF0(void) {
@@ -4374,10 +4374,25 @@ void fn_800CE144(void) {
 }
 
 extern f32 lbl_801A4F10[];
-extern void *lbl_802E0BE4[];
+struct levelstate_c6900_0_s {
+    u8 pad0[0x28];
+    f32 unk28;
+};
+
+/* Level state block at lbl_802E0BE4 as read by fn_800C6900. */
+struct levelstate_c6900_s {
+    struct levelstate_c6900_0_s *unk0;
+    void *unk4;                   /* nuvec_s at +0x10 */
+    struct nuhspecial_s unk8[10];
+    s16 unk80[10];
+    u8 unk94;
+    u8 pad95[0x98 - 0x95];
+};
+
+extern struct levelstate_c6900_s lbl_802E0BE4;
 void fn_800CF03C(void) {
     s32 v;
-    if (lbl_802E0BE4[0] != NULL && *(f32 *)((s8 *)lbl_802E0BE4[0] + 0x28) == lbl_801A4F10[0] && lbl_80409008 == NULL) {
+    if (lbl_802E0BE4.unk0 != NULL && lbl_802E0BE4.unk0->unk28 == lbl_801A4F10[0] && lbl_80409008 == NULL) {
         if ((s32)lbl_80409004 == gPlayer1Pointer[0]) {
             v = gPlayer1Pointer[1];
         } else {
@@ -4395,6 +4410,54 @@ void fn_800CE43C(void) {
     s32 *p = lbl_802E0B9C;
     if (p[1] != 0 && (void *)p[0] != NULL && *(f32 *)((s8 *)p[0] + 0x28) == lbl_801A4EF0[0]) {
         fn_800D95B8((void *)p[1]);
+    }
+}
+
+/* AI path locator (OpenSaga AIPathFindLocator result): position, then a u16 direction. */
+struct ailocator_s {
+    u8 pad0[0x10];
+    struct nuvec_s position;
+    u8 pad1C[2];
+    u16 direction;
+};
+
+/* CruiserC level state (lbl_802E0B9C, cleared by fn_800CE408). */
+struct cruiserc_s {
+    f32 *dookuFight;              /* AI message "DookuFight" */
+    s32 countDooku;
+    f32 *freePalpatine;           /* AI message "FreePalpatine"; value at +0x28 */
+    s8 *palpatine;
+    struct ailocator_s *palpatineLocator;
+};
+
+#define cruiser_c (*(struct cruiserc_s *)lbl_802E0B9C)
+
+struct ailocator_s *AIPathFindLocator(s32, s32 *);
+extern s32 lbl_801A2B20[];
+extern s32 lbl_801A2B30[];
+extern f32 lbl_801A2B3C[];
+
+void CruiserCUpdate(void)
+{
+    if (cruiser_c.freePalpatine == NULL) {
+        cruiser_c.freePalpatine = (f32 *)CheckAIMessage(lbl_80408F58, lbl_801A2B20, 0);
+    }
+    if (cruiser_c.palpatine == NULL) {
+        cruiser_c.palpatine = (s8 *)fn_800D515C(0x64, 0, 1);
+    }
+    if (cruiser_c.palpatineLocator == NULL) {
+        cruiser_c.palpatineLocator = AIPathFindLocator(*(s32 *)((s8 *)lbl_80409410 + 0x2E8), lbl_801A2B30);
+    }
+    if (cruiser_c.dookuFight == NULL) {
+        cruiser_c.dookuFight = (f32 *)CheckAIMessage(lbl_80408F58, lbl_801A2AE4, 0);
+    }
+    if (cruiser_c.countDooku == 0) {
+        cruiser_c.countDooku = fn_800D515C(0xE, 1, 1);
+    }
+    if (lbl_804091F8 == 0 && cruiser_c.palpatine != NULL && cruiser_c.palpatineLocator != NULL &&
+        cruiser_c.freePalpatine != NULL && cruiser_c.freePalpatine[10] < lbl_801A2B3C[0]) {
+        *(struct nuvec_s *)(cruiser_c.palpatine + 0x6C) = cruiser_c.palpatineLocator->position;
+        *(u16 *)(cruiser_c.palpatine + 0x27E) = cruiser_c.palpatineLocator->direction;
     }
 }
 
@@ -7960,4 +8023,736 @@ done:
         }
     }
 #undef p
+}
+
+extern s32 lbl_801A2B40[];
+extern struct nuhspecial_s lbl_802E0BB0;
+extern s32 lbl_8040A694;
+extern s32 lbl_8040A698;
+extern s32 lbl_8040A69C;
+extern struct nuinstanim_s *lbl_8040A6A0;
+
+void fn_800C48A4(void) {
+    s32 i;
+    s32 id;
+
+    for (i = 0; i < ((struct episode_s *)lbl_80409410->unk1AC)->count; i++) {
+        id = ((struct episode_s *)lbl_80409410->unk1AC)->levels[i];
+        if (id == 0x5B) {
+            lbl_8040A698 = i;
+        }
+        if (id == 0x5C) {
+            lbl_8040A69C = i;
+        }
+    }
+    if (NuSpecialFind(lbl_80409410->unk1C0, (s32 *)&lbl_802E0BB0, lbl_801A2B40, 1) != 0) {
+        lbl_8040A6A0 = fn_8001384C((s32)&lbl_802E0BB0);
+        fn_800135B0(&lbl_802E0BB0);
+        lbl_8040A694 = fn_8005A5F8();
+    }
+    lbl_803EAE44[0] = FindObstacle((s32)lbl_80409410, lbl_801A1EBC);
+}
+
+extern f32 lbl_801A2B8C[];
+extern f32 lbl_801A2B90[];
+DEFINE_INTRO_UPDATE(IntroUpdate_800C4C4C, lbl_801A2B90)
+
+void fn_800C4C4C(void)
+{
+    if (lbl_804091F8 != 0) {
+        fn_800BB20C(0, 0, 2, lbl_801A2B8C[0]);
+    } else if (IntroUpdate_800C4C4C(2, lbl_801A2B8C[0])) {
+        lbl_80408F2C = 1;
+        lbl_804093B0 = 0x5F;
+        if (lbl_8040AF64 != -1) {
+            lbl_8040AF94 = 1;
+        }
+    }
+}
+
+struct aimessage_s {
+    u8 links[8];
+    char name[0x20];
+    f32 value;
+};
+
+f32 *fn_80013380(struct nuhspecial_s *);
+void fn_800D3054(s32, s32);
+extern s32 lbl_801A2B58[];
+extern f32 lbl_801A2B6C[];
+extern f32 lbl_801A2B78[];
+extern f32 lbl_8040932C;
+extern s32 lbl_80409330;
+extern f32 lbl_80409334;
+extern s32 lbl_80409338;
+extern struct aimessage_s *lbl_8040A690;
+
+void fn_800C4A8C(void) {
+    s32 i;
+    s32 p;
+    f32 *sp;
+
+    lbl_80409330 = 0;
+    if (fn_800130F4((s32 *)&lbl_802E0BB0) != 0 && lbl_8040A6A0 != NULL && lbl_8040A690 != NULL) {
+        lbl_8040A690->value = lbl_801A2B6C[0];
+        if (lbl_80409338 >= 0 && lbl_803EAE44[0] != 0 && (*(s32 *)(lbl_803EAE44[0] + 0x18) & 0x1000)) {
+            lbl_80409338 = -1;
+            lbl_8040A6A0->tfactor = -lbl_8040932C;
+            lbl_8040A6A0->flags |= 0x80000000;
+        }
+        if (lbl_8040A6A0->flags < 0) {
+            if (lbl_8040A694 != -1) {
+                if ((f32)lbl_80409338 >= lbl_801A2B6C[0]) {
+                    lbl_80409330 = 1;
+                    lbl_8040A690->value = lbl_801A2B78[0];
+                }
+                sp = fn_80013380(&lbl_802E0BB0);
+                for (i = 0; i < 8; i++) {
+                    p = gPlayer1Pointer[i];
+                    if (p != 0 && *(u8 *)(p + 0x28F) == 0
+                        && (*(s16 *)(p + 0x282) == lbl_8040A694 || *(f32 *)(p + 0x98) > sp[2])) {
+                        fn_800D3054(p, 2);
+                    }
+                }
+            }
+            if (lbl_8040A6A0->flags < 0) {
+                sp = fn_80013380(&lbl_802E0BB0);
+                fn_8006DCD4(lbl_801A2B58, (s32)sp);
+            }
+        }
+        lbl_80409334 = lbl_8040A6A0->ltime;
+    }
+}
+
+struct gameaiscript_level_s {
+    u8 unk0[0x1D0];
+    u32 beenTo : 1;
+    u32 unk1D0 : 31;
+    u8 unk1D4[4];
+};
+
+extern s32 lbl_801A2B48[];
+extern f32 lbl_801A2B54[];
+extern struct gameaiscript_level_s lbl_803EB190[];
+
+void fn_800C4978(void) {
+    lbl_8040A690 = (struct aimessage_s *)CheckAIMessage(lbl_80408F58, lbl_801A2B48, 0);
+    if (fn_800130F4((s32 *)&lbl_802E0BB0) != 0 && lbl_8040A6A0 != NULL) {
+        if (!lbl_803EB190[lbl_8040A69C].beenTo) {
+            lbl_80409334 = lbl_8040A6A0->ltime = lbl_801A2B54[0];
+            lbl_80409338 = 1;
+            lbl_8040A6A0->tfactor = lbl_8040932C;
+            lbl_8040A6A0->flags |= 0x80000000;
+        } else if (lbl_80409338 >= 0) {
+            lbl_8040A6A0->ltime = lbl_802E0BB0.scene->instanim_data[lbl_8040A6A0->anim_ix][0];
+            lbl_8040A6A0->tfactor = lbl_8040932C;
+            lbl_8040A6A0->flags &= 0x7FFFFFFF;
+        } else {
+            lbl_8040A6A0->tfactor = -lbl_8040932C;
+            lbl_8040A6A0->ltime = lbl_80409334;
+            lbl_8040A6A0->flags |= 0x80000000;
+        }
+    }
+    lbl_80409330 = 0;
+}
+
+void fn_800D963C(s16 *, u8 *, s32);
+extern f32 lbl_801A2BE8[];
+
+void fn_800C5174(void) {
+    s16 ids[3] = {0x63, 0x63, 0x63};
+    u8 flags[3] = {1, 1, 1};
+    s32 n;
+    s32 m;
+    s32 i;
+
+    if (lbl_8040934C != 0 && ((struct aimessage_s *)lbl_8040934C)->value > lbl_801A2BE8[0]) {
+        n = ((struct aimessage_s *)lbl_8040934C)->value;
+        if (n > 3) {
+            n = 3;
+        }
+        if (lbl_80409350 != 0 && ((struct aimessage_s *)lbl_80409350)->value > lbl_801A2BE8[0]) {
+            m = ((struct aimessage_s *)lbl_80409350)->value;
+            if (m > 3) {
+                m = 3;
+            }
+            for (i = 0; i < m; i++) {
+                flags[i] = 0;
+            }
+            fn_800D963C(ids, flags, n);
+        }
+    }
+}
+
+struct c38e8_ent {
+    char pad0[0x12];
+    s16 id;
+    s32 obj;
+    char pad18[0x60 - 0x18];
+};
+struct c38e8_s {
+    char pad0[0x6000];
+    struct c38e8_ent ents[8];
+    char pad6300[2];
+    s16 count;
+    s16 state;
+    s16 mode;
+    char pad6308[0x63C4 - 0x6308];
+    s16 ids[6];
+    u8 done[6];
+    char pad63D6[2];
+    s8 *unk63D8;
+};
+
+void fn_800C38E8(void)
+{
+#define p ((struct c38e8_s *)lbl_802DA798)
+    s16 ids[8];
+    u8 flags[8] = {0};
+    s32 n;
+    s32 i;
+
+    if (p->mode == 1) {
+        switch (p->state) {
+        case 1:
+        case 2:
+        case 3:
+            n = p->count;
+            if (n != 0) {
+                if (n > 8) {
+                    n = 8;
+                }
+                for (i = 0; i < n; i++) {
+                    ids[i] = p->ents[i].id;
+                    if (p->ents[i].obj == 0) {
+                        flags[i] = 1;
+                    }
+                }
+            } else {
+                n = 1;
+                if (p->state == 1) {
+                    ids[0] = 0x16;
+                } else if (p->state == 2) {
+                    ids[0] = 0xD;
+                } else if (p->state == 3) {
+                    ids[0] = 5;
+                }
+            }
+            fn_800D963C(ids, flags, n);
+            break;
+        case 4:
+        case 5:
+        case 6:
+            fn_800D963C(p->ids, p->done, 6);
+            break;
+        case 7:
+            if (p->unk63D8 != NULL) {
+                fn_800D95B8(p->unk63D8);
+            }
+            break;
+        }
+    }
+#undef p
+}
+
+extern f32 lbl_801A2D2C[];
+DEFINE_INTRO_UPDATE(IntroUpdate_800C6094, lbl_801A2D2C)
+
+void fn_800C6094(void)
+{
+    if (lbl_804091F8 != 0) {
+        fn_800BB20C(0, 0, 1, lbl_801A2D2C[0]);
+    } else if (IntroUpdate_800C6094(1, lbl_801A2D2C[0])) {
+        fn_8011E9C4(0x54);
+    }
+}
+
+void *fn_8008EFD0(f32 *, f32);
+void fn_8008F090(void *);
+extern f32 lbl_801A2C04[];
+extern struct nuhspecial_s lbl_803ED2C0[6];
+extern void *lbl_803ED308[6];
+extern f32 lbl_80409358;
+
+void fn_800C525C(void)
+{
+    struct nuinstanim_s *ia;
+    s32 i;
+
+    if (lbl_803EAF84[0] == 0 && ((s32 (*)(struct nuhspecial_s *))fn_800130F4)((struct nuhspecial_s *)lbl_803EAD24) != 0) {
+        ia = ((struct nuinstanim_s *(*)(struct nuhspecial_s *))fn_8001384C)((struct nuhspecial_s *)lbl_803EAD24);
+        if (ia != NULL && ia->flags >= 0 && ia->ltime > lbl_801A2C04[0]) {
+            lbl_803EAF84[1] = 1;
+            fn_8013F0AC(0);
+        }
+    }
+    for (i = 0; i < 6; i++) {
+        if (((s32 (*)(struct nuhspecial_s *))fn_800131B8)(&lbl_803ED2C0[i]) != 0) {
+            if (lbl_803ED308[i] == NULL) {
+                lbl_803ED308[i] = fn_8008EFD0(fn_80013380(&lbl_803ED2C0[i]), lbl_80409358);
+            }
+        } else if (lbl_803ED308[i] != NULL) {
+            fn_8008F090(lbl_803ED308[i]);
+            lbl_803ED308[i] = NULL;
+        }
+    }
+}
+
+/* Kashyyyk_D thrown part: lbl_803ED320[i] are the three live parts, each following
+ * special lbl_803EAD24[i] (instance animation lbl_802DA1E8[i]). */
+struct forcepart_s {
+    struct numtx_s mtx;           /* row 3 is the position */
+    u8 pad40[0x80 - 0x40];
+    struct nuvec_s vel;
+    u8 pad8C[0xFC - 0x8C];
+    f32 unkFC;
+    u8 pad100[0x128 - 0x100];
+    s32 unk128;
+};
+
+void fn_80074880(void *, s32);
+extern s32 lbl_801A2C6C[];
+extern const f32 lbl_801A2C7C[];
+extern struct nuvec_s lbl_801D5964;
+extern struct nuvec_s lbl_803ED32C[3];
+
+void fn_800C5640(void *arg0)
+{
+    struct forcepart_s *p = arg0;
+    f32 k;
+    struct nuinstanim_s *ia;
+    s32 i;
+
+    if (arg0 == (void *)lbl_803ED320[0]) {
+        i = 0;
+    } else if (arg0 == (void *)lbl_803ED320[1]) {
+        i = 1;
+    } else if (arg0 == (void *)lbl_803ED320[2]) {
+        i = 2;
+    } else {
+        fn_80074880(arg0, 0);
+        return;
+    }
+    lbl_803ED32C[i] = *(struct nuvec_s *)&p->mtx._30;
+    p->mtx = *(struct numtx_s *)fn_800133FC(&lbl_803EAD24[i * 3]);
+    k = lbl_801A2C7C[0];
+    if (p->unkFC < k) {
+        p->vel = lbl_801D5964;
+    } else {
+        NuVecSub(&p->vel, (struct nuvec_s *)&p->mtx._30, &lbl_803ED32C[i]);
+        NuVecScale(&p->vel, &p->vel, k / lbl_80408E9C);
+    }
+    ia = (struct nuinstanim_s *)lbl_802DA1E8[i];
+    if (ia->ltime > lbl_801A2C7C[0] && ia->flags >= 0) {
+        fn_80074880(arg0, 0);
+    }
+    if (p->unk128 < 0) {
+        fn_8006DCD4(lbl_801A2C6C, (s32)&p->mtx._30);
+    }
+}
+
+/* Emitter request handed to fn_80120AEC. lbl_803EAD9C is lbl_803EAD24[10]: retail loads
+ * the scene word through lbl_803EAD24 + 0x78 and the other two through lbl_803EAD9C. */
+struct partemit_entry_s {
+    struct nuhspecial_s sp;
+    u8 flag;
+};
+
+struct partemit_s {
+    s32 unk0;
+    s16 unk4;
+    s16 unk6;
+    s16 unk8;
+    u8 count;
+    u8 unkB;
+    s16 sfx;
+    f32 unk10;
+    f32 unk14;
+    f32 unk18;
+    f32 unk1C;
+    f32 unk20;
+    struct partemit_entry_s e[61];
+    u8 pad3F4[0xC];               /* frame is 0x420: 0x400 bytes of locals */
+};
+
+s32 fn_80120AEC(struct partemit_s *, struct nuvec_s *, s32 *);
+extern s32 lbl_801A2C80[];
+extern f32 lbl_801A2C94[];
+extern f32 lbl_801A2C98[];
+extern f32 lbl_801A2C9C[];
+extern f32 lbl_801A2CA0[];
+
+void fn_800C582C(void *arg0)
+{
+    struct partemit_s s;
+    struct partemit_s *ps = &s;
+    struct partemit_entry_s *e;
+    s32 idx;
+    s32 i;
+    s32 p;
+    s32 c;
+
+    if (arg0 == (void *)lbl_803ED320[0]) {
+        idx = 0;
+    } else if (arg0 == (void *)lbl_803ED320[1]) {
+        idx = 1;
+    } else if (arg0 == (void *)lbl_803ED320[2]) {
+        idx = 2;
+    } else {
+        idx = -1;
+    }
+    if (idx != -1 && arg0 != NULL) {
+        if (fn_800130F4(lbl_803EAD9C) != 0) {
+            ps->unk0 = 0;
+            ps->unk4 = 0x38;
+            ps->unk6 = -1;
+            ps->unk8 = 0;
+            ps->count = 0xF;
+            ps->unkB = 0;
+            ps->sfx = PauseMenu_HandleEntry1(lbl_801A2C80);
+            ps->unk10 = lbl_801A2C94[0];
+            ps->unk14 = lbl_801A2C98[0];
+            ps->unk18 = lbl_801A2C9C[0];
+            ps->unk1C = lbl_801A2CA0[0];
+            ps->unk20 = lbl_801A2C98[0];
+            for (i = 0; i < ps->count; i++) {
+                e = &ps->e[i];
+                *(s32 *)&e->sp.scene = lbl_803EAD24[30];
+                *(s32 *)&e->sp.special = lbl_803EAD9C[1];
+                *(s32 *)&e->sp.display = lbl_803EAD9C[2];
+                e->flag = 0;
+            }
+            fn_80120AEC(ps, (struct nuvec_s *)((s8 *)arg0 + 0x30), &lbl_803EAD24[idx * 3]);
+        }
+        fn_800BA244(&lbl_803EAD24[idx * 3]);
+        for (i = 0; i < 8; i++) {
+            p = gPlayer1Pointer[i];
+            if (p != 0) {
+                c = *(s32 *)(p + 0xEEC);
+                if (*(s32 *)(c + 0x64C) == lbl_803ED320[idx]) {
+                    *(s32 *)(c + 0x64C) = 0;
+                }
+            }
+        }
+        lbl_803ED320[idx] = 0;
+    }
+}
+
+/* Part spawn template (gameaiscript.c's gameaiscript_part_s, lbl_801BB478). */
+struct levelpart_s {
+    void *mtx;
+    u32 unk4;
+    void *dir;
+    u32 unkC;
+    u32 unk10;
+    f32 unk14;
+    f32 unk18;
+    f32 unk1C;
+    u32 unk20;
+    void *special;
+    s32 unk28;
+    u32 unk2C;
+    s32 unk30;
+    u32 unk34;
+    void (*update)(void *);
+    u32 unk3C[2];
+    void *collide;
+    void (*kill)(void *);
+    u32 unk4C[16];
+    f32 unk8C;
+    u32 unk90[5];
+};
+
+s32 fn_80072410(struct levelpart_s *);
+extern s32 PartCollide[];
+extern struct levelpart_s lbl_801BB478;
+extern s32 lbl_801B0F08[];
+extern const f32 lbl_801A2CA4[];
+extern f32 lbl_80409360;
+
+void fn_800C5A10(s32 i)
+{
+    struct levelpart_s part;
+    s32 o;
+
+    if (fn_800130F4(&lbl_803EAD24[i * 3]) != 0 && lbl_802DA1E8[i] != 0) {
+        fn_800BA244(&lbl_803EAD24[i * 3]);
+        fn_800BA1E8((s32)&lbl_803EAD24[i * 3]);
+        part = lbl_801BB478;
+        part.mtx = lbl_801B0F08;
+        part.dir = &lbl_801D5964;
+        part.unk18 = lbl_80409360;
+        part.unk14 = lbl_80409360;
+        part.unk1C = lbl_801A2CA4[0];
+        part.special = &lbl_803EAD24[i * 3];
+        part.unk30 = 0x80861A;
+        part.unk28 = 0;
+        part.unkC = 0;
+        part.update = fn_800C5640;
+        part.collide = PartCollide;
+        part.kill = fn_800C582C;
+        part.unk8C = lbl_80408E9C;
+        o = fn_80072410(&part);
+        if (o != 0) {
+            lbl_803ED320[i] = o;
+        }
+    }
+}
+
+s32 NuStrICmp(char *, char *);
+extern void *lbl_8040AE4C;
+extern const f32 lbl_801A2E88[];
+extern const f32 lbl_801A2E8C[];
+extern char lbl_801A2E7C[];
+
+#define LS (&lbl_802E0BE4)
+
+struct levelnames_c67b8_s {
+    char *name[10];
+};
+
+extern const struct levelnames_c67b8_s lbl_801A2E48;
+extern char lbl_801A2E70[];
+extern s32 lbl_801A2D3C[];
+extern s32 lbl_8040B16C;
+
+void fn_800C67B8(void)
+{
+    struct levelstate_c6900_s *ls;
+    struct levelnames_c67b8_s names;
+    s32 i;
+
+    names = lbl_801A2E48;
+    ls = &lbl_802E0BE4;
+    memset((s32 *)ls, 0, sizeof(*ls));
+    ls->unk0 = (void *)CheckAIMessage(lbl_80408F58, (s32 *)lbl_801A2E70, 0);
+    ls->unk4 = (void *)AIPathFindLocator(lbl_80409410->unk2E8, lbl_801A2D3C);
+    for (i = 0; i < 10; i++) {
+        if (NuSpecialFind(lbl_80409410->unk1C0, (s32 *)&ls->unk8[i], (s32 *)names.name[i], 1) != 0) {
+            fn_800135B0(&ls->unk8[i]);
+            ls->unk80[i] = fn_8005A5F8();
+        } else {
+            ls->unk80[i] = -1;
+        }
+    }
+    lbl_8040B16C = 0;
+}
+
+
+void fn_800C6900(void)
+{
+    struct lbl_80409410_240_s *e;
+    s32 i;
+    s32 j;
+    s16 id;
+    void *p0;
+
+    if (LS->unk0 != NULL && LS->unk0->unk28 == lbl_801A2E88[0] && LS->unk4 != NULL
+        && lbl_80409004 != NULL && *(s16 *)((s8 *)lbl_80409004 + 0x282) != -1) {
+        *(struct nuvec_s *)((s8 *)LS->unk4 + 0x10) = *(struct nuvec_s *)((s8 *)lbl_80409004 + 0x1AC);
+        p0 = (void *)gPlayer1Pointer[0];
+        for (i = 0; i < 10; i++) {
+            void *p;
+            if (p0 != NULL && LS->unk80[i] != -1 && *(u8 *)((s8 *)p0 + 0x285) != 0
+                && *(s16 *)((s8 *)p0 + 0x282) == LS->unk80[i]
+                && *(f32 *)((s8 *)p0 + 0x70) >= *(f32 *)((s8 *)*(void **)((s8 *)(*(s32 *)((s8 *)lbl_8040AE4C + 0x68) + *(s16 *)((s8 *)p0 + 0x282) * 0x6C) + 0x40) + 0x34)) {
+                LS->unk94 |= 1;
+            }
+            p = (void *)gPlayer1Pointer[1];
+            if (p != NULL && LS->unk80[i] != -1 && *(u8 *)((s8 *)p + 0x285) != 0
+                && *(s16 *)((s8 *)p + 0x282) == LS->unk80[i]
+                && *(f32 *)((s8 *)p + 0x70) >= *(f32 *)((s8 *)*(void **)((s8 *)(*(s32 *)((s8 *)lbl_8040AE4C + 0x68) + *(s16 *)((s8 *)p + 0x282) * 0x6C) + 0x40) + 0x34)) {
+                LS->unk94 |= 2;
+            }
+        }
+        if (lbl_802E0C78[0] == 3) {
+            LS->unk0->unk28 = lbl_801A2E8C[0];
+            for (j = 0, e = lbl_80409410->unk240; j < lbl_80409410->unk244; j++, e++) {
+                if (NuStrICmp((char *)e, lbl_801A2E7C) == 0) {
+                    fn_800C9648((s32)e, 1);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+s32 NuSpecialFindMulti(s32, struct nuhspecial_s *, char *, s32, s32);
+struct levelflags_s {
+    s32 count;
+    u32 flags[1];
+};
+
+struct levelflags_s *fn_8008A6D4(void *, s32, char *, char *, s32 *);
+extern char lbl_801A2D48[];
+extern char lbl_801A2D68[];
+extern char lbl_801A2D74[];
+extern char lbl_801A2D80[];
+extern char lbl_801A2D90[];
+extern char lbl_801A2D98[];
+extern char lbl_801A2DA0[];
+extern char lbl_801A2DA8[];
+extern char lbl_801A2DB0[];
+extern const f32 lbl_801A2DB8[];
+extern f32 lbl_801D687C[];
+
+void VaderAStartCollapseStage(void)
+{
+    struct nuhspecial_s specials[100];
+    s32 idx;
+    void *loc;
+    struct levelflags_s *p;
+    s32 o;
+    s32 n;
+    s32 i;
+
+    loc = (void *)lbl_80409410->unk2E8;
+    p = fn_8008A6D4(loc, *(s32 *)(*(s8 **)((s8 *)loc + 0xC) + 8), lbl_801A2D68, lbl_801A2D74, &idx);
+    if (p != NULL) {
+        u32 *f = p->flags;
+
+        f[idx] |= 0x80000000;
+    }
+    o = FindObstacle((s32)lbl_80409410, (s32 *)lbl_801A2D80);
+    if (o != 0) {
+        fn_80105500(lbl_80409410, *(s8 *)(o + 0x71), *(s8 *)(o + 0x72), 0);
+        fn_80107A6C(o, 0);
+    }
+    lbl_802E0BBC[4] = FindForceObject(lbl_80409410, (s32 *)lbl_801A2D90, 0);
+    lbl_802E0BBC[5] = FindForceObject(lbl_80409410, (s32 *)lbl_801A2D98, 0);
+    lbl_802E0BBC[6] = FindForceObject(lbl_80409410, (s32 *)lbl_801A2DA0, 0);
+    lbl_802E0BBC[7] = FindForceObject(lbl_80409410, (s32 *)lbl_801A2DA8, 0);
+    *(s16 *)((s8 *)lbl_802E0BBC + 8) = 1;
+    *(f32 *)((s8 *)lbl_802E0BBC + 4) = lbl_801D687C[0];
+    SetAIMessage(lbl_80408F58, (s32 *)lbl_801A2D48, lbl_802E0BBC[0], lbl_801A2DB8[0]);
+    n = NuSpecialFindMulti(lbl_80409410->unk1C0, specials, lbl_801A2DB0, 100, 0);
+    for (i = 0; i < n; i++) {
+        fn_80013200((s32 *)&specials[i], 0);
+    }
+}
+
+/* Vader A collapse state at lbl_802E0BBC (VaderAStartCollapseStage, fn_800C6430). */
+struct vadera_s {
+    s32 msg;
+    f32 timer;
+    s16 stage;
+    s16 hit;
+    u8 padC[0x10 - 0xC];
+    s32 force[4];
+    u8 pad20[0x24 - 0x20];
+    s32 surface;
+};
+
+#define VA ((struct vadera_s *)lbl_802E0BBC)
+
+s32 SetPlayerOnSurface(void *, s32);
+void *NuCameraGetViewMtx(void);
+s32 fn_800E6484();
+void fn_800B01C4(void *, void *, f32, f32, f32, f32, s32, s32);
+extern void *lbl_802E0BDC[];
+extern f32 lbl_80409364;
+extern char lbl_801A2DBC[];
+extern char lbl_801A2DCC[];
+extern const f32 lbl_801A2DDC[];
+extern const f32 lbl_801A2DE0[];
+extern const f32 lbl_801A2DE4[];
+extern s32 lbl_801D6888[];
+extern s32 lbl_801D6894[];
+
+static inline s32 levels_alldone(s32 *list, s32 n)
+{
+    s32 o;
+
+    do {
+        o = *list++;
+        if (o == 0 || (*(u16 *)(o + 0x20) & 0x101) == 0) {
+            return 0;
+        }
+    } while (--n > 0);
+    return 1;
+}
+
+void fn_800C6430(void)
+{
+    s32 i;
+    s32 o;
+    f32 old;
+    f32 wait;
+
+    if (VA->surface != 0) {
+        VA->surface = 0;
+        for (i = 0; i < 8; i++) {
+            if (gPlayer1Pointer[i] != 0 && *(s32 *)(gPlayer1Pointer[i] + 0x20C) < 0) {
+                SetPlayerOnSurface((void *)gPlayer1Pointer[i], 1);
+            }
+        }
+    }
+    if (lbl_802E0BDC[0] != NULL && lbl_80409004 != NULL && *(s16 *)((s8 *)lbl_80409004 + 0x282) != -1) {
+        *(struct nuvec_s *)((s8 *)lbl_802E0BDC[0] + 0x10) = *(struct nuvec_s *)((s8 *)lbl_80409004 + 0x1AC);
+    }
+    if (VA->stage != 0) {
+        old = VA->timer;
+        VA->timer = old - lbl_80408E9C;
+        if (VA->stage <= 2) {
+            for (i = 0; i < 4; i++) {
+                if (VA->force[i] != 0 && (*(u16 *)(VA->force[i] + 0x20) & 1)) {
+                    VA->hit = 1;
+                    VA->timer += lbl_80409364;
+                    VA->force[i] = 0;
+                }
+            }
+            if (VA->timer < lbl_801D687C[VA->stage]) {
+                o = 0;
+                switch (VA->stage) {
+                case 1:
+                    o = FindObstacle((s32)lbl_80409410, (s32 *)lbl_801A2DBC);
+                    break;
+                do {
+                case 2:
+                    o = FindObstacle((s32)lbl_80409410, (s32 *)lbl_801A2DCC);
+                    VA->timer = lbl_801A2DDC[0];
+                    NuCameraGetViewMtx();
+                    fn_800B01C4(lbl_801D6888, lbl_801D6894, lbl_801A2DE0[0], lbl_801A2DDC[0], lbl_801A2DE0[0], lbl_801A2DE4[0], 0, 1);
+                    break;
+                } while (0);
+                }
+                if (o != 0) {
+                    fn_80105500(lbl_80409410, *(s8 *)(o + 0x71), *(s8 *)(o + 0x72), 0);
+                    fn_80107A6C(o, 0);
+                }
+                VA->stage++;
+            }
+            if (VA->hit != 0 || (VA->timer > lbl_801A2DE0[0] && (s32)old != (s32)VA->timer)) {
+                fn_800E6484();
+            }
+        } else if (VA->timer <= lbl_801A2DE0[0]) {
+            fn_800D3054((s32)lbl_80409004, 2);
+        }
+    }
+    wait = lbl_801A2DE0[0];
+    switch (lbl_8040B060[0]) {
+    case 0:
+        if (levels_alldone(lbl_803EAEC4, 2)) {
+            {
+                s32 *pp = lbl_803EAEC4;
+
+                do {
+                    fn_801268CC(*pp);
+                    pp++;
+                } while ((s32)pp < (s32)&lbl_803EAEC4[2]);
+            }
+            if (wait <= lbl_801A2DE0[0]) {
+                goto set2;
+            }
+            lbl_8040B060[0] = 1;
+        }
+        break;
+    case 1:
+        lbl_8040B0C8 += lbl_80408E9C;
+        if (lbl_8040B0C8 >= wait) {
+        set2:
+            lbl_8040B060[0] = 2;
+        }
+        break;
+    }
 }
