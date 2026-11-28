@@ -4965,7 +4965,7 @@ void fn_800ABD50(void *arg0) {
     }
 }
 
-s32 fn_800CFD80(void *, s32, s32);
+s32 fn_800CFD80(struct nuvec_s *, s16 *, s16 *);
 extern f32 lbl_801A50F0[];
 extern f32 lbl_801A50F4[];
 extern f32 lbl_801A50F8[];
@@ -8957,4 +8957,47 @@ s32 fn_800D02E4(struct nuvec_s *p, struct nuvec_s *v, struct nuvec_s *q, f32 lim
     }
     len = d.x * d.x + d.y * d.y + d.z * d.z - dot * dot;
     return len <= lim;
+}
+extern f32 lbl_801A4FB0[];
+
+struct pathlen_s {
+    s16 count;
+    s16 stride;
+    s32 pad4;
+    u8 *data;
+};
+
+f32 fn_800D0030(struct pathlen_s *path, s32 open)
+{
+    struct nuvec_s d;
+    f32 total;
+    s32 n;
+    s32 i;
+    s32 next;
+    s32 idx;
+    u8 *prev;
+    u8 *cur;
+
+    if (path == NULL || path->count <= 1) {
+        return lbl_801A4FB0[0];
+    }
+    n = path->count - 1;
+    if (open != 0) {
+        n = path->count;
+    }
+    total = lbl_801A4FB0[0];
+    prev = path->data;
+    i = 0;
+    for (; i < n; i = next) {
+        next = i + 1;
+        idx = next;
+        if (i == path->count - 1) {
+            idx = 0;
+        }
+        cur = path->data + idx * path->stride;
+        NuVecSub(&d, (struct nuvec_s *)cur, (struct nuvec_s *)prev);
+        total += fn_8000CB50(&d);
+        prev = cur;
+    }
+    return total;
 }
