@@ -8913,3 +8913,31 @@ void *fn_800CCA80(struct lbl_80409410_s *obj, s32 key)
     }
     return NULL;
 }
+s16 fn_800CC830(s16 level)
+{
+    s32 ep = lbl_801D68E0[level].key;
+    s32 i = lbl_801D68E0[level].chapter;
+    s32 n;
+    s16 *p;
+    s16 l;
+    s32 t;
+    struct episode_s *e;
+
+    if (ep != -1) {
+        e = (struct episode_s *)((u8 *)lbl_801DC074 + ep * 0x68);
+        n = e->count - 1;
+        if (i < n) {
+            p = (s16 *)(i * 2 + (s32)e->levels);
+            do {
+                t = *p++;
+                ep = t;
+                l = ep;
+                if (!(lbl_801D68E0[l].flags & 0x1000)) {
+                    return l;
+                }
+                i++;
+            } while (i < n);
+        }
+    }
+    return level;
+}
