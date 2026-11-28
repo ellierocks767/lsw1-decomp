@@ -1235,3 +1235,81 @@ void fn_8014E9B8(void) {
         }
     }
 }
+
+s32 fn_8002A4B0(s32 *, s32 *, s8 *);
+extern s32 lbl_80408F8C;
+extern s32 lbl_80408FE0;
+extern s32 lbl_80409C70;
+extern s32 lbl_8040B100;
+extern s8 str_Extension_Gsc2[];
+extern s8 str_Path_Legal[];
+extern s8 str_Path_LegalCubeDanish[];
+extern s8 str_Path_LegalCubeDutch[];
+extern s8 str_Path_LegalCubeEnglish[];
+extern s8 str_Path_LegalCubeFrench[];
+extern s8 str_Path_LegalCubeItalian[];
+extern s8 str_Path_LegalCubeJap[];
+extern s8 str_Path_LegalCubeSpanish[];
+extern s8 str_Path_LegalCubeUS[];
+extern s8 str_Path_StuffDir[];
+
+typedef struct { s32 w[16]; } PodStruct40;
+void fn_8014BFEC(s32 *arg0, void *arg1, void *arg2) {
+    char sp8[0x100];
+    s32 sp10C;
+    volatile s32 sp108;
+    s32 temp_r0;
+    s32 temp_r29;
+    s32 temp_r31;
+    s32 temp_r3;
+    s32 var_r3;
+    s32 var_r9;
+
+    temp_r29 = lbl_80408F8C;
+    sp10C = temp_r29 + 0xFFC00000;
+    NuStrCpy(sp8, str_Path_StuffDir);
+    if ((s32) lbl_80408FE0 != 0) {
+        NuStrCat(sp8, str_Path_Legal);
+    } else {
+        temp_r31 = lbl_8040B100;
+        switch (temp_r31) {                         /* irregular */
+        default:
+            NuStrCat(sp8, str_Path_LegalCubeUS);
+            break;
+        case 1:
+            NuStrCat(sp8, str_Path_LegalCubeFrench);
+            lbl_80409C70 = temp_r31;
+            break;
+        case 2:
+            NuStrCat(sp8, str_Path_LegalCubeEnglish);
+            lbl_80409C70 = temp_r31;
+            break;
+        case 3:
+            NuStrCat(sp8, str_Path_LegalCubeItalian);
+            break;
+        case 4:
+            NuStrCat(sp8, str_Path_LegalCubeSpanish);
+            break;
+        case 5:
+            NuStrCat(sp8, str_Path_LegalCubeDanish);
+            break;
+        case 6:
+            NuStrCat(sp8, str_Path_LegalCubeDutch);
+            break;
+        case 7:
+            NuStrCat(sp8, str_Path_LegalCubeJap);
+            break;
+        }
+    }
+    NuStrCat(sp8, str_Extension_Gsc2);
+    sp108 = temp_r29;
+    *arg0 = fn_8002A4B0(&sp10C, &sp108, sp8);
+    memset(arg1, 0, 0xC);
+    temp_r3 = *arg0;
+    if (temp_r3 != 0) {
+        NuSpecialFind(temp_r3, arg1, (s32 *) str_Path_Legal, 1);
+        if (fn_800130F4(arg1) != 0) {
+            *(PodStruct40 *) arg2 = *(PodStruct40 *) fn_800133FC(arg1);
+        }
+    }
+}
