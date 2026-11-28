@@ -7961,3 +7961,31 @@ done:
     }
 #undef p
 }
+
+extern s32 lbl_801A2B40[];
+extern struct nuhspecial_s lbl_802E0BB0;
+extern s32 lbl_8040A694;
+extern s32 lbl_8040A698;
+extern s32 lbl_8040A69C;
+extern void *lbl_8040A6A0;
+
+void fn_800C48A4(void) {
+    s32 i;
+    s32 id;
+
+    for (i = 0; i < ((struct episode_s *)lbl_80409410->unk1AC)->count; i++) {
+        id = ((struct episode_s *)lbl_80409410->unk1AC)->levels[i];
+        if (id == 0x5B) {
+            lbl_8040A698 = i;
+        }
+        if (id == 0x5C) {
+            lbl_8040A69C = i;
+        }
+    }
+    if (NuSpecialFind(lbl_80409410->unk1C0, (s32 *)&lbl_802E0BB0, lbl_801A2B40, 1) != 0) {
+        lbl_8040A6A0 = fn_8001384C((s32)&lbl_802E0BB0);
+        fn_800135B0(&lbl_802E0BB0);
+        lbl_8040A694 = fn_8005A5F8();
+    }
+    lbl_803EAE44[0] = FindObstacle((s32)lbl_80409410, lbl_801A1EBC);
+}
