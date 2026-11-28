@@ -869,25 +869,28 @@ s32 fn_8004BC1C(HVQM4DvdStream* stream)
 {
     s32 status;
     void (*onStatusChange)(s32, s32, s32);
-    /* The first poll uses the incoming argument register. Reload it on repeat polls. */
-    register const void* commandBlock asm("r3") = stream->fileInfo;
+    HVQM4DvdStream* state;
+    u8* fileInfo;
+    const void* commandBlock = stream;
 
     for (;;) {
         status = DVDGetCommandBlockStatus(commandBlock);
-        if (status != stream->driveStatus) {
-            onStatusChange = stream->onStatusChange;
-            stream->driveStatus = status;
+        state = stream;
+        if (status != state->driveStatus) {
+            onStatusChange = state->onStatusChange;
+            state->driveStatus = status;
             if (onStatusChange != NULL) {
-                onStatusChange(stream->callbackArg0, stream->callbackArg1, status);
+                onStatusChange(state->callbackArg0, state->callbackArg1, status);
             }
         }
-        if (stream->result != 0) {
+        fileInfo = state->fileInfo;
+        if (state->result != 0) {
             break;
         }
-        commandBlock = stream->fileInfo;
+        commandBlock = fileInfo;
     }
 
-    DVDClose(stream->fileInfo);
+    DVDClose(fileInfo);
     fn_80049A10(stream->buffer);
     fn_80049A10(stream);
     return lbl_80408388 == 0;
