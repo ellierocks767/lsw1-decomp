@@ -9001,3 +9001,30 @@ f32 fn_800D0030(struct pathlen_s *path, s32 open)
     }
     return total;
 }
+extern f32 lbl_801A4FB8[];
+extern f32 lbl_801A4FBC[];
+
+s32 fn_800D01C4(struct nuvec_s *a, struct nuvec_s *plane, struct nuvec_s *dir, struct nuvec_s *out, f32 *outDot, f32 t)
+{
+    struct nuvec_s p;
+    f32 dot;
+
+    if (t == lbl_801A4FB8[0]) {
+        p = *a;
+    } else {
+        NuVecScale(&p, dir, t);
+        NuVecAdd(&p, &p, a);
+    }
+    dot = (p.x - plane->x) * dir->x + (p.y - plane->y) * dir->y + (p.z - plane->z) * dir->z;
+    if (outDot != NULL) {
+        *outDot = dot;
+    }
+    if (dot <= lbl_801A4FB8[0]) {
+        if (out != NULL) {
+            NuVecScale(out, dir, -(dot - lbl_801A4FBC[0]));
+            NuVecAdd(out, out, a);
+        }
+        return 1;
+    }
+    return 0;
+}
