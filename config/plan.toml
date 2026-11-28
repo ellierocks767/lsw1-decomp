@@ -2682,6 +2682,26 @@ function = "fn_8010A0D8"
 reason = "best 97/144 (work/hc/a/h7.c): clamp frac>1.0 folds 9C reuse (target reloads lbl_801AA09C after b stores), float reg alloc and a/b stack slots/f30-f31 swapped; next: decl-order search over a/b/c and f32 locals, then timeout 180 permuter burst"
 
 [[parked]]
+function = "fn_8011C090"
+reason = "best 39/43: first byte load folds to lbzu instead of addi plus lbzx; next: test a shared indexed read at loop entry and latch without constant-folding the initial index"
+
+[[parked]]
+function = "fn_8011BCBC"
+reason = "best 43/49: loop entry folds addi plus lbzx into lbzu and the cursor limit becomes bgt 30; next: test a shared inline quoted-token scanner that seeds the index at its entry and explicitly enforces the signed 31-byte limit"
+
+[[parked]]
+function = "fn_8011BD80"
+reason = "best 43/49: same initial lbzu and bgt 30 as fn_8011BCBC; next: retry the shared scanner after fn_8011BCBC matches and retain the 0xBE halfword destination"
+
+[[parked]]
+function = "fn_8011E1EC"
+reason = "best 47/71: path-table float reads fold into one record pointer and the reload/product schedule differs; next: expose independent float field bases through an inline helper, then tune the post-store reload separately"
+
+[[parked]]
+function = "fn_8011AC30"
+reason = "best 22/26: ProDG coalesces both loop-entry pointer copies or reloads globals and shifts the guard; next: type both owning global declarations and check whether ProDG retains the preheader copies"
+
+[[parked]]
 function = "fn_80040B4C"
 reason = "best 23/54 (hc-20261127-023020, PR #222): narrow stride changes allocation width; full-width 21/54 merges the two masks and shifts the node loop registers; in-tree source scores 15/54: target computes -align twice (no CSE) with size copied to r8; next: separate inline alignment helpers (blocks CSE of the two negs), inspect ProDG RTL before tuning the node loop, permuter burst"
 
@@ -2752,6 +2772,50 @@ reason = "retried: best 312/340: 1.0f literal + static inline per-object helpers
 [[parked]]
 function = "Shop_DrawCodes"
 reason = "retried: best 376/391: literals + char[7] sda buffer + static inline draw helpers (DcDraw/DcDrawAt) + pos=lbl_80401894 hoisted; left: target keeps clrlwi on the (u8)(c-0x30)<=9 test (gcc drops it in every spelling tried), base/t fsubs register order, scale-vector stfs/li r4 scheduling in the setup (same as DrawTopShelf); next: char test via inline helper/switch, setup helper shape (work/hc/Shop_DrawCodes.best.c)"
+
+[[parked]]
+function = "fn_8014BEB0"
+reason = "best 77/79: arg load order swapped for fn_800203A4/fn_8007BD64 (target loads first arg before f1/addi r4); next: permuter burst, arg-eval structure"
+
+[[parked]]
+function = "fn_8014C8B0"
+reason = "best 125/142: srwi+cmpwi r11 (target) vs srwi. record form, f11/f12 swap in neg-limit branch; next: permuter burst, helper-approach inline"
+
+[[parked]]
+function = "fn_8014BBE0"
+reason = "best 45/59: shared 'li r3,1; bne' tail with case0 cmp via lbz r11 (separate from lbl r0 tail); next: other switch/ret shapes, permuter w/ focus markers"
+
+[[parked]]
+function = "Shop_DrawSubMenuTitle"
+reason = "best 55/61: branch chain matches (if/else idx, a=(s32)..., y local); only fmr f6,f5 chain + li/lfs scheduling differ; 180s permuter no zero; next: struct-typed float args or long permuter"
+
+[[parked]]
+function = "fn_8014D0A8"
+reason = "best 46/84 (9 candidates): loop CFG matches via goto form but target hoists base, base+0x18, base+0x1c into r29/r27/r28 and keeps spl in r31/i in r30; next: variant_search on index/pointer expression forms, permuter"
+
+[[parked]]
+function = "fn_8014D5A0"
+reason = "best 90/138 (12 candidates): CFG/stack match; arg0->r31/i->r30/pp->r29 allocation and f30 vs reloaded CE4 for e->scale differ; next: permuter/variant_search on pointer-walk forms (work/hc/pod_d5a0_b.c)"
+
+[[parked]]
+function = "fn_8014DB7C"
+reason = "best 151/156 (about 16 candidates + 180s permuter): only prologue mr r27,r4 vs mr r29,r5 order differs; same shape as chris.c fn_801435B8 (work/hc/pod_db7c_b.c); next: longer permuter or param/local pseudo ordering"
+
+[[parked]]
+function = "fn_8014D7C8"
+reason = "best 156/158: lis r23 (MINE base 0x804072F4@ha) scheduled after ble instead of before; next: restructure first loop / MINE base pointer (saved work/hc/pod_d7c8_best156.c)"
+
+[[parked]]
+function = "PodraceLoadSplineSettings"
+reason = "best 270/288: instruction scheduling of v8/v18 pointer regs (addi r4; mr r30,r4) and zero-store/arg order; best body work/hc/PodraceLoadSplineSettings_best.c needs fn_80146B8C(spl,out,t) 3-arg proto and fn_8014DB7C(act,sp28,0,f); next: permuter burst on pls_d.c"
+
+[[parked]]
+function = "Shop_DrawSubMenu3D"
+reason = "best 118/154: control flow matches, register rotation (items r28 vs r30), 152 vs 154 insns; next: permuter burst on items/locals order"
+
+[[parked]]
+function = "fn_8014D1F8"
+reason = "best 121/166 (3 variants): target uses lis base in r23 + addi 0x18 then lfsx with r29=i<<5, frame -0xa0 stmw r20; mine folds +0x18 into reloc, frame -0x98 stmw r19; next: permuter burst, restructure loop locals (work/hc/d1f8_b.c)"
 
 [[parked]]
 function = "fn_800B4834"

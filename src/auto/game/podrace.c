@@ -50,8 +50,8 @@ void fn_8014BE90(void) {
 
 s32 PodraceUpdateStartLights();
 s32 fn_8014D7C8();
-s32 fn_8014DA40();
-s32 fn_8014EBBC();
+void fn_8014DA40(void);
+void fn_8014EBBC(void);
 
 void fn_8014FD9C(void) {
     fn_8014EBBC();
@@ -80,7 +80,7 @@ void fn_80146EF4(void) {
     fn_801451A4((*(s32 *)((s8 *)(lbl_80409410) + (0x1984))));
 }
 
-s32 PodraceCreateMine();
+void PodraceCreateMine(void);
 s32 (*fn_80009948(s32 *, s32))();
 void fn_8010BD90(void);
 s32 fn_80142BA8(s32, s32);
@@ -150,7 +150,7 @@ void fn_8014D01C(u32 arg0) {
 
 s32 PodraceUpdateStartLights();
 s32 fn_8014D1F8();
-s32 fn_8014EBBC();
+void fn_8014EBBC(void);
 extern PodSnd12 lbl_803EAD24[];
 
 void fn_8014FFE8(void) {
@@ -169,7 +169,7 @@ void fn_8014FFE8(void) {
     }
 }
 
-s32 PodraceCreateMine();
+void PodraceCreateMine(void);
 s32 (*fn_80009948(s32 *, s32))();
 #define fn_8010BD90 ((s32(*)(void))fn_8010BD90)
 #define fn_80142BA8 ((s32(*)(s32, s32))fn_80142BA8)
@@ -361,7 +361,7 @@ s32 PodraceUpdateStartLights();
 s32 fn_800133FC(void *);
 s32 fn_800137D0(void *, s32);
 void fn_8011E9C4(s32);
-s32 fn_8014EBBC();
+void fn_8014EBBC(void);
 extern f32 NuRndrHackWaterLevel[];
 extern f32 lbl_801AFEA4[];
 extern f32 lbl_801AFEA8[];
@@ -1163,4 +1163,650 @@ void fn_80146B8C(SplineKnots *s, f32 t) {
         }
     }
     CalcSplinePoint(s, t);
+}
+
+s32 fn_800E6484();
+extern f32 NuRndrHackWaterLevel[];
+extern f32 lbl_80408E9C;
+extern f32 lbl_80408F00;
+extern s32 lbl_8040912C;
+extern void *lbl_80409410;
+extern s32 lbl_8040A810;
+extern f32 lbl_8040A814;
+extern f32 lbl_8040A818;
+extern f32 lbl_8040A81C;
+extern s32 lbl_8040AFA8;
+extern s32 lbl_8040AFAC;
+
+void fn_8014E9B8(void) {
+    f32 temp_f0;
+    f32 temp_f0_2;
+    f32 temp_f0_3;
+    f32 temp_f0_4;
+    f32 temp_f13;
+    f32 var_f12;
+    s32 prev;
+
+    if ((lbl_80408F00 != -0.1f) || ((s32) lbl_8040AFA8 != 0) || ((s32) lbl_8040AFAC != 0)) {
+        lbl_8040A814 = 0.0f;
+        lbl_8040A818 = 0.0f;
+        lbl_8040A81C = 0.0f;
+    } else {
+        if (((s32) lbl_8040912C != 0) || (((s32) (*(s32 *)((s8 *)(lbl_80409410) + (0x198))) == 0x1B) && ((NuRndrHackWaterLevel[0] >= 1.0f)) && (NuRndrHackWaterLevel[0] < 6.0f))) {
+            var_f12 = 1.0f;
+        } else {
+            var_f12 = 0.0f;
+        }
+        if (lbl_8040A814 > var_f12) {
+            temp_f0 = lbl_8040A814 - (2.0f * lbl_80408E9C);
+            lbl_8040A814 = temp_f0;
+            if (temp_f0 < var_f12) {
+                lbl_8040A814 = var_f12;
+            }
+        } else if (lbl_8040A814 < var_f12) {
+            temp_f0_2 = lbl_8040A814 + (2.0f * lbl_80408E9C);
+            lbl_8040A814 = temp_f0_2;
+            if (temp_f0_2 > var_f12) {
+                lbl_8040A814 = var_f12;
+            }
+        }
+    }
+    prev = lbl_8040A810;
+    if (((s32) lbl_8040912C == 0) && ((void *) lbl_80409C94 != NULL) && (temp_f13 = (*(f32 *)((s8 *)(lbl_80409C94) + (0xB008))), ((temp_f13 < 1e+01f) != 0))) {
+        lbl_8040A810 = (s32) temp_f13;
+        if (lbl_8040A818 < 1.0f) {
+            temp_f0_3 = lbl_8040A818 + (2.0f * lbl_80408E9C);
+            lbl_8040A818 = temp_f0_3;
+            if (temp_f0_3 > 1.0f) {
+                lbl_8040A818 = 1.0f;
+            }
+        }
+    } else {
+        lbl_8040A818 = 0.0f;
+    }
+    if (((s32) lbl_8040A810 > 0) && ((s32) lbl_8040A810 != prev)) {
+        fn_800E6484();
+    }
+    if (((s32) lbl_8040912C == 0) && ((void *) lbl_80409C94 != NULL) && ((*(f32 *)((s8 *)(lbl_80409C94) + (0xB000))) > 0.0f) && (lbl_8040A81C < 1.0f)) {
+        temp_f0_4 = lbl_8040A81C + (2.0f * lbl_80408E9C);
+        lbl_8040A81C = temp_f0_4;
+        if (temp_f0_4 > 1.0f) {
+            lbl_8040A81C = 1.0f;
+        }
+    }
+}
+
+s32 fn_8002A4B0(s32 *, s32 *, s8 *);
+extern s32 lbl_80408F8C;
+extern s32 lbl_80408FE0;
+extern s32 lbl_80409C70;
+extern s32 lbl_8040B100;
+extern s8 str_Extension_Gsc2[];
+extern s8 str_Path_Legal[];
+extern s8 str_Path_LegalCubeDanish[];
+extern s8 str_Path_LegalCubeDutch[];
+extern s8 str_Path_LegalCubeEnglish[];
+extern s8 str_Path_LegalCubeFrench[];
+extern s8 str_Path_LegalCubeItalian[];
+extern s8 str_Path_LegalCubeJap[];
+extern s8 str_Path_LegalCubeSpanish[];
+extern s8 str_Path_LegalCubeUS[];
+extern s8 str_Path_StuffDir[];
+
+typedef struct { s32 w[16]; } PodStruct40;
+void fn_8014BFEC(s32 *arg0, void *arg1, void *arg2) {
+    char sp8[0x100];
+    s32 sp10C;
+    volatile s32 sp108;
+    s32 temp_r0;
+    s32 temp_r29;
+    s32 temp_r31;
+    s32 temp_r3;
+    s32 var_r3;
+    s32 var_r9;
+
+    temp_r29 = lbl_80408F8C;
+    sp10C = temp_r29 + 0xFFC00000;
+    NuStrCpy(sp8, str_Path_StuffDir);
+    if ((s32) lbl_80408FE0 != 0) {
+        NuStrCat(sp8, str_Path_Legal);
+    } else {
+        temp_r31 = lbl_8040B100;
+        switch (temp_r31) {                         /* irregular */
+        default:
+            NuStrCat(sp8, str_Path_LegalCubeUS);
+            break;
+        case 1:
+            NuStrCat(sp8, str_Path_LegalCubeFrench);
+            lbl_80409C70 = temp_r31;
+            break;
+        case 2:
+            NuStrCat(sp8, str_Path_LegalCubeEnglish);
+            lbl_80409C70 = temp_r31;
+            break;
+        case 3:
+            NuStrCat(sp8, str_Path_LegalCubeItalian);
+            break;
+        case 4:
+            NuStrCat(sp8, str_Path_LegalCubeSpanish);
+            break;
+        case 5:
+            NuStrCat(sp8, str_Path_LegalCubeDanish);
+            break;
+        case 6:
+            NuStrCat(sp8, str_Path_LegalCubeDutch);
+            break;
+        case 7:
+            NuStrCat(sp8, str_Path_LegalCubeJap);
+            break;
+        }
+    }
+    NuStrCat(sp8, str_Extension_Gsc2);
+    sp108 = temp_r29;
+    *arg0 = fn_8002A4B0(&sp10C, &sp108, sp8);
+    memset(arg1, 0, 0xC);
+    temp_r3 = *arg0;
+    if (temp_r3 != 0) {
+        NuSpecialFind(temp_r3, arg1, (s32 *) str_Path_Legal, 1);
+        if (fn_800130F4(arg1) != 0) {
+            *(PodStruct40 *) arg2 = *(PodStruct40 *) fn_800133FC(arg1);
+        }
+    }
+}
+
+typedef struct PodStartState {
+    u8 pad[0xB000];
+    f32 fB000, fB004, fB008, fB00C, fB010, fB014;
+    s32 iB018, iB01C;
+} PodStartState;
+#define ST ((PodStartState *) lbl_80409C94)
+s32 fn_800D4F70(void *, s32, s32, void *);
+s32 fn_800D5378(void *, s32);
+s32 fn_8014DDEC(void *);
+extern void *gPlayerPointers[];
+extern f32 lbl_80408F00;
+extern s32 lbl_80409004;
+extern f32 lbl_8040AFE8;
+extern s8 str_Podrace_EngStartup1[];
+extern s8 str_Podrace_EngStartup2[];
+extern s8 str_Podrace_Go[];
+extern s8 str_Podrace_Light[];
+
+s32 PodraceUpdateStartLights(void) {
+    PodracePlayerTiming **var_r10;
+    PodracePlayerTiming *temp_r9;
+    f32 temp_f0;
+    f32 temp_f0_2;
+    f32 temp_f0_3;
+    f32 temp_f12;
+    f32 temp_f12_2;
+    f32 temp_f13;
+    f32 temp_f13_2;
+    f32 temp_f31;
+    s32 temp_r11;
+    s32 temp_r8;
+    PodStartState *p;
+    s32 temp_r9_2;
+    s32 var_r29;
+    s32 var_r30;
+    s32 var_r31;
+    s32 var_r3;
+
+    temp_f31 = ST->fB000;
+    if (temp_f31 > 0.0f) {
+        var_r10 = gPlayer1Pointer;
+        ST->fB008 = (f32) ST->fB00C;
+        lbl_8040AFE8 = 0.0f;
+        do {
+            temp_r9 = *var_r10;
+            var_r10 += 1;
+            if ((temp_r9 != NULL) && ((*(s32 *)((s8 *)(temp_r9) + (0x20C))) & 0x01000000)) {
+                (*(f32 *)((s8 *)((*(void **)((s8 *)(temp_r9) + (0xEEC)))) + (0x708))) = (f32) 0.0f;
+            }
+        } while ((s32) var_r10 <= (s32) (gPlayer1Pointer + 1));
+        if (lbl_80408F00 == -0.1f) {
+            ST->fB000 = (f32) (ST->fB000 - lbl_80408E9C);
+        }
+        if ((ST->fB000 < 2.9f) && ((temp_f31 >= 2.9f))) {
+            fn_8006DCD4(str_Podrace_EngStartup1, NULL);
+        }
+        if ((ST->fB000 < 1.5f) && ((temp_f31 >= 1.5f))) {
+            fn_8006DCD4(str_Podrace_EngStartup2, NULL);
+        }
+        temp_f13 = ST->fB000;
+        if ((temp_f13 <= 0.0f)) {
+            fn_8006DCD4(str_Podrace_Go, NULL);
+        } else if ((s32) temp_f13 != (s32) temp_f31) {
+            fn_8006DCD4(str_Podrace_Light, NULL);
+        }
+    } else {
+        p = ST;
+        temp_f12 = p->fB00C;
+        temp_f0 = p->fB004 + lbl_80408E9C;
+        p->fB004 = temp_f0;
+        if (temp_f12 > 0.0f) {
+            temp_f0_2 = temp_f12 - temp_f0;
+            p->fB008 = temp_f0_2;
+            if (temp_f0_2 < 0.0f) {
+                p->fB008 = 0.0f;
+                if ((PodracePlayerTiming *) *gPlayer1Pointer != NULL) {
+                    temp_r8 = (*(s32 *)((s8 *)(*gPlayer1Pointer) + (0x20C))) & 0x01000000;
+                    if (temp_r8 != 0) {
+                        fn_800D5378(*gPlayer1Pointer, 1);
+                    }
+                }
+                if (((void *) gPlayerPointers[0] != NULL) && ((*(s32 *)((s8 *)(gPlayerPointers[0]) + (0x20C))) & 0x01000000)) {
+                    fn_800D5378(gPlayerPointers[0], 1);
+                }
+                lbl_80409C98 = 1;
+                fn_800D4F70(lbl_80409004, 3, 1, 0);
+                p = ST;
+                temp_f12_2 = p->fB00C;
+                temp_f13_2 = p->fB010;
+                temp_r9_2 = p->iB01C + 1;
+                p->iB01C = temp_r9_2;
+                if (temp_f12_2 < temp_f13_2) {
+                    temp_r11 = p->iB018;
+                    if ((temp_r11 != 0) && (temp_r9_2 == (s32) ((temp_r9_2 / temp_r11) * temp_r11))) {
+                        temp_f0_3 = temp_f12_2 + p->fB014;
+                        p->fB00C = temp_f0_3;
+                        if (temp_f0_3 > temp_f13_2) {
+                            p->fB00C = temp_f13_2;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    var_r29 = 0;
+    var_r31 = 0xA600;
+    var_r30 = 0x10;
+    do {
+        var_r3 = lbl_80409C94;
+        if ((s32) (*(s32 *)((s8 *)((var_r3 + var_r29)) + (0xA694))) != 0) {
+            var_r3 = fn_8014DDEC(var_r3 + var_r31);
+        }
+        var_r31 += 0xA0;
+        var_r29 += 0xA0;
+        var_r30 -= 1;
+    } while (var_r30 != 0);
+    return var_r3;
+}
+
+typedef struct PodSpecEnt {
+    s32 active;
+    f32 pos[4];
+    f32 scale;
+    u16 rotY;
+    u16 rotX;
+} PodSpecEnt;
+extern PodSpecEnt lbl_80407300[0x40];
+void NuMtxTranslate(void *, void *);
+void fn_8000DCE0(void *, void *);
+void fn_8000E318(void *, s32);
+void fn_8000E498(void *, s32);
+
+void fn_8014FDC8(void) {
+    s32 mtx[0x10];
+    f32 scale[3];
+    PodSpecEnt *e;
+    s32 i;
+
+    if (fn_800130F4(lbl_804072F4) != 0) {
+        e = lbl_80407300;
+        i = 0x40;
+        do {
+            if (e->active != 0) {
+                scale[2] = e->scale;
+                scale[1] = e->scale;
+                scale[0] = e->scale;
+                fn_8000DCE0(mtx, scale);
+                NuMtxTranslate(mtx, e->pos);
+                fn_8000E318(mtx, e->rotY);
+                fn_8000E498(mtx, e->rotX);
+                NuSpecialFindMultiWC((s32 *)lbl_804072F4, (s32)mtx);
+            }
+            e++;
+        } while (--i != 0);
+    }
+}
+
+extern f32 lbl_801AFE14[];
+extern f32 lbl_801AFE18[];
+extern s32 lbl_8040B2DC;
+
+void fn_8014ECEC(void) {
+    s8 *p = (s8 *)lbl_80409C94;
+    u8 *q;
+
+    *(f32 *)(p + 0xB004) = lbl_801AFE14[0];
+    memset(p + 0xA600, 0, 0xA00);
+    lbl_80409C98 = 0;
+    lbl_8040A810 = -1;
+    switch (lbl_8040B108) {
+    case 1:
+        lbl_8040B068 = 3;
+        break;
+    case 2:
+        lbl_8040B068 = 6;
+        break;
+    case 3:
+        lbl_8040B068 = 9;
+        break;
+    }
+    lbl_80409C90 = 0;
+    memset(lbl_80407300, 0, 0x700);
+    q = (u8 *)lbl_80407300 - 0xC;
+    *(f32 *)(q + 0x710) = lbl_801AFE18[0];
+    *(f32 *)(q + 0x744) = lbl_801AFE14[0];
+    lbl_8040B2DC = 0;
+}
+
+s32 AISysFindArea(s32, void *);
+s16 FindGameDebris(s32, s32 *);
+s32 PARTLookupType(s32 *);
+f32 fn_80013764(void *);
+extern s32 str_Format_NoMine[];
+extern s32 str_Podrace_Mine[];
+extern s32 str_Podrace_MinePart[];
+extern s32 str_Podrace_MinePop[];
+
+typedef struct PodMineData {
+    u8 special[0x70C];
+    f32 unk70C;
+    f32 unk710;
+    s32 mines[10];
+    s16 mineCount;
+    s16 debris;
+    s32 part;
+    f32 unk744;
+} PodMineData;
+
+#define MINE ((PodMineData *)lbl_804072F4)
+void PodraceCreateMine(void) {
+    s32 *mines;
+    s32 i;
+    s32 r;
+    s32 buf[8];
+
+    memset(MINE, 0, 0x748);
+    r = NuSpecialFind(*(s32 *)((s8 *)lbl_80409410 + 0x1C8), MINE, str_Podrace_Mine, 1);
+    if (r != 0) {
+        MINE->unk70C = fn_80013764(MINE);
+        mines = MINE->mines;
+        for (i = 0; i <= 9; i++) {
+            sprintf(buf, str_Format_NoMine, i);
+            r = AISysFindArea(*(s32 *)((s8 *)lbl_80409410 + 0x2E8), buf);
+            mines[MINE->mineCount] = r;
+            if (mines != NULL) {
+                MINE->mineCount++;
+            }
+        }
+        MINE->debris = FindGameDebris(*(s32 *)((s8 *)lbl_80409410 + 0x1B8), str_Podrace_MinePop);
+        MINE->part = PARTLookupType(str_Podrace_MinePart);
+    }
+}
+
+void *fn_800D5680(s32, s32, s32, s32, s32, s32, s32, f32, f32, f32);
+f32 NuSinApprox(s32);
+extern f32 lbl_801AFDF8[];
+extern f32 lbl_801AFDFC[];
+extern f32 lbl_801AFE00[];
+extern f32 lbl_801AFE04[];
+extern f32 lbl_801AFE08[];
+extern f32 lbl_801AFE0C[];
+extern f32 lbl_801AFE10[];
+extern f32 lbl_803E04B0[];
+extern s32 lbl_80408F20;
+extern s32 lbl_8040948C;
+extern f32 lbl_80409CF4;
+extern f32 lbl_8040AFA4;
+
+void fn_8014EBBC(void) {
+    u8 *obj;
+    f32 var;
+
+    if (lbl_80409C90 != 0) {
+        if (lbl_80408F00 == lbl_801AFDF8[0] && lbl_80408F20 == 0) {
+            lbl_8040AFA4 = lbl_8040AFA4 + 2.0f * lbl_80408E9C;
+            if (lbl_8040AFA4 > lbl_801AFDFC[0]) {
+                lbl_8040AFA4 = lbl_801AFDFC[0];
+            }
+            if (NuFmod(lbl_803E04B0[0], lbl_801AFE00[0]) < lbl_801AFE04[0]) {
+                var = lbl_80409CF4;
+                lbl_8040948C = 0xD1;
+                obj = fn_800D5680(0, lbl_80409C90 + 0x1A0, 0, 0xFF, 0x3F, 0x3F, 0x8083, var, lbl_801AFE08[0], lbl_801AFE08[0]);
+                if (obj != NULL) {
+                    obj[0x90] = (s32)(NuSinApprox((s32)(lbl_8040AFA4 * lbl_801AFE0C[0])) * lbl_801AFE10[0]);
+                }
+            }
+        } else {
+            lbl_8040AFA4 = lbl_801AFE08[0];
+        }
+    }
+}
+
+s32 NuVecAdd(f32 *, f32 *, void *);
+s32 NuVecRotateY(f32 *, f32 *, u16);
+extern f32 fn_8000C038(void);
+s32 fn_8014D5A0(f32 *);
+extern char MenuHeader[];
+#define MENUF(o) (*(f32 *)(mh + (o)))
+#define P2F4F(o) (*(f32 *)(pp + (o)))
+extern f32 lbl_801AFCFC[];
+extern f32 lbl_801AFD00[];
+extern f32 lbl_801AFD04[];
+extern f32 lbl_801AFD08[];
+extern f32 lbl_801E1960[];
+extern f32 lbl_80409CB0;
+extern f32 lbl_80409CB4;
+extern f32 lbl_80409CB8;
+extern s32 lbl_8040B108;
+
+void fn_8014DA40(void) {
+    f32 v[3];
+
+    if (lbl_8040B108 <= 3 && lbl_8040AFA8 == 0) {
+        u8 *pp = lbl_804072F4;
+        char *mh;
+
+        P2F4F(0x744) = P2F4F(0x744) + lbl_80408E9C;
+        if (P2F4F(0x744) > lbl_801AFCFC[0]) {
+            if (P2F4F(0x710) == lbl_801AFD00[0]) {
+                { char *m0 = MenuHeader; P2F4F(0x710) = *(f32 *)(m0 + 0xAC); }
+            }
+            mh = MenuHeader;
+            if (MENUF(0xAC) < lbl_80409CB8 && MENUF(0xAC) >= P2F4F(0x710)) {
+                v[0] = 2.0f * lbl_80409CB0 * (lbl_801AFD04[0] - fn_8000C038());
+                v[1] = lbl_801AFD08[0];
+                v[2] = lbl_80409CB4;
+                NuVecRotateY(v, v, *(u16 *)((u8 *)lbl_80409004 + 0x626));
+                NuVecAdd(v, v, (u8 *)lbl_80409004 + 0x90);
+                if (fn_8014D5A0(v) != 0) {
+                    P2F4F(0x710) = MENUF(0xAC) + lbl_801E1960[lbl_8040B108];
+                }
+            }
+        }
+    }
+}
+
+s32 CloseDoorObstacle(s32, s32);
+s32 ProcessForceObject(s32);
+s32 fn_80108710(s32, s32);
+s32 fn_8014C8B0();
+extern s8 lbl_801AFC2C[];
+extern s8 lbl_801AFC3C[];
+extern f32 lbl_801AFC4C[];
+extern s32 lbl_804093AC;
+extern f32 lbl_80409C88;
+extern s32 lbl_8040A800;
+extern s32 lbl_8040A804;
+extern s32 lbl_8040A808;
+extern s32 lbl_8040B2C0;
+extern s32 lbl_8040B2C4;
+extern s32 lbl_8040B2D0;
+extern s32 lbl_8040B2D4;
+
+#define PAIRID(a, b, r) \
+    if (((a) == 0 && (b) == 1) || ((a) == 1 && (b) == 0)) { r = 3; } \
+    else if (((a) == 2 && (b) == 1) || ((a) == 1 && (b) == 2)) { r = 4; } \
+    else if (((a) == 0 && (b) == 2) || ((a) == 2 && (b) == 0)) { r = 5; } \
+    else { r = -1; }
+
+static inline s32 PodPairId(s32 a, s32 b) {
+    if ((a == 0 && b == 1) || (a == 1 && b == 0)) {
+        return 3;
+    } else if ((a == 2 && b == 1) || (a == 1 && b == 2)) {
+        return 4;
+    } else if ((a == 0 && b == 2) || (a == 2 && b == 0)) {
+        return 5;
+    }
+    return -1;
+}
+
+void fn_8014CAE8(void) {
+    s32 hit = 0;
+    s32 a, b, r, i, k, r2;
+
+    if (lbl_804093AC == 0x42) {
+        if (lbl_8040B2B4 == 0) {
+            if (lbl_8040B2CC != 0) {
+                fn_8014C8B0();
+                if (lbl_8040B2B8 != 0) {
+                    r = PodPairId(lbl_8040A804, lbl_8040A808);
+                    if (r == lbl_8040B2AC) {
+                        hit = 1;
+                    }
+                    if (hit != 0) {
+                        fn_8006DCD4((char *)lbl_801AFC2C, (void *)(fn_800133FC(lbl_80407154) + 0x30));
+                        lbl_8040B2BC++;
+                        if (lbl_8040B2BC == 3) {
+                            lbl_8040B2B4 = 1;
+                        }
+                    } else {
+                        lbl_8040B2BC = hit;
+                        memset(lbl_80407100, 0xFF, 0xC);
+                    }
+                    lbl_80409C88 = lbl_801AFC4C[0];
+                    lbl_8040A808 = -1;
+                    lbl_8040A804 = -1;
+                    lbl_8040B2B8 = 0;
+                    lbl_8040B2CC = 0;
+                    lbl_8040A800 = lbl_8040B2AC;
+                    do {
+                        r = (fn_800B9ED4() / 21846) + 3;
+                        lbl_8040B2AC = r;
+                        if (lbl_8040B2BC > 0) {
+                            u32 n = lbl_8040B2BC;
+                            s32 old = lbl_8040A800;
+                            s32 *q = lbl_80407100;
+                            do {
+                                k = *q++;
+                                if (r == k) { r = old; }
+                            } while (--n);
+                            lbl_8040B2AC = r;
+                        }
+                    } while (lbl_8040B2AC == lbl_8040A800);
+                    {
+                        u32 u = lbl_8040B2AC - 3;
+                        if (u <= 2U) {
+                            PodSnd12 *p = lbl_80407154;
+                            do {
+                                if (fn_800130F4(p) != 0) {
+                                    fn_80013200(p, 0);
+                                }
+                                p++;
+                            } while ((s32)p <= (s32)lbl_80407154 + 0x18);
+                            p = &lbl_80407154[u];
+                            if (fn_800130F4(p) != 0) {
+                                fn_80013200(p, 1);
+                            }
+                        }
+                    }
+                }
+            } else if (lbl_8040A80C == 0) {
+                {
+                    s32 *q = lbl_80407178;
+                    s32 j = 0;
+                    k = 3;
+                    do {
+                        s32 x = *q++;
+                        if (*(s32 *)(x + 0x18) & 0x1000) {
+                            a = j;
+                            goto found_a;
+                        }
+                        j++;
+                    } while (--k != 0);
+                    a = -1;
+                }
+found_a:
+                lbl_8040A804 = a;
+                if (a != -1) {
+                    s32 o = lbl_80407178[a];
+                    lbl_8040B2D0 = o;
+                    if (o == 0) {
+                        s32 *q = lbl_80407178;
+                        i = 0;
+                        k = 3;
+                        do {
+                            s32 x = *q++;
+                            if (*(s32 *)(x + 0x18) & 0x1000) {
+                                b = i;
+                                goto found_b;
+                            }
+                            i++;
+                        } while (--k != 0);
+                        b = -1;
+                    } else {
+                        s32 *q = lbl_80407178;
+                        i = 0;
+                        k = 3;
+                        do {
+                            s32 x = *q++;
+                            if (x != o && (*(s32 *)(x + 0x18) & 0x1000)) {
+                                b = i;
+                                goto found_b;
+                            }
+                            i++;
+                        } while (--k != 0);
+                        b = -1;
+                    }
+found_b:
+                    lbl_8040A808 = b;
+                    if (lbl_8040A804 != -1 && b != -1) {
+                        lbl_8040B2CC = 1;
+                        lbl_8040B2D4 = lbl_80407178[b];
+                        lbl_8040B2B8 = 0;
+                        lbl_8040B2C0 = 0;
+                        lbl_8040B2C4 = PodPairId(lbl_8040A804, b);
+                        CloseDoorObstacle(0, lbl_8040B2D0);
+                        CloseDoorObstacle(0, lbl_8040B2D4);
+                        fn_80108710(0, lbl_8040B2D0);
+                        fn_80108710(0, lbl_8040B2D4);
+                        lbl_8040A80C = 1;
+                    }
+                } else {
+                    lbl_8040A808 = a;
+                }
+            } else if ((*(s32 *)(lbl_8040B2D0 + 0x18) & 8) && (*(s32 *)(lbl_8040B2D4 + 0x18) & 8)) {
+                lbl_8040A80C = lbl_8040B2CC;
+            }
+            if (lbl_8040B2B4 != 0) {
+                goto block_83;
+            }
+        } else {
+block_83:
+            {
+                s32 fo = lbl_8040B2B0;
+                if (!(*(u16 *)(fo + 0x20) & 0x100)) {
+                    *(u16 *)(fo + 0x20) |= 0x2042;
+                    ProcessForceObject(fo);
+                    if (lbl_80409C8C == 0) {
+                        lbl_80409C8C = 1;
+                        fn_8006DCD4((char *)lbl_801AFC3C, (void *)(fn_800133FC(lbl_8040B2B0 + 4) + 0x30));
+                    }
+                }
+            }
+        }
+    }
 }

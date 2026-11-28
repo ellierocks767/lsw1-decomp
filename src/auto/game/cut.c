@@ -1,4 +1,6 @@
 #include "types.h"
+#include "numath/numath.h"
+#include "nu3dx/nuanim.h"
 
 extern s32 lbl_80409970;
 extern s32 lbl_8040A758;
@@ -1123,11 +1125,12 @@ void fn_8011EB18(void) {
 s32 NuGCutSceneSysInit(s32 *);
 s32 fn_8003F178(s32 *);
 s32 fn_8003F180(s32 *);
-s32 fn_8003F188(s32 *);
+struct CutSceneCharacters;
+void fn_8003F188(void (*)(struct CutSceneCharacters *));
 s32 fn_8003F190(s32 *);
 s32 fn_8003F198(s32 *);
 s32 fn_8003F1A0(s32 *);
-extern s32 CUT_FindCharacters[];
+void CUT_FindCharacters(struct CutSceneCharacters *);
 extern s32 fn_8011C4B8[];
 extern s32 fn_8011D30C[];
 extern s32 fn_8011EF88[];
@@ -1144,13 +1147,13 @@ void fn_8011E864(void) {
     fn_8003F1A0(fn_8011D30C);
 }
 
-f32 fn_8000ED40();
+f32 fn_8000ED40(f32);
 
-void fn_8011BC1C(void)
+void fn_8011BC1C(f32 value)
 {
   f32 temp_f1;
   s8 *new_var;
-  temp_f1 = fn_8000ED40();
+  temp_f1 = fn_8000ED40(value);
   new_var = (s8 *) lbl_8040A75C;
   *((f32 *) (((s8 *) lbl_8040A75C) + 0xB0)) = temp_f1;
   if ((*((f32 *) (new_var + 0xB4))) < temp_f1)
@@ -1172,16 +1175,643 @@ void fn_8011F124(void) {
     }
 }
 
-f32 fn_8000ED40();
-
-void fn_8011AFEC(void) {
+void fn_8011AFEC(f32 value) {
     f32 temp_f1;
 
-    temp_f1 = fn_8000ED40();
+    temp_f1 = fn_8000ED40(value);
     {
         s8 *lbl_8040A758_p = (s8 *)lbl_8040A758;
         (*(f32 *)(lbl_8040A758_p + (0x30))) = (f32) -temp_f1;
         (*(f32 *)(lbl_8040A758_p + (0x2C))) = temp_f1;
         (*(f32 *)(lbl_8040A758_p + (0x34))) = temp_f1;
+    }
+}
+
+void fn_800AFF58(char *);
+extern char MenuHeader[];
+extern u8 *lbl_8040A774;
+extern f32 lbl_8040AFA0;
+extern s32 lbl_8040B25C;
+
+void fn_8011E968(void) {
+    if (lbl_8040A774 != NULL) {
+        *(u32 *)(lbl_8040A774 + 0x88) &= ~0x40000000u;
+        lbl_8040AFAC = 0;
+        lbl_8040B25C = -1;
+        lbl_8040AFA0 = 0.0f;
+        fn_800AFF58(MenuHeader);
+    }
+}
+
+void *fn_8011C3A8(void *, const char *, s32);
+extern void *lbl_80409414;
+extern s32 str_Assert_CUT_FindCharacters[];
+
+typedef struct CutCharacter {
+    u8 unk0[0x40];
+    const char *name;
+    u8 unk44[0xC];
+    void *instance;
+    union {
+        s32 index;
+        struct CutCharacter *record;
+        u8 bytes[4];
+    } link;
+    u8 unk58[4];
+    u8 flags;
+    u8 unk5D;
+    u8 hasLink;
+    u8 unk5F;
+    u8 linkByte;
+    u8 unk61[3];
+} CutCharacter;
+
+typedef struct CutCharacters {
+    CutCharacter *entries;
+    u16 count;
+} CutCharacters;
+
+typedef struct CutSceneCharacters {
+    u8 unk0[0x18];
+    CutCharacters *characters;
+    CutCharacters *linkedCharacters;
+} CutSceneCharacters;
+
+void CUT_FindCharacters(CutSceneCharacters *scene)
+{
+    s32 i;
+    CutCharacters *characters = scene->characters;
+
+    for (i = 0; i < characters->count; ++i) {
+        CutCharacters *linkedCharacters = scene->linkedCharacters;
+        CutCharacter *character = &characters->entries[i];
+        u8 flags = (character->flags |= 2);
+
+        if ((character->instance = fn_8011C3A8(lbl_80409414, character->name, flags & 2)) == NULL) {
+            fn_80009970(str_SourceFile_Cut, 0x651)(str_Assert_CUT_FindCharacters, character->name);
+        }
+        if (character->hasLink && character->link.index <= 254) {
+            character->linkByte = character->link.bytes[3];
+            character->link.record = &linkedCharacters->entries[character->link.index];
+        } else {
+            character->linkByte = 255;
+        }
+    }
+}
+
+void fn_8006497C(s32);
+extern void *lbl_8040AFB0;
+extern s32 lbl_8040AFE0;
+extern s32 lbl_8040AFEC;
+extern s32 lbl_8040B264;
+extern s32 lbl_8040B268;
+extern s32 lbl_8040B26C;
+extern s32 lbl_8040B270;
+extern s32 lbl_8040B274;
+
+static inline u8 *CutSceneGetHeader(u8 *scene)
+{
+    return *(u8 **)(scene + 8);
+}
+
+static inline s32 CutSceneGetFlags(u8 *scene)
+{
+    return *(s32 *)(CutSceneGetHeader(scene) + 0x3C);
+}
+
+static inline s32 CutSceneReadFlag(u8 *scene, s32 mask)
+{
+    s32 flag = CutSceneGetFlags(scene) & mask;
+
+    if (flag != 0) {
+        flag = 1;
+    }
+    return flag;
+}
+
+void fn_8011D6A4(u8 *scene)
+{
+    s32 flag2;
+    u8 *header;
+
+    header = CutSceneGetHeader(scene);
+    lbl_8040AFAC = 1;
+    flag2 = *(s32 *)(header + 0x3C) & 2;
+    lbl_8040AFB0 = scene;
+    if (flag2 != 0) {
+        lbl_8040AFE0 = 1;
+    } else {
+        lbl_8040AFE0 = 0;
+    }
+    lbl_8040AFEC = CutSceneReadFlag(scene, 4);
+    lbl_8040B264 = CutSceneReadFlag(scene, 8);
+    lbl_8040B268 = CutSceneReadFlag(scene, 0x20);
+    lbl_8040B26C = CutSceneReadFlag(scene, 0x40);
+    header = CutSceneGetHeader(scene);
+    lbl_8040B270 = *(s8 *)(header + 0x10);
+    fn_8006497C(*(s8 *)(scene + 0x10));
+    if (*(s16 *)(CutSceneGetHeader(scene) + 4) != -1) {
+        lbl_8040B274 = 1;
+    } else {
+        lbl_8040B274 = 0;
+    }
+}
+
+extern s32 gDebugLevelStreamingEnabled;
+extern f32 lbl_801ACAFC[];
+extern f32 lbl_80408F00;
+extern s32 lbl_80408FE0;
+extern s32 lbl_8040A770;
+extern s32 lbl_8040AFB4;
+
+/* Keep the separate zero returns for the retail guard branches. */
+s32 fn_8011EAA8(void *scene)
+{
+    if (lbl_80408F00 != lbl_801ACAFC[0]) {
+        return 0;
+    }
+    if (scene == NULL || (lbl_8040AFB0 == scene && lbl_8040AFB4 != 0 && lbl_8040A770 != 0)) {
+        return 0;
+    }
+    if (lbl_80408FE0 != 0) {
+        return 0;
+    }
+    if (gDebugLevelStreamingEnabled != 0) {
+        return 0;
+    }
+    return 0;
+}
+
+s32 fn_8011E308(s32);
+extern u8 lbl_803EACC4[];
+extern s32 lbl_80408EEC;
+extern s32 lbl_80408EF0;
+extern s32 lbl_80409158;
+extern s32 lbl_80409940;
+extern s32 lbl_80409944;
+extern s32 lbl_8040B260;
+
+typedef struct CutSceneFixupEntry {
+    union {
+        u32 marker;
+        void *instance;
+    } value;
+    u8 unk4[0x10];
+    u8 flags;
+    u8 unk15[3];
+} CutSceneFixupEntry;
+
+typedef struct CutSceneFixups {
+    CutSceneFixupEntry *entries;
+} CutSceneFixups;
+
+typedef struct CutSceneFixupOwner {
+    u8 unk0[0xA4];
+    CutSceneFixups *fixups;
+} CutSceneFixupOwner;
+
+typedef struct CutSceneSlot {
+    CutSceneCharacters *scene;
+    CutSceneFixupOwner *owner;
+    u8 unk8[0x10];
+} CutSceneSlot;
+
+typedef struct CutSceneState {
+    u8 unk0[0x198];
+    s32 unk198;
+    u8 unk19C[0xC];
+    u8 *entry;
+    u8 unk1AC[0x440];
+    s8 indices[96];
+    CutSceneSlot slots[8];
+    s32 instanceCount;
+} CutSceneState;
+
+void fn_8011D4F8(void)
+{
+    s32 slotIndex = 0;
+    CutSceneSlot *slot = ((CutSceneState *)lbl_80409410)->slots;
+
+    do {
+        CutSceneFixupOwner *owner = slot->owner;
+        if (owner != NULL) {
+            CutSceneFixups *fixups = owner->fixups;
+            CutCharacters *characters = slot->scene->characters;
+            if (characters != NULL && fixups != NULL) {
+                s32 i = 0;
+                if (i < characters->count) {
+                    void *empty = NULL;
+                    s32 fixupOffset = 0;
+                    s32 characterOffset = 0;
+                    do {
+                        CutSceneFixupEntry *entries = fixups->entries;
+                        CutSceneFixupEntry *fixup = (CutSceneFixupEntry *)((u8 *)entries + fixupOffset);
+                        CutCharacter *character = (CutCharacter *)((u8 *)characters->entries + characterOffset);
+                        if (fixup->value.marker == 1) {
+                            if (fixup->flags & 2) {
+                                fixup->value.instance = empty;
+                            } else {
+                                fixup->value.instance = fn_8011C3A8(lbl_80409410, character->name, 0);
+                            }
+                            character->instance = fixup->value.instance;
+                        }
+                        i++;
+                        fixupOffset += sizeof(CutSceneFixupEntry);
+                        characterOffset += sizeof(CutCharacter);
+                    } while (i < characters->count);
+                }
+            }
+        }
+        slotIndex++;
+        slot++;
+    } while (slotIndex <= 7);
+
+    lbl_8040AFB4 = 0;
+    lbl_8040A770 = 0;
+    lbl_8040B25C = -1;
+    lbl_8040993C = 0.0f;
+    if (lbl_80409158 != 0) {
+        CutSceneState *state = lbl_80409410;
+        s8 sceneIndex = *(s8 *)(state->entry + 0x40);
+
+        if (sceneIndex != -1 && state->indices[sceneIndex] != -1 &&
+            lbl_80408EF0 == 0 && lbl_80408EEC == 0 && lbl_803EACC4[sceneIndex] == 0) {
+            fn_8011E308(sceneIndex);
+            if (!(*(s32 *)(((CutSceneState *)lbl_80409410)->entry + 4) & 0x4000)) {
+                lbl_8040993C = 1.0f;
+            }
+        }
+    }
+    lbl_80409940 = -1;
+    lbl_8040B260 = -1;
+    lbl_80409944 = 0;
+}
+
+typedef struct CutSceneFlagRecord {
+    u32 key;
+    u8 unk4[4];
+    u16 flags;
+    u8 unkA[0x36];
+} CutSceneFlagRecord;
+
+extern CutSceneFlagRecord *lbl_8040A760;
+
+void fn_8011B428(void)
+{
+    CutSceneFlagRecord *record = lbl_8040A760;
+
+    if (record != NULL) {
+        for (; record->key != 0; ++record) {
+            record->flags |= 8;
+        }
+    }
+}
+
+s32 fn_8011E9C4(s32 index)
+{
+    if ((u32)index < 96 && ((CutSceneState *)lbl_80409410)->indices[index] != -1) {
+        lbl_80409940 = index;
+        return 1;
+    }
+    return 0;
+}
+
+void __fini_cpp_exceptions(void)
+{
+    s32 index = lbl_80409940;
+
+    if (index != -1) {
+        fn_8011E308(index);
+        lbl_80409940 = -1;
+    }
+}
+
+typedef struct CutSceneController {
+    u8 unk0[0x20];
+    f32 value20;
+    f32 value24;
+    f32 value28;
+    u8 unk2C[0x10];
+    u32 flags;
+} CutSceneController;
+
+void fn_8011C028(f32 value)
+{
+    f32 magnitude = fn_8000ED40(value);
+    CutSceneController *controller = (CutSceneController *)lbl_8040A768;
+
+    controller->value24 = magnitude;
+    controller->flags |= 0x800;
+}
+
+void fn_8011BFF4(f32 value)
+{
+    f32 magnitude = fn_8000ED40(value);
+    CutSceneController *controller = (CutSceneController *)lbl_8040A768;
+
+    controller->value20 = magnitude;
+    controller->flags |= 0x800;
+}
+
+void fn_8011C05C(f32 value)
+{
+    f32 magnitude = fn_8000ED40(value);
+    CutSceneController *controller = (CutSceneController *)lbl_8040A768;
+
+    controller->value28 = magnitude;
+    controller->flags |= 0x800;
+}
+
+typedef struct gcut_instance_view gcut_instance_view;
+void fn_8003AD00(gcut_instance_view *);
+
+typedef struct CutSceneInstanceSlot {
+    gcut_instance_view *instance;
+    u8 pad04[9];
+    s8 sceneIndex;
+    u8 pad0E[0xA];
+} CutSceneInstanceSlot;
+
+void fn_8011EC3C(u8 *scene) {
+    CutSceneInstanceSlot *slot = (CutSceneInstanceSlot *)(scene + 0x650);
+    s32 remaining = 8;
+
+    do {
+        gcut_instance_view *instance = slot->instance;
+        slot++;
+        if (instance != NULL) {
+            fn_8003AD00(instance);
+        }
+    } while (--remaining != 0);
+}
+
+s32 NuStrICmp(char *, char *);
+char *NuStrIStr(char *, char *);
+
+typedef struct CutScenePathEntry {
+    char *path;
+    u8 pad04[0x3C];
+} CutScenePathEntry;
+
+extern CutScenePathEntry lbl_801DF4E0[];
+extern char str_Path_CutDir[];
+
+s32 FindCutScene(char *name) {
+    CutScenePathEntry *entry = lbl_801DF4E0;
+    s32 index;
+
+    for (index = 0; index < 96; index++) {
+        char *path = entry->path;
+        char *cutName;
+        entry++;
+        cutName = NuStrIStr(path, str_Path_CutDir);
+        if (cutName != NULL && NuStrICmp(cutName + 4, name) == 0) {
+            return index;
+        }
+    }
+    return -1;
+}
+
+void fn_8011B45C(void)
+{
+    CutSceneFlagRecord *record = lbl_8040A760;
+
+    if (record != NULL) {
+        for (; record->key != 0; ++record) {
+            /* Preserve the retail ori/xori pair for clearing bit 3. */
+            record->flags = (record->flags | 8) ^ 8;
+        }
+    }
+}
+
+gcut_instance_view *fn_8011EBF4(CutSceneState *state, s32 index)
+{
+    s32 i;
+
+    for (i = 0; i < state->instanceCount; ++i) {
+        CutSceneInstanceSlot *slots = (CutSceneInstanceSlot *)((u8 *)state + 0x650);
+        if (slots[i].sceneIndex == index) {
+            return slots[i].instance;
+        }
+    }
+    return NULL;
+}
+
+typedef struct CutCharacterName {
+    u8 pad00[0xC];
+    char *name;
+} CutCharacterName;
+
+typedef struct CutCharacterType {
+    CutCharacterName named;
+    u8 pad10[0x38];
+} CutCharacterType;
+
+typedef struct CutCharacterInstance {
+    u8 pad00[0x54];
+} CutCharacterInstance;
+
+typedef struct CutCharacterTable {
+    u8 pad00[0x18];
+    CutCharacterInstance *instances;
+    u8 pad1C[4];
+    CutCharacterType *types;
+} CutCharacterTable;
+
+typedef struct CutScenePlayer {
+    u8 pad00[0x64];
+    CutCharacterName *named;
+    u8 pad68[0x1A4];
+    s32 state;
+} CutScenePlayer;
+
+typedef struct CutCharacterIndex {
+    u8 type;
+    u8 unknown;
+} CutCharacterIndex;
+
+extern CutCharacterTable *lbl_80408DF0;
+extern CutCharacterIndex *lbl_804093E8;
+extern CutScenePlayer *gPlayer1Pointer[8];
+
+void *fn_8011C3A8(void *scene, const char *name, s32 useCharacterTable)
+{
+    if (useCharacterTable) {
+        /* Integer address arithmetic preserves the retail index-first byte load. */
+        u32 indices = (u32)lbl_804093E8;
+        if (indices != 0) {
+            s32 i = 0;
+            while (*(u8 *)(i * sizeof(CutCharacterIndex) + indices) != 255 && i < 64) {
+                u8 type = *(u8 *)(i * sizeof(CutCharacterIndex) + indices);
+                if (NuStrICmp((char *)name, lbl_80408DF0->types[type].named.name) == 0) {
+                    return &lbl_80408DF0->instances[i];
+                }
+                ++i;
+                indices = (u32)lbl_804093E8;
+            }
+        }
+    } else {
+        s32 offset = 0;
+        CutScenePlayer **playerSlot = gPlayer1Pointer;
+        CutScenePlayer **base = playerSlot;
+        CutScenePlayer **last = playerSlot + 7;
+        do {
+            CutScenePlayer *player = *playerSlot++;
+            if (player != NULL && player->state < 0 &&
+                NuStrICmp(player->named->name, (char *)name) == 0) {
+                return *(CutScenePlayer **)((u8 *)base + offset);
+            }
+            offset += sizeof(*base);
+        } while ((s32)playerSlot <= (s32)last);
+    }
+    return NULL;
+}
+
+void NuGCutSceneDestroy(s32 *);
+void fn_8003AA94(gcut_instance_view *);
+
+void fn_8011EB70(CutSceneState *scene)
+{
+    CutSceneInstanceSlot *slot = (CutSceneInstanceSlot *)((u8 *)scene + 0x650);
+    gcut_instance_view *emptyInstance = NULL;
+    s32 remaining = 8;
+    s32 offset;
+    u32 sceneSlots;
+    s32 *emptyScene;
+
+    /* The do/while (0) wraps keep each slot pointer in the call argument register. */
+    do {
+        do {
+            gcut_instance_view *instance = slot->instance;
+            do {
+                if (instance != NULL) {
+                    fn_8003AA94(instance);
+                    slot->instance = emptyInstance;
+                }
+            } while (0);
+            slot++;
+        } while (--remaining != 0);
+        sceneSlots = (u32)scene->slots;
+    } while (0);
+
+    emptyScene = NULL;
+    offset = 0;
+    remaining = 8;
+    do {
+        s32 **entry = (s32 **)(offset + sceneSlots);
+        s32 *cutscene = *entry;
+        do {
+            if (cutscene != NULL) {
+                NuGCutSceneDestroy(cutscene);
+                *entry = emptyScene;
+            }
+        } while (0);
+        offset += sizeof(CutSceneSlot);
+    } while (--remaining != 0);
+}
+
+void fn_8011B294(f32 value)
+{
+    if (lbl_8040A764 != 0) {
+        *(f32 *)lbl_8040A75C = fn_8000ED40(value);
+    }
+}
+
+typedef struct CutSceneCommandList {
+    u8 unknown[0x30];
+    s8 *commands;
+} CutSceneCommandList;
+
+void fn_8011C168(CutSceneState *, s32);
+
+void fn_8011E8D4(CutSceneState *scene)
+{
+    s32 remaining = 96;
+    s8 *slot = (s8 *)scene + 0x64B;
+    CutSceneCommandList *list;
+
+    do {
+        *slot-- = -1;
+    } while (--remaining != 0);
+
+    list = (CutSceneCommandList *)scene->entry;
+    scene->instanceCount = 0;
+    if (list->commands != NULL) {
+        s32 index = 0;
+        while (list->commands[index] != -1) {
+            /* The retail loop reloads the command pointer for the dispatch. */
+            s8 *commands = *(s8 *volatile *)&list->commands;
+            s32 command = commands[index++];
+            fn_8011C168(scene, command);
+            list = (CutSceneCommandList *)scene->entry;
+        }
+    }
+}
+
+typedef struct CutSceneLocator {
+    struct numtx_s matrix;
+    struct nuvec_s translation;
+    f32 scale;
+    struct nuanimdata2_s *animation;
+    u32 axis;
+    u8 flags;
+} CutSceneLocator;
+
+void NuAnimData2CalcTime(struct nuanimdata2_s *, struct nuanimtime_s *, f32);
+s32 instNuGCutSceneClipTest(CutSceneLocator *, struct nuanimtime_s *, f32 *);
+void fn_8003CEE0(CutSceneLocator *, struct numtx_s *, struct nuanimtime_s *, f32);
+void fn_8000D134(struct numtx_s *, struct numtx_s *, struct numtx_s *);
+s32 fn_800BA014(s32, struct numtx_s *);
+
+void fn_8011EDD8(s32 unused0, s32 unused1, s32 unused2, CutSceneLocator *locator,
+                 struct numtx_s *transform, f32 frame)
+{
+    struct numtx_s matrix;
+    struct nuanimtime_s time;
+    struct nuanimtime_s *animationTime = &time;
+
+    NuAnimData2CalcTime(locator->animation, animationTime, frame);
+    /* Keep frame in f1 at both retail call sites. */
+    if (((s32 (*)(CutSceneLocator *, f32, struct nuanimtime_s *, f32 *))instNuGCutSceneClipTest)(
+            locator, frame, animationTime, NULL)) {
+        ((void (*)(f32, CutSceneLocator *, struct numtx_s *, struct nuanimtime_s *))fn_8003CEE0)(
+            frame, locator, &matrix, animationTime);
+        if (locator->flags & 4) {
+            NuMtxPreTranslate(&matrix, &locator->translation);
+        }
+        if (transform != NULL) {
+            fn_8000D134(&matrix, &matrix, transform);
+        }
+        fn_800BA014(10, &matrix);
+        fn_800BA014(11, &matrix);
+    }
+}
+
+f32 NuSinApprox(s32);
+s32 fn_800274BC(s32);
+void fn_80025C38(s32, s32, s32, s32, u32, void *);
+void fn_80027564(void);
+extern f32 lbl_80409968;
+extern f32 lbl_8040996C;
+extern void *lbl_8040AF70;
+
+void fn_8011EC88(CutSceneState *scene)
+{
+    if (lbl_8040993C > 0.0f && fn_800274BC(-1) != 0) {
+        f32 scale;
+        f32 sine;
+        s32 height;
+        s32 fullHeight = 0xE00;
+
+        if (scene != NULL && (scene->unk198 == 0x77 || lbl_8040B25C == 0x5F)) {
+            scale = lbl_8040996C;
+        } else {
+            scale = lbl_80409968;
+        }
+        sine = NuSinApprox((s32)(lbl_8040993C * 16384.0f));
+        height = (s32)((f32)(s32)(fullHeight * scale) * sine);
+        fn_80025C38(0, 0, 0x2800, height, 0x80000000u, lbl_8040AF70);
+        fn_80025C38(0, fullHeight - height, 0x2800, height, 0x80000000u, lbl_8040AF70);
+        fn_80027564();
     }
 }
