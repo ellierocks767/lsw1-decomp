@@ -1432,3 +1432,41 @@ s32 PodraceUpdateStartLights(void) {
     } while (var_r30 != 0);
     return var_r3;
 }
+
+typedef struct PodSpecEnt {
+    s32 active;
+    f32 pos[4];
+    f32 scale;
+    u16 rotY;
+    u16 rotX;
+} PodSpecEnt;
+extern PodSpecEnt lbl_80407300[0x40];
+void NuMtxTranslate(void *, void *);
+void fn_8000DCE0(void *, void *);
+void fn_8000E318(void *, s32);
+void fn_8000E498(void *, s32);
+
+void fn_8014FDC8(void) {
+    s32 mtx[0x10];
+    f32 scale[3];
+    PodSpecEnt *e;
+    s32 i;
+
+    if (fn_800130F4(lbl_804072F4) != 0) {
+        e = lbl_80407300;
+        i = 0x40;
+        do {
+            if (e->active != 0) {
+                scale[2] = e->scale;
+                scale[1] = e->scale;
+                scale[0] = e->scale;
+                fn_8000DCE0(mtx, scale);
+                NuMtxTranslate(mtx, e->pos);
+                fn_8000E318(mtx, e->rotY);
+                fn_8000E498(mtx, e->rotX);
+                NuSpecialFindMultiWC((s32 *)lbl_804072F4, (s32)mtx);
+            }
+            e++;
+        } while (--i != 0);
+    }
+}
