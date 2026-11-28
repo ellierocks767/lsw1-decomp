@@ -6083,3 +6083,72 @@ void Menu_Unknown9_HandleSelection(void *menu)
         Menu_CloseCurrent();
     }
 }
+
+struct socksys_fx_s;
+s32 ParticlesPerFrame(f32, f32);
+s32 fn_80095A44(struct socksys_fx_s *, s32, const struct nuvec_s *, s32, const struct nuvec_s *);
+extern f32 lbl_801A17A8[];
+
+void BoltDebris(u8 *bolt, struct nuvec_s *positions, s32 index, const struct nuvec_s *direction) {
+    struct nuvec_s *position;
+    struct nuvec_s *selected;
+    u8 *object;
+    s32 i;
+    s32 effects;
+    s32 particleEffects;
+    s8 particle;
+    s8 effect;
+
+    effect = -1;
+    if (bolt[0xE4] == 6) {
+        effect = 0x3F;
+    } else {
+        object = *(u8 **)bolt;
+        if (object != NULL) {
+            switch (*(s16 *)(object + 0x1074)) {
+            case 0x79:
+            case 0x39:
+                effect = 0x2A;
+                break;
+            case 0x5D:
+                effect = 0x2C;
+                break;
+            }
+        }
+    }
+    if (bolt[0xE6] == 0x34) {
+        effect = 0x34;
+    }
+    if (effect != -1) {
+        effects = lbl_80409410->unk1B8;
+        if (index == -1) {
+            selected = positions + 1;
+        } else {
+            selected = &positions[index];
+        }
+        fn_800958F8(effects, effect, (s32)selected);
+        return;
+    }
+
+    position = positions;
+    i = 0;
+    do {
+        if (bolt[0xE5] != 0 && index == -1 && i != 1) {
+            goto next;
+        }
+        if (index != -1 && index != i) {
+            goto next;
+        }
+        if (direction != NULL) {
+            particleEffects = lbl_80409410->unk1B8;
+            particle = (s8)bolt[0xE6];
+            fn_80095A44((struct socksys_fx_s *)particleEffects, particle, position,
+                        ParticlesPerFrame(lbl_801A17A8[0], lbl_80408E9C), direction);
+        } else {
+            fn_800958F8(lbl_80409410->unk1B8, (s8)bolt[0xE6], (s32)&positions[i]);
+        }
+next:
+        i++;
+        position++;
+    } while (i <= 2);
+}
