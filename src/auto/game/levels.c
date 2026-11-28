@@ -7117,3 +7117,75 @@ void fn_800BA6AC(void *arg0)
         }
     }
 }
+
+typedef struct LevelTimedEffect {
+    s32 unk0;
+    s32 unk4;
+    void *owner;
+    void (*callback)(struct LevelTimedEffect *);
+    struct nuvec_s pos;
+    f32 unk1C;
+    f32 time;
+    f32 duration;
+    u16 seed;
+    s8 unk2A;
+    s8 unk2B;
+    s32 unk2C;
+} LevelTimedEffect;
+
+typedef struct LevelEffectOwner {
+    u8 pad0[0x20C];
+    u32 active : 1;
+    u32 rest : 31;
+} LevelEffectOwner;
+
+void fn_800BA390(void)
+{
+    s32 i;
+    LevelTimedEffect *effect = (LevelTimedEffect *)lbl_803EAAA0;
+
+    for (i = 0; i < 4; i++, effect++) {
+        if (effect->time < effect->duration) {
+            effect->time += lbl_80408E9C;
+            if (effect->time >= effect->duration) {
+                effect->time = effect->duration;
+            } else {
+                if (effect->owner != NULL && !((LevelEffectOwner *)effect->owner)->active) {
+                    effect->owner = NULL;
+                }
+                if (effect->callback != NULL) {
+                    effect->callback(effect);
+                }
+            }
+        }
+    }
+}
+
+typedef struct LevelSpecialItem {
+    s32 unk0;
+    s32 unk4;
+    s32 active;
+    s32 unkC;
+} LevelSpecialItem;
+
+typedef struct LevelSpecialTable {
+    u8 pad0[0x76C];
+    LevelSpecialItem specials[287];
+} LevelSpecialTable;
+
+s32 fn_800BA014(s32 arg0, struct numtx_s *arg1)
+{
+    struct numtx_s aligned;
+
+    if (arg0 == -1) {
+        return 1;
+    }
+    if (((LevelSpecialTable *)lbl_80409410)->specials[arg0].active != 0) {
+        if ((u32)arg1 & 0xF) {
+            aligned = *arg1;
+            arg1 = &aligned;
+        }
+        return NuSpecialFindMultiWC((struct nuhspecial_s *)&((LevelSpecialTable *)lbl_80409410)->specials[arg0], arg1);
+    }
+    return 0;
+}
