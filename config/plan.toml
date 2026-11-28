@@ -2788,3 +2788,11 @@ reason = "best 156/158: lis r23 (MINE base 0x804072F4@ha) scheduled after ble in
 [[parked]]
 function = "PodraceLoadSplineSettings"
 reason = "best 270/288: instruction scheduling of v8/v18 pointer regs (addi r4; mr r30,r4) and zero-store/arg order; best body work/hc/PodraceLoadSplineSettings_best.c needs fn_80146B8C(spl,out,t) 3-arg proto and fn_8014DB7C(act,sp28,0,f); next: permuter burst on pls_d.c"
+
+[[parked]]
+function = "Shop_DrawSubMenu3D"
+reason = "best 118/154: control flow matches, register rotation (items r28 vs r30), 152 vs 154 insns; next: permuter burst on items/locals order"
+
+[[parked]]
+function = "fn_8014D1F8"
+reason = "best 121/166 (3 variants): target uses lis base in r23 + addi 0x18 then lfsx with r29=i<<5, frame -0xa0 stmw r20; mine folds +0x18 into reloc, frame -0x98 stmw r19; next: permuter burst, restructure loop locals (work/hc/d1f8_b.c)"
