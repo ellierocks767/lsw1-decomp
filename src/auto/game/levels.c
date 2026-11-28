@@ -7865,3 +7865,99 @@ void fn_800C2D14(void) {
     }
 #undef p
 }
+
+extern const f32 lbl_801A282C[];
+extern const f32 lbl_801A2830[];
+f32 fn_8000C038(void);
+struct c267c_ent {
+    char pad0[0x10];
+    s32 unk10;
+    s32 unk14;
+    char pad18[0x58 - 0x18];
+    s32 unk58;
+    u32 flags;
+};
+struct c267c_s {
+    struct c267c_ent ents[0x100];
+    struct c267c_ent ents2[8];
+    s16 count;
+    s16 count2;
+    char pad6304[0x63C4 - 0x6304];
+    s16 ids[6];
+    u8 done[6];
+    char pad63D6[0x63DC - 0x63D6];
+    f32 unk63DC;
+    char pad63E0[0x63E8 - 0x63E0];
+    u32 unk63E8;
+};
+
+void fn_800C267C(s32 arg0) {
+#define p ((struct c267c_s *)lbl_802DA798)
+    struct c267c_ent *e;
+    s32 c;
+    s32 i;
+    s32 j;
+
+    c = 0;
+    if (arg0 == 0) {
+        return;
+    }
+    for (i = 0; i < p->count2; i++) {
+        if (p->ents2[i].unk14 == arg0) {
+            p->ents2[i].unk14 = 0;
+            for (i = 0; i < p->count2; i++) {
+                if (p->ents2[i].unk14 != 0) {
+                    c++;
+                }
+            }
+            if (c == 0) {
+                p->count2 = c;
+            }
+            return;
+        }
+    }
+    for (i = 0; i < p->count; i++) {
+        if (p->ents[i].unk14 == arg0) {
+            for (j = 0; j < 6; j++) {
+                if (p->ids[j] == p->ents[i].unk10 && p->done[j] == 0) {
+                    p->done[j] = 1;
+                    p->unk63DC = lbl_801A282C[0];
+                    break;
+                }
+            }
+            e = &p->ents[i];
+            e->flags |= 0x80000000;
+            p->ents[i].unk14 = 0;
+            e->flags &= ~0x18000000;
+            if (e == NULL) {
+                return;
+            }
+            if ((e->flags >> 30) & 1) {
+                if (lbl_804091F8 == 0) {
+                    if ((s32) p->unk63E8 >= 0) {
+                        e->unk10 = 0x6D;
+                        p->unk63E8 |= 0x80000000;
+                        goto done;
+                    }
+                    if (!(p->unk63E8 & 0x40000000)) {
+                        e->unk10 = 0x6E;
+                        p->unk63E8 |= 0x40000000;
+                        goto done;
+                    }
+                }
+                if (fn_8000C038() < lbl_801A2830[0]) {
+                    e->unk10 = 0x41;
+                } else {
+                    e->unk10 = 0x43;
+                }
+            } else {
+                e->unk10 = 0x75;
+            }
+done:
+            e->unk58 = 0;
+            e->flags &= ~0x38000000;
+            return;
+        }
+    }
+#undef p
+}
