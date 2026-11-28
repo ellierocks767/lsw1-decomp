@@ -872,3 +872,506 @@ void InitMiniKit(struct CHRISMINIKIT_s *kit, u32 *cursor, u32 *limit)
         kit->level = -1;
     }
 }
+
+struct ChrisBolt {
+    struct numtx_s transform;
+    struct CHRISVEC4_s velocity;
+    f32 duration;
+    u8 pad54[4];
+    s32 owner;
+    u8 pad5C[4];
+};
+
+struct ChrisBoltPool {
+    struct ChrisBolt *bolts;
+    s32 count;
+    s32 next;
+};
+
+extern struct numtx_s lbl_80313268;
+extern char lbl_801AF364[];
+extern char lbl_801AF378[];
+extern char lbl_801AF390[];
+extern f32 lbl_801AF3A4[];
+extern f32 lbl_801AF3A8[];
+
+void fn_8006DCD4(const char *name, void *pos);
+void *memset();
+
+static inline struct ChrisBolt *ChrisBolt_Allocate(struct ChrisBoltPool *pool)
+{
+    struct ChrisBolt *start, *end, *bolt, *base;
+
+    start = pool->bolts + pool->next;
+    end = pool->bolts + pool->count;
+    for (bolt = start; bolt < end; ++bolt) {
+        if (bolt->duration == lbl_801AF3A4[0])
+            goto found;
+    }
+    base = pool->bolts;
+    for (bolt = base; bolt < start; ++bolt) {
+        if (bolt->duration == lbl_801AF3A4[0])
+            goto found;
+    }
+    return NULL;
+found:
+    pool->next = bolt - pool->bolts;
+    memset(bolt, 0, sizeof(*bolt));
+    return bolt;
+}
+
+s32 QuickBolt_Add(struct ChrisBoltPool *pool, struct numtx_s *transform, struct CHRISVEC4_s *velocity,
+                  f32 duration, s32 owner, s32 sound)
+{
+    struct ChrisBolt *bolt = ChrisBolt_Allocate(pool);
+    if (bolt != NULL) {
+        f32 dy = transform->_31 - lbl_80313268._31;
+        f32 dx = transform->_30 - lbl_80313268._30;
+        f32 xy = dx * dx + dy * dy;
+        f32 dz = transform->_32 - lbl_80313268._32;
+        if (dz * dz + xy < lbl_801AF3A8[0]) {
+            switch (sound) {
+            case -279:
+                fn_8006DCD4(lbl_801AF364, &transform->_30);
+                break;
+            case -277:
+            case -276:
+                fn_8006DCD4(lbl_801AF378, &transform->_30);
+                break;
+            case -278:
+                fn_8006DCD4(lbl_801AF390, &transform->_30);
+                break;
+            }
+        }
+
+        bolt->duration = duration;
+        bolt->transform = *transform;
+        fn_8000E318(&bolt->transform, 0x4000);
+        bolt->velocity = *velocity;
+        bolt->owner = owner;
+        return 1;
+    }
+    return 0;
+}
+
+struct ChrisStripMaterial {
+    u8 pad0[0xCC];
+    s32 fieldCC;
+};
+
+struct ChrisPoolNode {
+    struct numtx_s transform;
+    struct nuvec_s velocity;
+    struct ChrisStripMaterial *material;
+    f32 radius;
+    f32 firstRadius;
+    f32 lastRadius;
+    u32 colour;
+    u32 firstColour;
+    u32 lastColour;
+    f32 age;
+    f32 duration;
+    f32 delay;
+    u16 flags;
+    u8 pad76[2];
+    struct ChrisPoolNode *next;
+    struct ChrisPoolNode *previous;
+};
+
+struct ChrisPool {
+    u16 capacity;
+    u16 count;
+    struct ChrisPoolNode *nodes;
+    struct ChrisPoolNode *free;
+    struct ChrisPoolNode *head;
+    struct ChrisPoolNode *tail;
+};
+
+extern struct ChrisPoolNode **lbl_80409A60;
+
+void fn_801409B4(struct ChrisPool **pool, u32 *arena, s32 unused, s32 capacity)
+{
+    struct ChrisPool *header;
+    struct ChrisPoolNode *nodes;
+    u32 bytes;
+    u32 index;
+
+    header = (struct ChrisPool *)((*arena + 3) & ~3u);
+    *arena = (u32)header + sizeof(*header);
+    *pool = header;
+    if (capacity < 0)
+        capacity = 0;
+    if (capacity > 64)
+        capacity = 64;
+    header->capacity = capacity;
+    (*pool)->count = 0;
+
+    capacity = (*pool)->capacity;
+    nodes = (struct ChrisPoolNode *)((*arena + 0x7F) & ~0x7Fu);
+    bytes = capacity * sizeof(*nodes);
+    *arena = (u32)nodes + bytes;
+    if (nodes != NULL) {
+        /* Keep the ring size and the loop count live in separate retail registers. */
+        register u32 ringBytes asm("r9") = bytes;
+        register s32 lastIndex asm("r10") = capacity - 1;
+        struct ChrisPoolNode *last;
+
+        if (lastIndex > 1) {
+            struct ChrisPoolNode *prev = nodes;
+            struct ChrisPoolNode *next = nodes + 2;
+            struct ChrisPoolNode *cur = nodes + 1;
+            s32 remaining = lastIndex - 1;
+            do {
+                cur->next = next;
+                cur->previous = prev;
+                ++next;
+                ++prev;
+                ++cur;
+            } while (--remaining != 0);
+        }
+        {
+            u32 lastOffset, previousOffset;
+            lastOffset = ringBytes - sizeof(*nodes);
+            previousOffset = ringBytes - 2 * sizeof(*nodes);
+            ringBytes += (u32)nodes;
+            nodes->next = nodes + 1;
+            last = (struct ChrisPoolNode *)(ringBytes - sizeof(*nodes));
+            nodes->previous = (struct ChrisPoolNode *)((u32)nodes + lastOffset);
+            last->previous = (struct ChrisPoolNode *)((u32)nodes + previousOffset);
+            last->next = nodes;
+        }
+    }
+
+    index = (*arena + 3) & ~3u;
+    *arena = index + capacity * sizeof(u32);
+    lbl_80409A60 = (struct ChrisPoolNode **)index;
+    (*pool)->nodes = nodes;
+    (*pool)->free = (*pool)->nodes;
+    (*pool)->head = NULL;
+    (*pool)->tail = NULL;
+}
+
+struct ChrisCameraPlayer {
+    u8 pad000[0x6C];
+    struct nuvec_s position;
+    u8 pad078[0x194];
+    u32 flags;
+};
+
+extern struct ChrisCameraPlayer *gPlayer1Pointer[];
+extern char MenuHeader[];
+extern f32 lbl_801AF5DC[];
+extern f32 lbl_801AF5E0[];
+extern f32 lbl_801AF5E4[];
+extern f32 lbl_801AF5E8[];
+extern f32 lbl_801AF5EC[];
+extern f32 lbl_801AF5F0[];
+extern f32 lbl_801AF5F4[];
+extern f32 lbl_801AF5F8[];
+extern f32 lbl_80409B5C;
+extern f32 lbl_80409B60;
+extern f32 lbl_80409B64;
+extern f32 lbl_80409B68;
+extern f32 lbl_80409B6C;
+
+void fn_8000DDD0(struct numtx_s *transform, s32 angle);
+void fn_8000E540(struct numtx_s *transform, s32 angle);
+void NuVec4MtxTransformVU0(struct nuvec4_s *dest, struct nuvec4_s *src, struct numtx_s *transform);
+void *fn_80059C44(struct nuvec_s *position, struct nuvec_s *delta, f32 radius, void *context);
+void fn_800B02E0(void *camera, f32 amplitude, f32 duration, f32 speed);
+void JudderGameCamera(void *camera, s32 mode, s32 flags, f32 duration);
+f32 fn_8000C038(void);
+
+void fn_8014564C(void)
+{
+    struct numtx_s transform;
+    struct nuvec_s position, *origin;
+    struct nuvec4_s delta, *rotated;
+    s32 i;
+    register f32 negative asm("fr28");
+    register f32 positive asm("fr29");
+    f32 nearest;
+    f32 zero;
+    f32 timer;
+
+    nearest = lbl_801AF5DC[0];
+
+    if (gPlayer1Pointer[0]->flags & 0x01000000) {
+        position = gPlayer1Pointer[0]->position;
+        origin = &position;
+    } else {
+        position = gPlayer1Pointer[1]->position;
+        origin = &position;
+    }
+    fn_8000DDD0(&transform, 0x2000);
+    i = 0;
+    rotated = &delta;
+    fn_8000E540(&transform, 0x2000);
+    {
+        f32 one;
+        zero = lbl_801AF5E8[0];
+        one = lbl_801AF5E0[0];
+        negative = lbl_801AF5E4[0];
+        /* Keep the zero and negative loads ordered as in the retail setup. */
+        asm("" : "=f"(zero) : "0"(zero), "f"(negative));
+        positive = lbl_801AF5DC[0];
+        delta.w = one;
+    }
+    do {
+        switch (i) {
+        case 0:
+        case 6:
+            delta.x = negative;
+            goto xAxis;
+        case 1:
+        case 7:
+            delta.x = positive;
+xAxis:
+            delta.y = zero;
+            delta.z = zero;
+            break;
+        case 2:
+        case 8:
+            delta.y = negative;
+            goto yAxis;
+        case 3:
+        case 9:
+            delta.y = positive;
+yAxis:
+            delta.x = zero;
+            delta.z = zero;
+            break;
+        case 4:
+        case 10:
+            delta.z = negative;
+            goto zAxis;
+        case 5:
+        case 11:
+            delta.z = positive;
+zAxis:
+            delta.x = zero;
+            delta.y = zero;
+            break;
+        }
+        if (i > 5)
+            NuVec4MtxTransformVU0(&delta, &delta, &transform);
+        if (fn_80059C44(origin, (struct nuvec_s *)rotated, lbl_801AF5EC[0], NULL) != NULL) {
+            delta.x = NuFsqrt(delta.z * delta.z + (delta.x * delta.x + delta.y * delta.y));
+            if (delta.x < nearest)
+                nearest = delta.x;
+        }
+        i++;
+    } while (i <= 11);
+    if (nearest < lbl_801AF5DC[0]) {
+        f32 amplitude;
+        register f32 speed asm("fr3");
+        zero = lbl_801AF5E0[0];
+        zero -= nearest / lbl_801AF5DC[0];
+        amplitude = zero * lbl_80409B68 + lbl_80409B6C;
+        speed = zero * lbl_80409B60 + lbl_80409B64;
+        fn_800B02E0(MenuHeader, amplitude, lbl_801AF5F0[0], speed);
+    }
+    timer = lbl_80409B5C - lbl_80408E9C;
+    lbl_80409B5C = timer;
+    if (timer < lbl_801AF5E8[0]) {
+        JudderGameCamera(MenuHeader, 2, 0, lbl_801AF5F0[0]);
+        lbl_80409B5C = fn_8000C038() * lbl_801AF5F4[0] + lbl_801AF5F8[0];
+    }
+}
+
+struct ChrisSplinePoint {
+    struct nuvec_s position;
+    f32 value;
+};
+
+struct ChrisFlightSpline {
+    struct ChrisSplinePoint points[64];
+    s32 count;
+};
+
+extern f32 lbl_801AF3B8[];
+extern f32 lbl_801AF3BC[];
+extern f32 lbl_801AF3C0[];
+extern f32 lbl_801AF3C4[];
+extern f32 lbl_801AF3C8[];
+
+void CalcSplinePoint(struct ChrisFlightSpline *spline, struct ChrisSplinePoint *result, f32 along)
+{
+    struct ChrisSplinePoint first, last, direction;
+    struct ChrisSplinePoint constant, linear, quadratic, cubic, scratch;
+    struct ChrisSplinePoint *previous, *current, *next, *following;
+    const s32 initialCount = spline->count;
+    s32 limit = initialCount - 1;
+    f32 scaled = along * limit;
+    s32 index = (s32)scaled;
+    f32 fraction = scaled - index;
+    f32 squared;
+
+    /* Extend the curve beyond the first point with its endpoint direction. */
+    if (index <= 0) {
+        index = 0;
+        NuVecSubPS(&direction, &spline->points[0], &spline->points[1]);
+        NuVecNorm(&direction.position, &direction.position);
+        NuVecScale(&direction.position, &direction.position, lbl_801AF3B8[0]);
+        NuVecAddPS(&first, &spline->points[0], &direction);
+        previous = &first;
+        first.value = spline->points[0].value;
+    } else {
+        if (index > limit)
+            index = initialCount;
+        previous = &spline->points[index - 1];
+    }
+
+    current = &spline->points[index];
+    next = &spline->points[index + 1];
+    /* Extend the curve beyond the last point the same way. */
+    if (index >= spline->count - 2) {
+        register u32 end asm("r11");
+        register u32 lastPoint asm("r9");
+        register u32 offset asm("r9");
+        offset = spline->count * sizeof(*current);
+        end = offset + (u32)spline;
+        lastPoint = end;
+        /* Preserve separate addresses for the two endpoint inputs. */
+        asm("" : "=b"(lastPoint), "=b"(end) : "0"(lastPoint), "1"(end));
+        lastPoint -= sizeof(*current);
+        end -= 2 * sizeof(*current);
+        NuVecSubPS(&direction, (struct ChrisSplinePoint *)lastPoint, (struct ChrisSplinePoint *)end);
+        NuVecNorm(&direction.position, &direction.position);
+        NuVecScale(&direction.position, &direction.position, lbl_801AF3B8[0]);
+        NuVecAddPS(&last, (void *)((spline->count << 4) + (u32)spline - 0x10), &direction);
+        following = &last;
+        last.value = *(f32 *)((u8 *)spline + ((spline->count - 1) << 4) + 0xC);
+    } else {
+        following = &spline->points[index + 2];
+    }
+
+    /* Evaluate the cubic for position and interpolate the fourth component linearly. */
+    NuVecAddPS(&constant, current, current);
+    NuVecSubPS(&linear, next, previous);
+    NuVecScale(&linear.position, &linear.position, fraction);
+    NuVecAddPS(&quadratic, previous, previous);
+    {
+        register struct nuvec_s *dest asm("r3");
+        register struct nuvec_s *scaledScratch asm("r30");
+        register struct nuvec_s *point asm("r4");
+        f32 factor;
+        dest = &scratch.position;
+        point = &current->position;
+        factor = lbl_801AF3BC[0];
+        /* Keep the scratch address live across both scale calls. */
+        NuVecScale(scaledScratch = dest, point, factor);
+        NuVecSubPS(&quadratic, &quadratic, scaledScratch);
+    }
+    NuVecScale(&scratch.position, &next->position, lbl_801AF3C0[0]);
+    NuVecAddPS(&quadratic, &quadratic, &scratch);
+    NuVecSubPS(&quadratic, &quadratic, following);
+    squared = fraction * fraction;
+    NuVecScale(&quadratic.position, &quadratic.position, squared);
+    NuVecSubPS(&cubic, current, next);
+    NuVecScale(&cubic.position, &cubic.position, lbl_801AF3C4[0]);
+    NuVecSubPS(&cubic, &cubic, previous);
+    NuVecAddPS(&cubic, &cubic, following);
+    NuVecScale(&cubic.position, &cubic.position, squared * fraction);
+    NuVecAddPS(result, &constant, &linear);
+    NuVecAddPS(result, result, &quadratic);
+    NuVecAddPS(result, result, &cubic);
+    NuVecScale(&result->position, &result->position, lbl_801AF3C8[0]);
+    result->value = fraction * (next->value - current->value) + current->value;
+}
+
+extern struct nuvec_s lbl_801D5964;
+extern const f32 lbl_801AF080[];
+extern s32 lbl_80409A68;
+
+void fn_80141158(struct ChrisPool *pool, const struct numtx_s *transform,
+                 const u32 *firstColour, const u32 *lastColour, u16 inputFlags,
+                 struct ChrisStripMaterial *material, const struct nuvec_s *inputVelocity,
+                 f32 firstRadius, f32 lastRadius, f32 duration, f32 delay)
+{
+    struct ChrisPoolNode *node;
+    u32 first;
+    u32 last;
+    struct ChrisPoolNode *head;
+    struct ChrisPoolNode *free;
+    struct ChrisPoolNode *next;
+    register u16 flags asm("r6");
+    register const struct nuvec_s *velocity asm("r7");
+    last = *lastColour;
+    node = NULL;
+    flags = inputFlags;
+    first = *firstColour;
+    velocity = inputVelocity;
+
+    if (material != NULL && pool != NULL) {
+        u16 capacity;
+        register u16 count asm("r9");
+        register struct ChrisPoolNode *slot asm("r0");
+        head = pool->head;
+        capacity = pool->capacity;
+        asm("" : "=r"(capacity) : "0"(capacity));
+        count = pool->count;
+        slot = pool->free;
+        if (count < capacity) {
+            free = slot;
+            {
+                struct ChrisPoolNode *first = free->next;
+                if (first == free) {
+                    next = NULL;
+                } else {
+                    first->previous = free->previous;
+                    free->previous->next = free->next;
+                    next = free->next;
+                }
+            }
+            if (head != NULL) {
+                free->next = head->next;
+                free->next->previous = free;
+                free->previous = head;
+                head->next = free;
+            } else {
+                free->next = free;
+                free->previous = free;
+            }
+            ++pool->count;
+            pool->free = next;
+            pool->head = free;
+            if (pool->count == pool->capacity)
+                pool->free = NULL;
+            node = free;
+        }
+        if (node == NULL) {
+            node = pool->tail;
+            pool->head = node;
+            pool->tail = node->next;
+        } else if (pool->tail == NULL) {
+            pool->tail = node;
+        }
+
+        if (node != NULL) {
+            node->transform = *transform;
+            node->material = material;
+            if (material->fieldCC == 0)
+                ++lbl_80409A68;
+            {
+                f32 age;
+                node->lastRadius = lastRadius;
+                age = lbl_801AF080[0];
+                asm volatile("" : : : "memory");
+                *(volatile f32 *)&node->radius = firstRadius;
+                *(volatile u16 *)&node->flags = flags;
+                *(volatile u32 *)&node->lastColour = last;
+                *(volatile u32 *)&node->colour = first;
+                *(volatile f32 *)&node->age = age;
+            }
+            node->duration = duration;
+            node->delay = delay;
+            node->firstRadius = firstRadius;
+            node->firstColour = first;
+            if (velocity != NULL)
+                node->velocity = *velocity;
+            else
+                node->velocity = lbl_801D5964;
+        }
+    }
+}
