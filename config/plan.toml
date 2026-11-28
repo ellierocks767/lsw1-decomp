@@ -2838,9 +2838,5 @@ function = "fn_8011C168"
 reason = "best 137/144: lwzx r28,r24 operand order, 2 insn sched, subi r0,r30,0x10; next: permuter run"
 
 [[parked]]
-function = "fn_800C03BC"
-reason = "best 17/31: u16 flags test; target does rlwinm+cmpwi for &0xC0 and keeps flags in r11/p in r10, mine uses andi. and p in r11; next: permuter, different flag-local shapes"
-
-[[parked]]
 function = "fn_800BD100"
 reason = "best 43/61: frame/stack right via 12-byte struct assign for sp8 and member copies for sp18; reg alloc differs (target keeps &sp18 in r4, var_r5 in r5, lhz before stw); next: permuter longer run, sp18 as 6-byte packed struct"

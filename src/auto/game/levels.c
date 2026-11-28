@@ -7738,3 +7738,33 @@ void fn_800C0EC0(void) {
     }
 #undef tb
 }
+
+typedef struct {
+    char pad[0x28];
+    s8 *a[4];
+    s8 *sel;
+    s8 *b[4];
+    char pad2[0x76 - 0x4C];
+    s16 id;
+} C03BCTbl;
+
+s32 fn_800C03BC(void *arg0) {
+#define t ((C03BCTbl *)lbl_802DA6D8)
+    s8 **q;
+    s32 i;
+    s8 *p;
+
+    if (*(s16 *)((s8 *)arg0 + 0xE0) == t->id) {
+        for (i = 0; i < 4; i++) {
+            p = t->a[i];
+            if (p != NULL && t->b[i] != NULL) {
+                if ((*(u16 *)(p + 0x6E) & 0xC0) == 0 && ((*(u16 *)(p + 0x6E) & 1) == 0 && t->sel == NULL)) {
+                    t->sel = p;
+                }
+            }
+        }
+        return 1;
+    }
+    return 0;
+#undef t
+}
