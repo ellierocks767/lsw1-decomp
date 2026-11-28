@@ -68,7 +68,7 @@ jobs:
           --build-url "$REPORT_BUILD_URL"
           --sweep progress/sweep.json
       - name: Upload public dashboard statistics
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dashboard-progress
           path: artifacts/progress.json
@@ -191,7 +191,7 @@ jobs:
       # <VERSION>_report convention.
       - name: Upload progress report
         if: steps.haskey.outputs.available == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: GL5E4F_report
           path: build/GL5E4F/report.json
@@ -210,7 +210,7 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: dashboard-progress
           path: artifacts

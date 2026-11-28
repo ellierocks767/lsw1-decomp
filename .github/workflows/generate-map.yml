@@ -34,7 +34,7 @@ jobs:
           python3 tools/symbols_to_map.py --all --output artifacts/GL5E4F.map
 
       - name: Upload Dolphin map
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: GL5E4F-dolphin-map
           path: artifacts/GL5E4F.map
