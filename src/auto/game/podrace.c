@@ -1313,3 +1313,122 @@ void fn_8014BFEC(s32 *arg0, void *arg1, void *arg2) {
         }
     }
 }
+
+typedef struct PodStartState {
+    u8 pad[0xB000];
+    f32 fB000, fB004, fB008, fB00C, fB010, fB014;
+    s32 iB018, iB01C;
+} PodStartState;
+#define ST ((PodStartState *) lbl_80409C94)
+s32 fn_800D4F70(void *, s32, s32, void *);
+s32 fn_800D5378(void *, s32);
+s32 fn_8014DDEC(void *);
+extern void *gPlayerPointers[];
+extern f32 lbl_80408F00;
+extern s32 lbl_80409004;
+extern f32 lbl_8040AFE8;
+extern s8 str_Podrace_EngStartup1[];
+extern s8 str_Podrace_EngStartup2[];
+extern s8 str_Podrace_Go[];
+extern s8 str_Podrace_Light[];
+
+s32 PodraceUpdateStartLights(void) {
+    PodracePlayerTiming **var_r10;
+    PodracePlayerTiming *temp_r9;
+    f32 temp_f0;
+    f32 temp_f0_2;
+    f32 temp_f0_3;
+    f32 temp_f12;
+    f32 temp_f12_2;
+    f32 temp_f13;
+    f32 temp_f13_2;
+    f32 temp_f31;
+    s32 temp_r11;
+    s32 temp_r8;
+    PodStartState *p;
+    s32 temp_r9_2;
+    s32 var_r29;
+    s32 var_r30;
+    s32 var_r31;
+    s32 var_r3;
+
+    temp_f31 = ST->fB000;
+    if (temp_f31 > 0.0f) {
+        var_r10 = gPlayer1Pointer;
+        ST->fB008 = (f32) ST->fB00C;
+        lbl_8040AFE8 = 0.0f;
+        do {
+            temp_r9 = *var_r10;
+            var_r10 += 1;
+            if ((temp_r9 != NULL) && ((*(s32 *)((s8 *)(temp_r9) + (0x20C))) & 0x01000000)) {
+                (*(f32 *)((s8 *)((*(void **)((s8 *)(temp_r9) + (0xEEC)))) + (0x708))) = (f32) 0.0f;
+            }
+        } while ((s32) var_r10 <= (s32) (gPlayer1Pointer + 1));
+        if (lbl_80408F00 == -0.1f) {
+            ST->fB000 = (f32) (ST->fB000 - lbl_80408E9C);
+        }
+        if ((ST->fB000 < 2.9f) && ((temp_f31 >= 2.9f))) {
+            fn_8006DCD4(str_Podrace_EngStartup1, NULL);
+        }
+        if ((ST->fB000 < 1.5f) && ((temp_f31 >= 1.5f))) {
+            fn_8006DCD4(str_Podrace_EngStartup2, NULL);
+        }
+        temp_f13 = ST->fB000;
+        if ((temp_f13 <= 0.0f)) {
+            fn_8006DCD4(str_Podrace_Go, NULL);
+        } else if ((s32) temp_f13 != (s32) temp_f31) {
+            fn_8006DCD4(str_Podrace_Light, NULL);
+        }
+    } else {
+        p = ST;
+        temp_f12 = p->fB00C;
+        temp_f0 = p->fB004 + lbl_80408E9C;
+        p->fB004 = temp_f0;
+        if (temp_f12 > 0.0f) {
+            temp_f0_2 = temp_f12 - temp_f0;
+            p->fB008 = temp_f0_2;
+            if (temp_f0_2 < 0.0f) {
+                p->fB008 = 0.0f;
+                if ((PodracePlayerTiming *) *gPlayer1Pointer != NULL) {
+                    temp_r8 = (*(s32 *)((s8 *)(*gPlayer1Pointer) + (0x20C))) & 0x01000000;
+                    if (temp_r8 != 0) {
+                        fn_800D5378(*gPlayer1Pointer, 1);
+                    }
+                }
+                if (((void *) gPlayerPointers[0] != NULL) && ((*(s32 *)((s8 *)(gPlayerPointers[0]) + (0x20C))) & 0x01000000)) {
+                    fn_800D5378(gPlayerPointers[0], 1);
+                }
+                lbl_80409C98 = 1;
+                fn_800D4F70(lbl_80409004, 3, 1, 0);
+                p = ST;
+                temp_f12_2 = p->fB00C;
+                temp_f13_2 = p->fB010;
+                temp_r9_2 = p->iB01C + 1;
+                p->iB01C = temp_r9_2;
+                if (temp_f12_2 < temp_f13_2) {
+                    temp_r11 = p->iB018;
+                    if ((temp_r11 != 0) && (temp_r9_2 == (s32) ((temp_r9_2 / temp_r11) * temp_r11))) {
+                        temp_f0_3 = temp_f12_2 + p->fB014;
+                        p->fB00C = temp_f0_3;
+                        if (temp_f0_3 > temp_f13_2) {
+                            p->fB00C = temp_f13_2;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    var_r29 = 0;
+    var_r31 = 0xA600;
+    var_r30 = 0x10;
+    do {
+        var_r3 = lbl_80409C94;
+        if ((s32) (*(s32 *)((s8 *)((var_r3 + var_r29)) + (0xA694))) != 0) {
+            var_r3 = fn_8014DDEC(var_r3 + var_r31);
+        }
+        var_r31 += 0xA0;
+        var_r29 += 0xA0;
+        var_r30 -= 1;
+    } while (var_r30 != 0);
+    return var_r3;
+}
