@@ -6228,3 +6228,59 @@ void BoltHitPlat(u8 *bolt) {
         }
     }
 }
+
+extern u8 lbl_803E029F[];
+extern f32 lbl_80408284;
+extern f32 lbl_80408288;
+extern const f32 lbl_801A165C[];
+extern const f32 lbl_801A1660[];
+extern const f32 lbl_801A1664[];
+extern const f32 lbl_801A1668[];
+extern const f32 lbl_801A166C[];
+extern const f32 lbl_801A1670[];
+extern const f32 lbl_801A1674[];
+
+void DaveSetSoundFadeDist(void) {
+    u8 *options;
+    u8 *volume;
+    f32 divisor;
+
+    if (lbl_80409410 != NULL) {
+        options = (u8 *)lbl_803E0298;
+        options[6] = 8;
+        options[7] = 9;
+        switch (lbl_80409410->unk19C) {
+        case 3:
+            options[6] = 8;
+            options[7] = 5;
+            lbl_80408284 = lbl_801A165C[0];
+            lbl_80408288 = lbl_801A1660[0];
+            break;
+        case 9:
+            options[7] = 9;
+            options[6] = 7;
+            break;
+        case 10:
+            lbl_80408284 = lbl_801A1664[0];
+            lbl_80408288 = lbl_801A1668[0];
+            break;
+        case 13:
+            options[6] = 8;
+            options[7] = 10;
+            lbl_80408284 = lbl_801A1664[0];
+            lbl_80408288 = lbl_801A166C[0];
+            break;
+        default:
+            lbl_80408284 = lbl_801A1670[0];
+            lbl_80408288 = lbl_801A1674[0];
+            break;
+        }
+        if (lbl_80409410->unk1A8->flags & 0x4000) {
+            lbl_803E029F[0] = 4;
+        }
+        divisor = lbl_801A165C[0];
+        volume = lbl_803E029C;
+        fn_8006DEB0(((f32)(f64)volume[2] / divisor) * ((f32)(f64)volume[4] / divisor));
+        fn_8006DF68(((f32)(f64)volume[3] / divisor) * ((f32)(f64)volume[4] / divisor));
+    }
+}
