@@ -5529,3 +5529,130 @@ fullProgress:
     }
     fn_8006DF68(volume * lbl_8040B0E4);
 }
+
+void Menu_CleanupAndReset(void);
+s32 Menu_OpenFromRegistry(f32, s32, s32, s32, s32, s32, s32, s32, s32);
+s32 fn_80078FA4(void);
+void fn_8007AC0C(void);
+s32 fn_800A1B50(s32, s32);
+struct MenuPlayerFlags {
+    u8 pad0[0x4C];
+    u8 flags[2];
+};
+extern struct MenuPlayerFlags lbl_801DCF5C[];
+extern s32 lbl_803D9AB4[];
+extern s32 lbl_80408EA8;
+extern s32 lbl_80408F98;
+extern s32 lbl_804093CC;
+extern u8 lbl_8040B02C[];
+extern f32 str_ExitDemo[];
+extern s32 str_menuBack[];
+
+void fn_800B203C(s32 *input)
+{
+    s32 *pad;
+    s16 frameId;
+    s32 newSelection38;
+    s32 menuId;
+    s32 opened;
+    s32 newSelection34;
+    s32 input04;
+    s32 input08;
+    s32 input0C;
+    s32 input10;
+    s32 combine;
+    s32 second;
+    s32 first;
+    MenuFrame *frame;
+
+    pad = input;
+    menuId = fn_800B2ED4();
+    if (lbl_80408EA8 == 0) {
+        fn_8007AC0C();
+    }
+
+    frame = &((MenuFrame *)gMenuStack)[gMenuDepth];
+    frameId = frame->id;
+    if ((gPlayer1Pointer[0] == 0 ||
+         !(*(u32 *)(gPlayer1Pointer[0] + 0x20C) & 0x01000000) ||
+         fn_800A1B50(0, 1) == 0 || fn_80078FA4() != 0) &&
+        (gPlayerPointers[0] == NULL ||
+         !(*(u32 *)((u8 *)gPlayerPointers[0] + 0x20C) & 0x01000000) ||
+         fn_800A1B50(1, 1) == 0 || fn_80078FA4() != 0)) {
+        combine = 0;
+        if (lbl_8040912C != 0 && lbl_80408F98 != -1) {
+            pad = (s32 *)((u8 *)lbl_803D9A58 + lbl_80408F98 * 0x5C);
+        } else if (lbl_80409410 == NULL ||
+                   (menuId != -1 &&
+                    (lbl_80409410->unk198 == 0x7C ||
+                     (menuId != 0x1B && (lbl_80409410->unk1A8->flags & 0x4000) &&
+                      lbl_801DCF5C[0].flags[0] != 0 && lbl_801DCF5C[0].flags[1] != 0))) ||
+                   (menuId == 0x1A && lbl_8040B02C[0] != 0 && lbl_8040B02C[1] != 0) ||
+                   (lbl_80408FE0 != 0 && lbl_80409410->unk198 == 0x7E) ||
+                   (gPlayer1Pointer[0] != 0 &&
+                    (*(u32 *)(gPlayer1Pointer[0] + 0x20C) & 0x01000000) &&
+                    gPlayer1Pointer[1] != 0 &&
+                    (*(u32 *)(gPlayer1Pointer[1] + 0x20C) & 0x01000000))) {
+            combine = 1;
+        } else if (pad == lbl_803D9A58) {
+            if (lbl_80409410->unk1A8->flags & 0x4000) {
+                const volatile struct MenuPlayerFlags *flags = lbl_801DCF5C;
+                first = flags->flags[0];
+                second = flags->flags[1];
+            } else if (lbl_80409410->unk198 == 0x7D) {
+                const volatile u8 *flags = lbl_8040B02C;
+                first = flags[0];
+                second = flags[1];
+            } else if (gPlayer1Pointer[0] != 0 && gPlayer1Pointer[1] != 0) {
+                first = (*(const volatile u32 *)(gPlayer1Pointer[0] + 0x20C) >> 24) & 1;
+                second = (*(const volatile u32 *)(gPlayer1Pointer[1] + 0x20C) >> 24) & 1;
+            } else {
+                second = 0;
+                first = 0;
+            }
+
+            if (first == 0 && second != 0) {
+                pad = lbl_803D9AB4;
+            }
+        }
+
+        if (lbl_80409410 == NULL ||
+            (!(lbl_80408F00 > str_ExitDemo[0]) && lbl_80408EA8 == 0 &&
+             lbl_8040913C == -1 && lbl_804093B0 == -1)) {
+            if (combine != 0) {
+                input04 = lbl_803D9A58[1] | lbl_803D9A58[24];
+                input08 = lbl_803D9A58[2] | lbl_803D9A58[25];
+                input0C = lbl_803D9A58[3] | lbl_803D9A58[26];
+                input10 = lbl_803D9A58[4] | lbl_803D9A58[27];
+            } else {
+                input04 = pad[1];
+                input08 = pad[2];
+                input0C = pad[3];
+                input10 = pad[4];
+            }
+
+            second = *(s32 *)((u8 *)frame + 0x34);
+            first = *(s32 *)((u8 *)frame + 0x38);
+            opened = Menu_OpenFromRegistry(lbl_80408E9C, input04, input08, input0C, input10,
+                                           0x20, 0x10, 0x4000, 0x8000);
+            if (*(s32 *)((u8 *)frame + 0x50) == -1) {
+                newSelection34 = *(s32 *)((u8 *)frame + 0x34);
+                if (newSelection34 != -1) {
+                    newSelection38 = *(s32 *)((u8 *)frame + 0x38);
+                    if (newSelection38 != -1 && second != -1 && first != -1 &&
+                        (newSelection34 != second || newSelection38 != first) &&
+                        fn_800B2ED4() == menuId) {
+                        fn_8006DCD4(str_menuBack, 0);
+                    }
+                }
+            }
+            if (opened == 1 && lbl_8040912C != 0) {
+                Menu_CleanupAndReset();
+            }
+        }
+
+        if (frameId != -1 && lbl_804093B0 != -1) {
+            lbl_804093CC = 1;
+        }
+    }
+}
