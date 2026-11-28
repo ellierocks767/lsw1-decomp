@@ -7189,3 +7189,21 @@ s32 fn_800BA014(s32 arg0, struct numtx_s *arg1)
     }
     return 0;
 }
+
+extern s32 lbl_801A1AC0[];
+extern f32 lbl_802DA258[];
+extern struct numtx_s lbl_803EAF44;
+
+void fn_800BB5A8(void)
+{
+    NuSpecialFind(lbl_80409410->unk1C0, lbl_803EAD24, lbl_801A1AC0, 1);
+    lbl_8040B14C = 1.0f;
+    if (fn_800130F4(lbl_803EAD24) != 0) {
+        lbl_803EAF44 = *(struct numtx_s *)fn_800133FC(lbl_803EAD24);
+        fn_80013200(lbl_803EAD24, 0);
+        lbl_802DA258[0] = lbl_803EAF44._30;
+        lbl_802DA258[1] = 0.0f;
+        lbl_802DA258[2] = lbl_803EAF44._32 - 0.5f;
+    }
+    lbl_8040B150 = 1.0f;
+}
