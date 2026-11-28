@@ -1132,9 +1132,9 @@ s32 fn_8003F198(s32 *);
 s32 fn_8003F1A0(s32 *);
 void CUT_FindCharacters(struct CutSceneCharacters *);
 extern s32 fn_8011C4B8[];
-extern s32 fn_8011D30C[];
-extern s32 fn_8011EF88[];
-extern s32 fn_8011EFE4[];
+void fn_8011D30C(void *, void *, struct numtx_s *);
+void fn_8011EF88(void *);
+void fn_8011EFE4(void *, s32, void **, void *);
 extern s32 lbl_801E0CE0[];
 
 void fn_8011E864(void) {
@@ -1142,9 +1142,9 @@ void fn_8011E864(void) {
     fn_8003F178(fn_8011C4B8);
     fn_8003F188(CUT_FindCharacters);
     fn_8003F198(CUT_CreateCharacterInstance);
-    fn_8003F190(fn_8011EF88);
-    fn_8003F180(fn_8011EFE4);
-    fn_8003F1A0(fn_8011D30C);
+    fn_8003F190((s32 *)fn_8011EF88);
+    fn_8003F180((s32 *)fn_8011EFE4);
+    fn_8003F1A0((s32 *)fn_8011D30C);
 }
 
 f32 fn_8000ED40(f32);
@@ -1366,18 +1366,27 @@ typedef struct CutSceneFixups {
 } CutSceneFixups;
 
 typedef struct CutSceneFixupOwner {
-    u8 unk0[0xA4];
+    u8 unk0[0x98];
+    f32 unk98;
+    u8 unk9C[0x8];
     CutSceneFixups *fixups;
 } CutSceneFixupOwner;
 
 typedef struct CutSceneSlot {
     CutSceneCharacters *scene;
     CutSceneFixupOwner *owner;
-    u8 unk8[0x10];
+    void *pathEntry;
+    f32 unkC;
+    u8 unk10;
+    u8 unk11;
+    u8 unk12[6];
 } CutSceneSlot;
 
 typedef struct CutSceneState {
-    u8 unk0[0x198];
+    u8 unk0[0x184];
+    s32 unk184;
+    s32 unk188;
+    u8 unk18C[0xC];
     s32 unk198;
     u8 unk19C[0xC];
     u8 *entry;
@@ -1550,7 +1559,10 @@ char *NuStrIStr(char *, char *);
 
 typedef struct CutScenePathEntry {
     char *path;
-    u8 pad04[0x3C];
+    u8 pad04[0x8];
+    f32 unk0C;
+    u8 pad10[0x2C];
+    s32 unk3C;
 } CutScenePathEntry;
 
 extern CutScenePathEntry lbl_801DF4E0[];
@@ -1814,4 +1826,396 @@ void fn_8011EC88(CutSceneState *scene)
         fn_80025C38(0, fullHeight - height, 0x2800, height, 0x80000000u, lbl_8040AF70);
         fn_80027564();
     }
+}
+
+typedef struct {
+    u8 pad0[0x64];
+    f32 unk64;
+    u8 pad68[0x10];
+    f32 unk78;
+    u8 pad7C[0x10];
+    f32 unk8C;
+    f32 unk90;
+    f32 unk94;
+} CutLightState;
+
+typedef struct {
+    u8 pad0[0x6C];
+    f32 unk6C;
+    u8 pad70[0x20];
+    f32 unk90;
+    u8 pad94[0x5C];
+    f32 unkF0;
+    f32 unkF4;
+    f32 unkF8;
+    u8 padFC[0x8];
+} CutLightEntry;
+
+typedef struct {
+    CutLightEntry *entries;
+} CutLightList;
+
+typedef struct {
+    u8 pad0[0x2DC];
+    CutLightList *list;
+} CutLightHolder;
+
+void fn_8011AA30(f32 farg0)
+{
+    s32 i;
+
+    ((CutLightState *)lbl_8040B250)->unk64 = farg0;
+    if (((CutLightHolder *)lbl_8040B254)->list != NULL) {
+        for (i = 0; i < 0x20; i++) {
+            ((CutLightHolder *)lbl_8040B254)->list->entries[i].unk6C = ((CutLightState *)lbl_8040B250)->unk64;
+        }
+    }
+}
+
+void fn_8011AC98(f32 farg0)
+{
+    s32 i;
+
+    ((CutLightState *)lbl_8040B250)->unk78 = fn_8000ED40(farg0);
+    if (((CutLightHolder *)lbl_8040B254)->list != NULL) {
+        for (i = 0; i < 0x20; i++) {
+            ((CutLightHolder *)lbl_8040B254)->list->entries[i].unk90 = ((CutLightState *)lbl_8040B250)->unk78;
+        }
+    }
+}
+
+void fn_8011ADF4(f32 farg0)
+{
+    s32 i;
+
+    ((CutLightState *)lbl_8040B250)->unk8C = fn_8000ED40(farg0);
+    if (((CutLightHolder *)lbl_8040B254)->list != NULL) {
+        for (i = 0; i < 0x20; i++) {
+            ((CutLightHolder *)lbl_8040B254)->list->entries[i].unkF0 = ((CutLightState *)lbl_8040B250)->unk8C;
+        }
+    }
+}
+
+void fn_8011AE5C(f32 farg0)
+{
+    s32 i;
+
+    ((CutLightState *)lbl_8040B250)->unk90 = fn_8000ED40(farg0);
+    if (((CutLightHolder *)lbl_8040B254)->list != NULL) {
+        for (i = 0; i < 0x20; i++) {
+            ((CutLightHolder *)lbl_8040B254)->list->entries[i].unkF4 = ((CutLightState *)lbl_8040B250)->unk90;
+        }
+    }
+}
+
+void fn_8011AEC4(f32 farg0)
+{
+    s32 i;
+
+    ((CutLightState *)lbl_8040B250)->unk94 = fn_8000ED40(farg0);
+    if (((CutLightHolder *)lbl_8040B254)->list != NULL) {
+        for (i = 0; i < 0x20; i++) {
+            ((CutLightHolder *)lbl_8040B254)->list->entries[i].unkF8 = ((CutLightState *)lbl_8040B250)->unk94;
+        }
+    }
+}
+
+void fn_8011EF88(void *arg0)
+{
+    s32 i;
+    s8 *entry;
+    s8 *sub = *(s8 **)(*(s8 **)((s8 *)arg0 + 0x58) + 0x18);
+    s32 **arr = *(s32 ***)((s8 *)arg0 + 0xA4);
+
+    for (i = 0; i < *(u16 *)(sub + 4); i++) {
+        entry = (s8 *)(*arr) + i * 0x18;
+        *(f32 *)(entry + 4) = 0.0f;
+        *(u8 *)(entry + 0x14) = 0;
+        *(u8 *)(entry + 0x15) = 0xFF;
+    }
+}
+
+s32 fn_8003E9B8(void *, struct numtx_s *, s32 *, s32, s32, s32, s32, s32);
+
+void fn_8011EFE4(void *arg0, s32 arg1, void **arg2, void *arg3)
+{
+    struct numtx_s mtx;
+    s32 sp48;
+    void *target = NULL;
+
+    if (!(*(u8 *)((s8 *)arg3 + 0x5C) & 2)) {
+        target = *arg2;
+    }
+    fn_8003E9B8(arg3, &mtx, &sp48, 0, 0, 0, 0, 0);
+    if (*(s32 *)((s8 *)arg0 + 0x88) & 0x01000000) {
+        fn_8000D134(&mtx, &mtx, (struct numtx_s *)((s8 *)arg0 + 0x18));
+    }
+    if (target != NULL) {
+        *(struct numtx_s *)((s8 *)target + 0xC8) = mtx;
+        *(struct nuvec_s *)((s8 *)target + 0x6C) = *(struct nuvec_s *)&mtx._30;
+    }
+}
+
+s32 NuSpecialFindMultiWC(void *, struct numtx_s *);
+char *NuSpecialGetInstAnim(void *);
+f32 fn_8000CD08(struct nuvec_s *, void *, s32);
+s32 fn_8001AF60(s32);
+u32 fn_8001AF70(void);
+f32 fn_8005A470(struct nuvec_s *, s32, f32, f32);
+u32 fn_8005A5B0(void);
+typedef struct CutSpecialNameEntry {
+    s32 unk0;
+    char *name;
+} CutSpecialNameEntry;
+
+typedef struct CutFloorMatEntry {
+    u8 pad0[6];
+    u16 unk6_0 : 14;
+    u16 reflect : 1;
+    u16 unk6_15 : 1;
+} CutFloorMatEntry;
+
+typedef struct CutReflectSpecial {
+    u8 unk0[8];
+    s32 active;
+    u8 unkC[4];
+} CutReflectSpecial;
+
+typedef struct CutReflectState {
+    u8 pad0[0x76C];
+    CutReflectSpecial specials[82];
+} CutReflectState;
+
+extern CutSpecialNameEntry lbl_801D5AA0[];
+extern CutFloorMatEntry lbl_801DCA34[];
+extern s32 lbl_803E0188[];
+extern f32 lbl_8040A790;
+
+void fn_8011D30C(void *arg0, void *arg1, struct numtx_s *arg2)
+{
+    if (*(u8 *)((s8 *)arg0 + 0x58) & 0x10) {
+        struct nuvec_s *pos = (struct nuvec_s *)&arg2->_30;
+        if (fn_8000CD08(pos, lbl_803E0188, 0) < lbl_8040A790) {
+            f32 floorY = fn_8005A470(pos, -1, 0.0f, 5.0f);
+            if (floorY != 2000000.0f) {
+                u32 mat = fn_8005A5B0();
+                if (mat <= 0x1EU && lbl_801DCA34[mat].reflect) {
+                    struct numtx_s mtx = *arg2;
+                    void *special = NULL;
+                    s32 i = 2;
+
+                    mtx._31 = floorY - (mtx._31 - floorY);
+                    mtx._01 = -mtx._01;
+                    mtx._11 = -mtx._11;
+                    mtx._21 = -mtx._21;
+                    do {
+                        if (((CutReflectState *)lbl_80409410)->specials[i + 40].active != 0 &&
+                            NuStrICmp(NuSpecialGetInstAnim(arg1), lbl_801D5AA0[i].name) == 0) {
+                            special = &((CutReflectState *)lbl_80409410)->specials[i + 40];
+                        } else {
+                            i++;
+                        }
+                        if (special != NULL) {
+                            break;
+                        }
+                    } while (i < 42);
+                    if (special == NULL) {
+                        special = arg1;
+                    }
+                    fn_8001AF60(0);
+                    NuSpecialFindMultiWC(special, &mtx);
+                    fn_8001AF70();
+                }
+            }
+        }
+    }
+}
+
+void fn_8000DDD0(struct numtx_s *, u16);
+void NuMtxTranslate(struct numtx_s *, struct nuvec_s *);
+s32 fn_800130F4(s32 *);
+void fn_80013200(s32 *, s32);
+void fn_8003ABC4(void *);
+void fn_8003AEA4(void *);
+void fn_8006CF50(s32, s32, void *);
+void fn_8006DCD4(char *, s32);
+void fn_8006DEE4(s32);
+void fn_8006E288(void *, s32);
+void fn_800D97BC(void);
+void fn_80108A34(s32, s32);
+void instNuGCutSceneEnd(void *, struct nuvec_s *);
+void instNuGCutSceneSetEndCallback(void *, struct numtx_s *);
+void instNuGCutSceneStart(void *, s32);
+
+extern struct nuvec_s lbl_801DF480[];
+extern struct nuvec_s lbl_801DF48C[];
+extern struct nuvec_s lbl_801DF498[];
+extern struct nuvec_s lbl_801DF4A4[];
+extern struct nuvec_s lbl_801DF4B0[];
+extern s32 lbl_803EAD24[];
+extern s32 lbl_803EAE20[];
+extern s32 lbl_803EAE44[];
+extern u8 lbl_803ED44C[];
+extern s32 lbl_80408EFC;
+extern s32 lbl_80409938;
+extern u16 lbl_80409950;
+extern u16 lbl_80409952;
+extern u16 lbl_80409954;
+extern u16 lbl_80409956;
+extern u16 lbl_80409958;
+extern s32 lbl_8040A76C;
+
+s32 fn_8011E308(s32 arg0)
+{
+    struct nuvec_s pos;
+    struct numtx_s mtx;
+    s32 result = 0;
+
+    if (arg0 != -1) {
+        CutSceneState *state = (CutSceneState *)lbl_80409410;
+        s32 slotIdx = state->indices[arg0];
+        if (slotIdx != -1) {
+            CutSceneSlot *slot = &state->slots[slotIdx];
+            if (slot->owner != NULL) {
+                CutScenePathEntry *entry;
+                u16 rot;
+                struct nuvec_s *vec;
+
+                fn_8003AD00((gcut_instance_view *)slot->owner);
+                entry = (CutScenePathEntry *)slot->pathEntry;
+                if (*(u16 *)((s8 *)entry + 0xA) != 0) {
+                    fn_8000DDD0(&mtx, *(u16 *)((s8 *)entry + 0xA));
+                    instNuGCutSceneSetEndCallback(slot->owner, &mtx);
+                } else if (arg0 == 0x1E || arg0 == 0x1F) {
+                    s32 level = ((CutSceneState *)lbl_80409410)->unk198;
+                    if (level == 0x1D) {
+                        rot = (u16)((lbl_80409950 << 16) / 360);
+                        vec = lbl_801DF480;
+                    } else if (level == 0x1B) {
+                        rot = (u16)((lbl_80409952 << 16) / 360);
+                        vec = lbl_801DF48C;
+                    } else {
+                        rot = (u16)((lbl_80409954 << 16) / 360);
+                        vec = lbl_801DF498;
+                    }
+                    goto apply_mtx;
+                } else if (arg0 == 0x3A) {
+                    if (((CutSceneState *)lbl_80409410)->unk198 == 0x4C) {
+                        rot = (u16)((lbl_80409956 << 16) / 360);
+                        vec = lbl_801DF4A4;
+                    } else {
+                        rot = (u16)((lbl_80409958 << 16) / 360);
+                        vec = lbl_801DF4B0;
+                    }
+                apply_mtx:
+                    fn_8000DDD0(&mtx, rot);
+                    NuMtxTranslate(&mtx, vec);
+                    instNuGCutSceneSetEndCallback(slot->owner, &mtx);
+                } else if (entry->unk3C & 8) {
+                    pos.z = 0.0f;
+                    pos.x = 0.0f;
+                    pos.y = (f32)slotIdx * 100.0f + 1000.0f;
+                    instNuGCutSceneEnd(slot->owner, &pos);
+                }
+
+                slot->owner->unk98 = slot->unkC * lbl_80408E9C;
+                fn_8003AEA4(slot->owner);
+                if (((CutScenePathEntry *)slot->pathEntry)->unk3C & 0x2000) {
+                    *(s32 *)((s8 *)slot->owner + 0x88) |= 0x10000000;
+                } else {
+                    *(s32 *)((s8 *)slot->owner + 0x88) &= ~0x10000000;
+                }
+
+                entry = (CutScenePathEntry *)slot->pathEntry;
+                if (*(s16 *)((s8 *)entry + 4) != -1) {
+                    s32 kind = (*(u16 *)((s8 *)entry + 6) != 0) ? 0xD : 0xB;
+                    fn_8006CF50(*(s16 *)((s8 *)entry + 4), kind, slot->owner);
+                    slot->owner->unk98 = 0.0f;
+                    if (((CutScenePathEntry *)slot->pathEntry)->unk3C & 1) {
+                        lbl_8040AFB4 = 1;
+                        fn_8006DEE4(0);
+                        lbl_8040A770 = 1;
+                    } else {
+                        lbl_8040A770 = 0;
+                    }
+                } else {
+                    fn_8006DEE4(0);
+                    fn_8006E288(slot->owner, (*(u16 *)((s8 *)slot->pathEntry + 6) != 0) ? 0xD : 0xB);
+                    slot->owner->unk98 = slot->unkC * lbl_80408E9C;
+                    if (((CutScenePathEntry *)slot->pathEntry)->unk3C & 1) {
+                        lbl_8040AFB4 = 0;
+                        lbl_8040A770 = 0;
+                    }
+                }
+
+                if (((CutScenePathEntry *)slot->pathEntry)->unk3C & 1) {
+                    s32 i;
+                    fn_800D97BC();
+                    lbl_8040A76C = 0;
+                    if (lbl_803ED44C[arg0] < 0xFF) {
+                        lbl_803ED44C[arg0]++;
+                    }
+                    if (lbl_803EACC4[arg0] < 0xFF) {
+                        lbl_803EACC4[arg0]++;
+                    }
+                    for (i = 0; i < ((CutSceneState *)lbl_80409410)->instanceCount; i++) {
+                        CutSceneState *st = (CutSceneState *)lbl_80409410;
+                        CutSceneFixupOwner *own = st->slots[i].owner;
+                        if (*(s32 *)((s8 *)own + 0x88) & 0x40000000) {
+                            if (i != slotIdx && own != NULL &&
+                                (((CutScenePathEntry *)st->slots[i].pathEntry)->unk3C & 1)) {
+                                own->unk98 = 0.0f;
+                                fn_8003ABC4(st->slots[i].owner);
+                            } else {
+                                ((CutSceneState *)lbl_80409410)->slots[i].owner->unk98 = 0.0f;
+                                instNuGCutSceneStart(((CutSceneState *)lbl_80409410)->slots[i].owner, 1);
+                            }
+                        }
+                    }
+                    fn_8011D6A4((u8 *)slot);
+                    lbl_80409938 = 1;
+                    lbl_8040993C = 1.0f;
+                    if (((CutScenePathEntry *)slot->pathEntry)->unk3C & 0x20) {
+                        lbl_8040B268 = 1;
+                    } else {
+                        lbl_8040B268 = 0;
+                    }
+                    lbl_8040B25C = arg0;
+                    lbl_80409944 = 0;
+                }
+
+                result = 1;
+                switch (arg0) {
+                case 5:
+                    fn_8006DCD4("SaberOn", 0);
+                    break;
+                case 0x50:
+                    lbl_80408EFC &= ~4;
+                    break;
+                case 0x45:
+                    if (fn_800130F4(lbl_803EAD24) != 0) {
+                        fn_80013200(lbl_803EAD24, 0);
+                    }
+                    break;
+                case 0x54:
+                    lbl_80408EFC &= ~0x18;
+                    break;
+                case 0x5B:
+                case 37:
+                    lbl_80408EFC &= ~2;
+                    break;
+                case 49:
+                    lbl_80408EFC &= ~0x10;
+                    break;
+                case 0x3B:
+                    if (fn_800130F4(lbl_803EAE20) != 0) {
+                        fn_80013200(lbl_803EAE20, 0);
+                    }
+                    fn_80108A34(lbl_803EAE44[0], 0);
+                    break;
+                }
+            }
+        }
+    }
+    return result;
 }

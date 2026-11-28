@@ -2832,3 +2832,7 @@ reason = "best 27/50: prefix table access matches structurally, but the first it
 [[parked]]
 function = "fn_800B4758"
 reason = "best 39/55: fallback scene and signed bounds are recovered, but the table-end setup, indexed output base and min-count reload differ; next: use the actual level output-array field and trace aliasing between it and the descriptor bounds"
+
+[[parked]]
+function = "fn_8011C168"
+reason = "best 137/144: lwzx r28,r24 operand order, 2 insn sched, subi r0,r30,0x10; next: permuter run"
