@@ -8756,3 +8756,23 @@ void fn_800C6430(void)
         break;
     }
 }
+
+s32 fn_800CC558(void) {
+    s32 ret = 0;
+
+    if (lbl_80409410->unk19C == 7) {
+        switch (lbl_80409410->unk198) {
+        case 0x36:
+            if (lbl_8040AFAC != 0 || (s8)lbl_803E0199[0] == 5 || (s8)lbl_803E0199[0] == 6) {
+                ret = 1;
+            }
+            break;
+        case 0x39:
+            if (lbl_8040AFAC == 0 && lbl_803E0199[0] != 0x1E) {
+                ret = 1;
+            }
+            break;
+        }
+    }
+    return ret;
+}
