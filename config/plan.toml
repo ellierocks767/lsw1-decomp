@@ -2896,3 +2896,11 @@ reason = "best 57/73: base+4 / base+0x10 table offset not folded into reloc in t
 [[parked]]
 function = "fn_800D04BC"
 reason = "best 52/73 (~28 cands, permuter 200s no zero): target do-while has no ctr/lwzu, mine does; next: loop form blocking doloop"
+
+[[parked]]
+function = "fn_800CFBFC"
+reason = "best 27/84 (~20 cands + 170s permuter, no zero): target needs 7 saved FPRs (frame 0x60 vs 0x58), sp locals loaded early; next: different expression grouping"
+
+[[parked]]
+function = "fn_800CC0F8"
+reason = "best 91/99 (~30 cands + 175s permuter, no zero): target has extra mr r11,r10 copy before lbl_80409410==lbl_803DB158 compare; next: source form creating that pointer copy"
