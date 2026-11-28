@@ -1132,9 +1132,9 @@ s32 fn_8003F198(s32 *);
 s32 fn_8003F1A0(s32 *);
 void CUT_FindCharacters(struct CutSceneCharacters *);
 extern s32 fn_8011C4B8[];
-extern s32 fn_8011D30C[];
+void fn_8011D30C(void *, void *, struct numtx_s *);
 void fn_8011EF88(void *);
-extern s32 fn_8011EFE4[];
+void fn_8011EFE4(void *, s32, void **, void *);
 extern s32 lbl_801E0CE0[];
 
 void fn_8011E864(void) {
@@ -1143,8 +1143,8 @@ void fn_8011E864(void) {
     fn_8003F188(CUT_FindCharacters);
     fn_8003F198(CUT_CreateCharacterInstance);
     fn_8003F190((s32 *)fn_8011EF88);
-    fn_8003F180(fn_8011EFE4);
-    fn_8003F1A0(fn_8011D30C);
+    fn_8003F180((s32 *)fn_8011EFE4);
+    fn_8003F1A0((s32 *)fn_8011D30C);
 }
 
 f32 fn_8000ED40(f32);
@@ -1366,18 +1366,27 @@ typedef struct CutSceneFixups {
 } CutSceneFixups;
 
 typedef struct CutSceneFixupOwner {
-    u8 unk0[0xA4];
+    u8 unk0[0x98];
+    f32 unk98;
+    u8 unk9C[0x8];
     CutSceneFixups *fixups;
 } CutSceneFixupOwner;
 
 typedef struct CutSceneSlot {
     CutSceneCharacters *scene;
     CutSceneFixupOwner *owner;
-    u8 unk8[0x10];
+    void *pathEntry;
+    f32 unkC;
+    u8 unk10;
+    u8 unk11;
+    u8 unk12[6];
 } CutSceneSlot;
 
 typedef struct CutSceneState {
-    u8 unk0[0x198];
+    u8 unk0[0x184];
+    s32 unk184;
+    s32 unk188;
+    u8 unk18C[0xC];
     s32 unk198;
     u8 unk19C[0xC];
     u8 *entry;
@@ -1550,7 +1559,10 @@ char *NuStrIStr(char *, char *);
 
 typedef struct CutScenePathEntry {
     char *path;
-    u8 pad04[0x3C];
+    u8 pad04[0x8];
+    f32 unk0C;
+    u8 pad10[0x2C];
+    s32 unk3C;
 } CutScenePathEntry;
 
 extern CutScenePathEntry lbl_801DF4E0[];
@@ -1920,5 +1932,101 @@ void fn_8011EF88(void *arg0)
         *(f32 *)(entry + 4) = 0.0f;
         *(u8 *)(entry + 0x14) = 0;
         *(u8 *)(entry + 0x15) = 0xFF;
+    }
+}
+
+s32 fn_8003E9B8(void *, struct numtx_s *, s32 *, s32, s32, s32, s32, s32);
+
+void fn_8011EFE4(void *arg0, s32 arg1, void **arg2, void *arg3)
+{
+    struct numtx_s mtx;
+    s32 sp48;
+    void *target = NULL;
+
+    if (!(*(u8 *)((s8 *)arg3 + 0x5C) & 2)) {
+        target = *arg2;
+    }
+    fn_8003E9B8(arg3, &mtx, &sp48, 0, 0, 0, 0, 0);
+    if (*(s32 *)((s8 *)arg0 + 0x88) & 0x01000000) {
+        fn_8000D134(&mtx, &mtx, (struct numtx_s *)((s8 *)arg0 + 0x18));
+    }
+    if (target != NULL) {
+        *(struct numtx_s *)((s8 *)target + 0xC8) = mtx;
+        *(struct nuvec_s *)((s8 *)target + 0x6C) = *(struct nuvec_s *)&mtx._30;
+    }
+}
+
+s32 NuSpecialFindMultiWC(void *, struct numtx_s *);
+char *NuSpecialGetInstAnim(void *);
+f32 fn_8000CD08(struct nuvec_s *, void *, s32);
+s32 fn_8001AF60(s32);
+u32 fn_8001AF70(void);
+f32 fn_8005A470(struct nuvec_s *, s32, f32, f32);
+u32 fn_8005A5B0(void);
+typedef struct CutSpecialNameEntry {
+    s32 unk0;
+    char *name;
+} CutSpecialNameEntry;
+
+typedef struct CutFloorMatEntry {
+    u8 pad0[6];
+    u16 unk6_0 : 14;
+    u16 reflect : 1;
+    u16 unk6_15 : 1;
+} CutFloorMatEntry;
+
+typedef struct CutReflectSpecial {
+    u8 unk0[8];
+    s32 active;
+    u8 unkC[4];
+} CutReflectSpecial;
+
+typedef struct CutReflectState {
+    u8 pad0[0x76C];
+    CutReflectSpecial specials[82];
+} CutReflectState;
+
+extern CutSpecialNameEntry lbl_801D5AA0[];
+extern CutFloorMatEntry lbl_801DCA34[];
+extern s32 lbl_803E0188[];
+extern f32 lbl_8040A790;
+
+void fn_8011D30C(void *arg0, void *arg1, struct numtx_s *arg2)
+{
+    if (*(u8 *)((s8 *)arg0 + 0x58) & 0x10) {
+        struct nuvec_s *pos = (struct nuvec_s *)&arg2->_30;
+        if (fn_8000CD08(pos, lbl_803E0188, 0) < lbl_8040A790) {
+            f32 floorY = fn_8005A470(pos, -1, 0.0f, 5.0f);
+            if (floorY != 2000000.0f) {
+                u32 mat = fn_8005A5B0();
+                if (mat <= 0x1EU && lbl_801DCA34[mat].reflect) {
+                    struct numtx_s mtx = *arg2;
+                    void *special = NULL;
+                    s32 i = 2;
+
+                    mtx._31 = floorY - (mtx._31 - floorY);
+                    mtx._01 = -mtx._01;
+                    mtx._11 = -mtx._11;
+                    mtx._21 = -mtx._21;
+                    do {
+                        if (((CutReflectState *)lbl_80409410)->specials[i + 40].active != 0 &&
+                            NuStrICmp(NuSpecialGetInstAnim(arg1), lbl_801D5AA0[i].name) == 0) {
+                            special = &((CutReflectState *)lbl_80409410)->specials[i + 40];
+                        } else {
+                            i++;
+                        }
+                        if (special != NULL) {
+                            break;
+                        }
+                    } while (i < 42);
+                    if (special == NULL) {
+                        special = arg1;
+                    }
+                    fn_8001AF60(0);
+                    NuSpecialFindMultiWC(special, &mtx);
+                    fn_8001AF70();
+                }
+            }
+        }
     }
 }
