@@ -5824,3 +5824,82 @@ void Menu_Unknown11_BuildOptions(void *menu)
         fn_800769B4(menu, (s32) lbl_803E04F0, *flags);
     } while (difficulty <= 10);
 }
+
+extern f32 lbl_801A018C[];
+extern f32 lbl_801A0190[];
+extern s32 lbl_8040AFA8;
+extern s32 lbl_804093C8;
+
+void Menu_Unknown6_HandleSelection(void *menu)
+{
+    s32 index;
+    s32 scene;
+    s32 pending;
+    s32 players;
+    s32 bothPlayers;
+    s32 player;
+
+    if (*(s32 *)((u8 *) menu + 0x68) != 0) {
+        if (*(s32 *)((u8 *) menu + 0x34) == 0) {
+            bothPlayers = 0;
+            if (gPlayer1Pointer[0] != 0 &&
+                (*(u32 *)(gPlayer1Pointer[0] + 0x20C) & 0x01000000) &&
+                gPlayer1Pointer[1] != 0 &&
+                (*(u32 *)(gPlayer1Pointer[1] + 0x20C) & 0x01000000)) {
+                bothPlayers = 1;
+            }
+            if (bothPlayers != 0) {
+                index = lbl_80408F98 * sizeof(s32);
+                players = (s32) gPlayer1Pointer;
+                player = *(s32 *)(players + index);
+                *(u32 *)(player + 0x20C) &= ~0x01000000u;
+                fn_800AB98C((void *) *(s32 *)(players + index));
+                if (lbl_8040AFA8 != 2) {
+                    fn_800B00B8((struct levels_fade_s *) MenuHeader, lbl_801A018C[0], lbl_801A0190[0]);
+                }
+                Menu_CleanupAndReset();
+            } else {
+                if (lbl_80408FE0 != 0) {
+                    if (lbl_8040AFF8 == 0) {
+                        lbl_8040AFF0 = 1;
+                        lbl_8040AFF8 = 1;
+                    }
+                    SceneSelect_HandleEntry();
+                    pending = 1;
+                    scene = 0x7C;
+                    lbl_804093B0 = scene;
+                    lbl_804090E0 = pending;
+                } else if (lbl_804093C8 == 0x15) {
+                    if (lbl_8040AFF8 == 0) {
+                        lbl_8040AFF0 = 1;
+                        lbl_8040AFF8 = 1;
+                    }
+                    SceneSelect_HandleEntry();
+                    pending = 1;
+                    scene = 0x7C;
+                    lbl_804093B0 = scene;
+                    lbl_804090E0 = pending;
+                } else {
+                    if (lbl_8040AFF8 == 0) {
+                        lbl_8040AFF0 = 1;
+                        lbl_8040AFF8 = 1;
+                    }
+                    SceneSelect_HandleEntry();
+                    pending = 1;
+                    scene = 0x7B;
+                    lbl_804093B0 = scene;
+                    lbl_804090E0 = pending;
+                }
+            }
+            *(s32 *)((u8 *) menu + 0x50) = PauseMenu_HandleEntry1(str_Confirm);
+        } else {
+            goto cancel;
+        }
+        return;
+    }
+    if (*(s32 *)((u8 *) menu + 0x6C) != 0) {
+cancel:
+        Menu_CloseCurrent();
+        *(s32 *)((u8 *) menu + 0x50) = PauseMenu_HandleEntry1(str_Cancel);
+    }
+}
