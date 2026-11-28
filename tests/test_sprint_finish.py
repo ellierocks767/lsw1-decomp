@@ -229,6 +229,31 @@ class QueueTests(unittest.TestCase):
         self.assertEqual((queue, dropped), (['new', 'parked', 'again'], ['old']))
         validate_queue(queue, ['new', 'again'], ['parked=1/2: regs; next: x'])
 
+    def test_source_paths_cover_every_unit_of_an_item(self):
+        from tools.sprint_finish import source_paths
+        with tempfile.TemporaryDirectory() as directory:
+            a, b = Path(directory) / 'a.c', Path(directory) / 'b.c'
+            a.write_text('')
+            b.write_text('')
+            self.assertEqual(source_paths([str(a), str(b)], 'save'), [str(a), str(b)])
+            self.assertEqual(source_paths([], str(a)), [str(a)])
+            self.assertEqual(source_paths([], 'save (two units)'), [])
+            self.assertIsNone(source_paths([str(a), str(Path(directory) / 'gone.c')], None))
+
+    def test_prior_matches_drop_across_sources_without_matched_from_diff(self):
+        # A regression scan of two units queues their old matches; finish drops them from
+        # every --source, even when the matches are listed by hand.
+        prior = {'saveload': {'old_a', 'shared'}, 'apisave': {'old_b'}}
+        with unittest.mock.patch.object(sprint_finish, 'defined_at_base', side_effect=lambda u: prior[u]), \
+             unittest.mock.patch.object(sprint_finish, 'source_paths', return_value=['saveload', 'apisave']), \
+             unittest.mock.patch.object(sprint_finish, 'BASELINE') as base, \
+             unittest.mock.patch.object(sprint_finish, 'validate_queue', side_effect=ValueError('stop')) as check:
+            base.is_file.return_value = True
+            base.read_text.return_value = json.dumps({'queue': ['new', 'old_a', 'old_b', 'shared']})
+            self.assertEqual(sprint_finish.main(['new', 'shared', '--unit', 'save',
+                                                 '--source', 'saveload', '--source', 'apisave']), 2)
+        self.assertEqual(check.call_args.args[0], ['new', 'shared'])
+
     def test_score_fn_adds_scored_function(self):
         from tools import score_fn
         with tempfile.TemporaryDirectory() as directory:

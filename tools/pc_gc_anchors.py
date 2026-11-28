@@ -770,8 +770,8 @@ def donor_markdown(addr: int, body: tuple[Path | None, str] | None = None) -> st
         lines.append(f"No `jp_x86.s`: {body[1]}.")
     lines += [
         "`python3 tools/ghidra_decompile.py decompile-pc NAME` writes a Ghidra decompile of the x86 body",
-        "(`jp_ghidra.c`) once `setup-pc` has run. For x86 callers and xrefs, open the exe in REA",
-        f"(`open_binary` on `{exe}`).",
+        "(`jp_ghidra.c`) once `setup-pc` has run. For x86 callers and xrefs, run the `rea` CLI on",
+        f"`{exe}` (`rea procedure-references`, `rea xrefs`).",
         "Known global pairs: `docs/symbol_donors/pc_jp_globals.tsv`. After confirming the pair, add it to",
         "`docs/symbol_donors/pc_jp_pairs.tsv` so later runs propagate from it. In `--donor-note`, record",
         "the x86 address, the pairing method, what you confirmed against GC assembly and what differed.",

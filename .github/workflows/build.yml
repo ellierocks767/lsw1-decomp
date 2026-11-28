@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Check Python tooling
         run: |
           python3 -m compileall -q configure.py tools tests
@@ -39,7 +39,7 @@ jobs:
     outputs:
       readme: ${{ steps.readme.outputs.content }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Ninja
         # Pinned upstream release instead of apt: Ubuntu mirror outages failed every PR.
         run: |
@@ -89,7 +89,7 @@ jobs:
       contents: write
       actions: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 2
       - name: Publish or fast-forward checked README progress
@@ -112,11 +112,11 @@ jobs:
     env:
       ORIG_KEY: ${{ secrets.ORIG_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.15"
 
       - name: Install Ninja
         # Pinned upstream release instead of apt: Ubuntu mirror outages failed every PR.
@@ -209,7 +209,7 @@ jobs:
       group: progress-data
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v4
         with:
           name: dashboard-progress

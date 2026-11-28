@@ -433,8 +433,17 @@ void instNuGCutSceneEnd(gcut_instance_view* instance)
 }
 
 typedef struct gcut_cam_state { u8 flags; u8 value; u8 pad[2]; } gcut_cam_state;
-typedef struct gcut_cam_runtime { u32 unused; gcut_cam_state* states; u8 a, b, c; } gcut_cam_runtime;
-typedef struct gcut_cam_data { u32 count; u8 pad[12]; u8 value; } gcut_cam_data;
+typedef struct gcut_cam_cut { f32* target; f32 start; f32 duration; s8 camera; u8 pad[3]; } gcut_cam_cut;
+typedef struct gcut_cam_runtime { gcut_cam_cut* cuts; gcut_cam_state* states; u8 a; s8 b; u8 c; u8 pad; u8 count; } gcut_cam_runtime;
+typedef struct gcut_cam_view { gcut_matrix matrix; u8 flags; u8 pad41; u8 index; u8 pad43[13]; } gcut_cam_view;
+typedef struct gcut_cam_data {
+    u32 count;
+    gcut_cam_view* cameras;
+    struct gcut_anim* anim;
+    struct gcut_events* events;
+    u8 value;
+    s8 map[1];
+} gcut_cam_data;
 void instNuGCutCamSysStart(gcut_cam_runtime* runtime, gcut_cam_data* data)
 {
     u32 i;
@@ -544,7 +553,7 @@ void instNuGCutLocatorSysStart(gcut_instance_view* instance)
 }
 
 extern s32 lbl_804081E4;
-extern void instNuGCutDebrisLocatorUpdate(gcut_locator_system*, gcut_locator_runtime_item*, gcut_locator_record*, s32, f32);
+extern void instNuGCutDebrisLocatorUpdate(gcut_locator_system*, gcut_locator_runtime_item*, gcut_locator_record*, f32, s32);
 void instNuGCutSceneUpdate(gcut_instance_view* instance, gcut_locator_system* system,
                           gcut_locator_runtime_item* item, gcut_locator_record* record,
                           f32 frame, s32 arg, s32 skip)
@@ -552,7 +561,7 @@ void instNuGCutSceneUpdate(gcut_instance_view* instance, gcut_locator_system* sy
     gcut_locator_event* event = &system->events[record->event];
     if (event->flags & 1) {
         if (!skip)
-            instNuGCutDebrisLocatorUpdate(system, item, record, arg, frame);
+            instNuGCutDebrisLocatorUpdate(system, item, record, frame, arg);
     } else if (event->flags & 2) {
         s32 callback = *(s32*)((u8*)&((gcut_event_callback*)lbl_804081EC)[event->index] + 0x10);
         if (callback && event->index != 0xffff)
@@ -1529,3 +1538,795 @@ void instNuGCutRigidSysEnd(gcut_rigid_view* rigid, f32 frame, gcut_matrix* matri
     }
 }
 #undef GCUT_SAMPLE
+
+typedef struct gcut_lfx_event { char* name; u8 flags; u8 pad5; u16 index; u8 pad8[4]; } gcut_lfx_event;
+typedef struct gcut_lfx_system { u8 pad[4]; gcut_lfx_event* events; u8 pad8; u8 count; } gcut_lfx_system;
+typedef struct gcut_lfx_name { char* name; u8 pad[0x10]; } gcut_lfx_name;
+extern u16 fn_800633A4(char*, s8);
+extern u16 (*lbl_804081E0)(char*);
+extern char str_NuGCutLocatorSysFixUp_CannotFixupLocator[];
+void NuGCutLocatorSysFixUp(s32* scene, s32 arg)
+{
+    u32 i;
+    gcut_lfx_system* system = (gcut_lfx_system*)scene[7];
+    for (i = 0; i < system->count; i++) {
+        gcut_lfx_event* event = &system->events[i];
+        if (event->flags & 1) {
+            event->index = fn_800633A4(event->name, arg);
+        } else if (event->flags & 2) {
+            s32 j = 0;
+            s32 r;
+            char* name = event->name;
+            s32 t = lbl_804081EC;
+            s32 a;
+            s32 b;
+            if (t && *(s32*)t) {
+                a = 0;
+                b = 0;
+                do {
+                    if (strcasecmp(name, *(char**)(b + t)) == 0) {
+                        r = j;
+                        goto store;
+                    }
+                    t = lbl_804081EC;
+                    a += 0x14;
+                    b += 0x14;
+                    j++;
+                } while (*(s32*)(a + t) != 0);
+            }
+            r = -1;
+store:
+            event->index = r;
+        } else if ((event->flags & 4) && lbl_804081E0) {
+            event->index = lbl_804081E0(event->name);
+            if (event->index == 0xFFFF) goto fail;
+            scene[14] |= 0x20000000;
+        }
+        if (event->index == 0xFFFF) {
+fail:
+            fn_80009970(lbl_8019308C, 0xdaf)(str_NuGCutLocatorSysFixUp_CannotFixupLocator, event->name);
+        }
+    }
+}
+
+void fn_8003E0B4(gcut_instance_view* instance, f32 frame, s32 skip)
+{
+    s32* scene = (s32*)instance->scene;
+    gcut_rigid_runtime* runtime = *(gcut_rigid_runtime**)((u8*)instance + 0xa0);
+    gcut_rigid_system* system = (gcut_rigid_system*)scene[5];
+    u8 visible;
+    gcut_matrix matrix;
+    s32 i;
+    for (i = 0; i < system->count; i++) {
+        gcut_rigid_runtime_item* item = &runtime->items[i];
+        gcut_rigid_view* rigid = &system->rigids[i];
+        if (*((u8*)rigid + 0x58) & 2) continue;
+        if (!(*((u8*)rigid + 0x58) & 4)) continue;
+        if (rigid->state && fn_800407F4(rigid->state, (gcut_trigger_byte*)&item->a, &visible, frame)) {
+            if (visible)
+                fn_80013200(item, 1);
+            else
+                fn_80013200(item, 0);
+        }
+        if (fn_800131B8(item)) {
+            instNuGCutRigidSysEnd(rigid, frame, &matrix);
+            if (instance->flags & 0x1000000)
+                fn_8000D134(&matrix, &matrix, &instance->matrix);
+            fn_80013454(item, (gcut_rigid_view*)&matrix);
+            if (fn_800131B8(item) && *((u8*)rigid + 0x5a) != 0xff) {
+                s32 j;
+                gcut_locator_system* locsys = (gcut_locator_system*)scene[7];
+                gcut_locator_runtime* locrt = *(gcut_locator_runtime**)((u8*)instance + 0xa8);
+                for (j = 0; j < *((u8*)rigid + 0x59); j++) {
+                    s32 k = *((u8*)rigid + 0x5a) + j;
+                    s32 arg = (s32)&matrix;
+                    gcut_locator_runtime_item* litem = (gcut_locator_runtime_item*)(k * 8 + (s32)locrt->items);
+                    gcut_locator_record* record = (gcut_locator_record*)(k * 0x64 + (s32)locsys->records);
+                    gcut_locator_event* event = &locsys->events[record->event];
+                    if (event->flags & 1) {
+                        if (!skip)
+                            instNuGCutDebrisLocatorUpdate(locsys, litem, record, frame, arg);
+                    } else if (event->flags & 2) {
+                        s32 callback = *(s32*)((u8*)&((gcut_event_callback*)lbl_804081EC)[event->index] + 0x10);
+                        if (callback && event->index != 0xffff)
+                            ((void (*)(gcut_instance_view*, gcut_locator_system*, gcut_locator_runtime_item*, gcut_locator_record*, f32, s32, s32))callback)(instance, locsys, litem, record, frame, arg, skip);
+                    } else if ((event->flags & 4) && lbl_804081E4 && *(f32*)((u8*)instance + 0x98) != 0.0f) {
+                        ((void (*)(gcut_locator_system*, gcut_locator_runtime_item*, gcut_locator_record*, f32, s32, s32))lbl_804081E4)(locsys, litem, record, frame, arg, skip);
+                    }
+                }
+            }
+        }
+    }
+}
+
+extern char* NuStrCpy(char*, char*);
+extern char* NuStrStr(char*, char*);
+extern s32 fn_8003A244(char*, s32*, s32*, s32);
+extern char lbl_801931F4[];
+extern char lbl_801931F8[];
+extern char lbl_80193224[];
+extern char lbl_80193248[];
+extern char lbl_80193268[];
+extern s32 lbl_804081F8;
+void fn_8003B5F8(void)
+{
+    char name[256];
+    char suffix[8];
+    s32 data;
+    s32 end;
+    s32 value;
+    char* p;
+    u8* inst;
+    s32 tens;
+    s32 ones;
+    if (lbl_804081A8 && !(value = lbl_804081F8)) {
+        NuStrCpy(name, (char*)((s32*)((gcut_instance_view*)lbl_804081A8)->scene)[11]);
+        p = NuStrStr(name, lbl_801931F4);
+        NuStrCpy(suffix, p);
+        tens = (*((volatile u8*)lbl_804081A8 + 0xdf) + 1) / 10;
+        ones = (*((volatile u8*)lbl_804081A8 + 0xdf) + 1) % 10;
+        if (tens) {
+            *p = tens + '0';
+            p++;
+        }
+        *p = ones + '0';
+        NuStrCpy(p + 1, suffix);
+        inst = (u8*)lbl_804081A8;
+        data = *(s32*)(inst + 0xe4);
+        *(s32*)(inst + 0xe4) = value;
+        if (!data) {
+            fn_80009984(lbl_8019308C, 0x84a)(lbl_804081B4, lbl_801931F8, name);
+            return;
+        }
+        inst[0x8c] |= 1;
+        end = data + ((s32*)((gcut_instance_view*)lbl_804081A8)->scene)[15];
+        fn_80009970(lbl_8019308C, 0x855)(lbl_80193224, name, data);
+        fn_80009984(lbl_8019308C, 0x857)(lbl_804081B4, lbl_80193248, name);
+        fn_8003A244(name, &data, &end, 1);
+        fn_80009984(lbl_8019308C, 0x859)(lbl_804081B4, lbl_80193268, name);
+        *((u8*)lbl_804081A8 + 0x8b) |= 0x10;
+        if (*((u8*)lbl_804081A8 + 0xdf) == 0 && (((s32*)((gcut_instance_view*)lbl_804081A8)->scene)[14] & 0x10000000)) {
+            fn_80040974((gcut_instance_view*)lbl_804081A8, 1);
+            copyAnims((s32*)((gcut_instance_view*)lbl_804081A8)->scene, (s32*)((s32*)((volatile gcut_instance_view*)lbl_804081A8)->scene)[13]);
+            ((s32*)((gcut_instance_view*)lbl_804081A8)->scene)[14] &= ~0x10000000;
+            *((u8*)lbl_804081A8 + 0x8b) &= ~0x10;
+            *((u8*)lbl_804081A8 + 0xdf) = 1;
+        }
+        *((u8*)lbl_804081A8 + 0x8c) &= ~1;
+        lbl_804081A8 = 0;
+    }
+}
+
+extern void NuSpecialFindMultiWC(gcut_rigid_runtime_item*, gcut_matrix*);
+extern s32 lbl_804081D8;
+void fn_8003E328(gcut_instance_view* instance, f32 frame, s32 skip)
+{
+    s32* scene = (s32*)instance->scene;
+    gcut_rigid_runtime* runtime = *(gcut_rigid_runtime**)((u8*)instance + 0xa0);
+    gcut_rigid_system* system = (gcut_rigid_system*)scene[5];
+    s8 visible;
+    gcut_matrix matrix;
+    s32 i;
+    for (i = 0; i < system->count; i++) {
+        gcut_rigid_runtime_item* item = &runtime->items[i];
+        gcut_rigid_view* rigid = &system->rigids[i];
+        if (!(*((u8*)rigid + 0x58) & 2)) continue;
+        if (!(*((u8*)rigid + 0x58) & 4)) continue;
+        if (rigid->state && fn_800407F4(rigid->state, (gcut_trigger_byte*)&item->a, &visible, frame)) {
+            if (visible)
+                item->b = 1;
+            else
+                item->b = 0;
+        }
+        if (item->b) {
+            instNuGCutRigidSysEnd(rigid, frame, &matrix);
+            if (instance->flags & 0x1000000)
+                fn_8000D134(&matrix, &matrix, &instance->matrix);
+            NuSpecialFindMultiWC(item, &matrix);
+            if (lbl_804081DC && (*(s32*)((u8*)rigid + 0x58) & 0x18000000))
+                ((void (*)(gcut_rigid_view*, gcut_rigid_runtime_item*, gcut_matrix*))lbl_804081DC)(rigid, item, &matrix);
+            if (lbl_804081D8)
+                ((void (*)(gcut_rigid_view*, gcut_matrix*))lbl_804081D8)(rigid, &matrix);
+            if (*((u8*)rigid + 0x5a) != 0xff) {
+                s32 j;
+                gcut_locator_system* locsys = (gcut_locator_system*)scene[7];
+                gcut_locator_runtime* locrt = *(gcut_locator_runtime**)((u8*)instance + 0xa8);
+                for (j = 0; j < *((u8*)rigid + 0x59); j++) {
+                    s32 k = *((u8*)rigid + 0x5a) + j;
+                    s32 arg = (s32)&matrix;
+                    gcut_locator_runtime_item* litem = (gcut_locator_runtime_item*)(k * 8 + (s32)locrt->items);
+                    gcut_locator_record* record = (gcut_locator_record*)(k * 0x64 + (s32)locsys->records);
+                    gcut_locator_event* event = &locsys->events[record->event];
+                    if (event->flags & 1) {
+                        if (!skip)
+                            instNuGCutDebrisLocatorUpdate(locsys, litem, record, frame, arg);
+                    } else if (event->flags & 2) {
+                        s32 callback = *(s32*)((u8*)&((gcut_event_callback*)lbl_804081EC)[event->index] + 0x10);
+                        if (callback && event->index != 0xffff)
+                            ((void (*)(gcut_instance_view*, gcut_locator_system*, gcut_locator_runtime_item*, gcut_locator_record*, f32, s32, s32))callback)(instance, locsys, litem, record, frame, arg, skip);
+                    } else if ((event->flags & 4) && lbl_804081E4 && *(f32*)((u8*)instance + 0x98) != 0.0f) {
+                        ((void (*)(gcut_locator_system*, gcut_locator_runtime_item*, gcut_locator_record*, f32, s32, s32))lbl_804081E4)(locsys, litem, record, frame, arg, skip);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void fn_8003CEE0(gcut_rigid_view* rigid, gcut_matrix* matrix, void* time, f32 frame)
+{
+    gcut_anim* anim = *(gcut_anim**)((u8*)rigid + 0x50);
+    f32 translate[3];
+    f32 angles[3];
+    s32 rotation[3];
+    f32 translate2[3];
+    f32 angles2[3];
+    s32 rotation2[3];
+    if (anim) {
+        if (anim->magic == 0x414e4934) {
+            f32* values = fn_8001BFC4(anim, 0);
+            u8 flags = **(u8**)((u8*)*(gcut_anim**)((u8*)rigid + 0x50) + 0x34);
+            if (flags & 1) {
+                angles2[0] = values[3];
+                angles2[1] = values[4];
+                angles2[2] = values[5];
+                rotation2[0] = (s32)(angles2[0] * 10430.3779296875f);
+                rotation2[1] = (s32)(angles2[1] * 10430.3779296875f);
+                rotation2[2] = (s32)(angles2[2] * 10430.3779296875f);
+                fn_8000D010(matrix, rotation2);
+            } else {
+                NuMtxSetIdentity(matrix);
+            }
+            translate2[0] = values[0];
+            translate2[1] = values[1];
+            translate2[2] = values[2];
+            NuMtxTranslate(matrix, translate2);
+            matrix->m[2] = -matrix->m[2];
+            matrix->m[6] = -matrix->m[6];
+            matrix->m[8] = -matrix->m[8];
+            matrix->m[9] = -matrix->m[9];
+            matrix->m[11] = -matrix->m[11];
+            matrix->m[14] = -matrix->m[14];
+            NuMtxTranslate(matrix, (f32*)((u8*)rigid + 0x30));
+        } else {
+            f32* curves = anim->curves;
+            s8* types = anim->types;
+            if (**(u8**)((u8*)anim + 0x14) & 1) {
+                angles[0] = types[3] == 0 ? curves[3] : NuAnimCurve2CalcVal(&curves[3], time, types[3]);
+                angles[1] = types[4] == 0 ? curves[4] : NuAnimCurve2CalcVal(&curves[4], time, types[4]);
+                angles[2] = types[5] == 0 ? curves[5] : NuAnimCurve2CalcVal(&curves[5], time, types[5]);
+                rotation[0] = (s32)(angles[0] * 10430.3779296875f);
+                rotation[1] = (s32)(angles[1] * 10430.3779296875f);
+                rotation[2] = (s32)(angles[2] * 10430.3779296875f);
+                fn_8000D010(matrix, rotation);
+            } else {
+                NuMtxSetIdentity(matrix);
+            }
+            translate[0] = types[0] == 0 ? curves[0] : NuAnimCurve2CalcVal(&curves[0], time, types[0]);
+            translate[1] = types[1] == 0 ? curves[1] : NuAnimCurve2CalcVal(&curves[1], time, types[1]);
+            translate[2] = types[2] == 0 ? curves[2] : NuAnimCurve2CalcVal(&curves[2], time, types[2]);
+            NuMtxTranslate(matrix, translate);
+            matrix->m[2] = -matrix->m[2];
+            matrix->m[6] = -matrix->m[6];
+            matrix->m[8] = -matrix->m[8];
+            matrix->m[9] = -matrix->m[9];
+            matrix->m[11] = -matrix->m[11];
+            matrix->m[14] = -matrix->m[14];
+            NuMtxTranslate(matrix, (f32*)((u8*)rigid + 0x30));
+        }
+    } else {
+        *matrix = *(gcut_matrix*)rigid;
+    }
+}
+
+typedef struct gcut_debris { u8 pad[0x14]; s16 rate; } gcut_debris;
+extern gcut_debris** lbl_804083FC;
+extern f32 lbl_804083C8;
+extern char str_instNuGCutDebrisLocatorUpdate_CannotSeeDebris[];
+extern void NuMtxPreTranslate(gcut_matrix*, f32*);
+extern f32 NuAtan2(f32, f32);
+extern s32 NuAngSub(s32, s32);
+extern f32 NuFsqrt(f32);
+extern void fn_80063E14(s32*, s32, f32*, s32);
+extern void fn_80064730(s32, s32, s32, s32);
+extern void fn_80064088(s32, f32*, s32, s32, s32, f32);
+typedef struct gcut_debris_item { f32 accum; s32 active; } gcut_debris_item;
+static inline s32 gcut_debris_clip(gcut_locator_record* locator, void* time, f32* scale, f32 frame)
+{
+    gcut_anim* anim = *(gcut_anim**)((u8*)locator + 0x50);
+    s32 visible;
+    if (anim) {
+        if (anim->magic == 0x414e4934) {
+            f32* values = ((f32* (*)(gcut_anim*, s32, f32))fn_8001BFC4)(anim, 0, frame);
+            s32 result = (s32)values[7];
+            if (result)
+                *scale = values[6];
+            return result;
+        } else {
+            s8* types = anim->types;
+            f32* curves = anim->curves;
+            if (types[7] == 0)
+                visible = (s32)curves[7];
+            else
+                visible = (s32)NuAnimCurve2CalcVal(&curves[7], time, types[7]);
+            if (visible && scale) {
+                f32 value;
+                if (types[6] == 0)
+                    value = curves[6];
+                else
+                    value = NuAnimCurve2CalcVal(&curves[6], time, types[6]);
+                *scale = value;
+            }
+        }
+    } else {
+        visible = *((u8*)locator + 0x58) & 8;
+        if (visible)
+            *scale = *(f32*)((u8*)locator + 0x4c);
+    }
+    return visible;
+}
+void instNuGCutDebrisLocatorUpdate(gcut_locator_system* system, gcut_locator_runtime_item* item_,
+                                   gcut_locator_record* record, f32 frame, s32 arg)
+{
+    gcut_matrix matrix;
+    u8 time[24];
+    f32 dir[3];
+    f32 scale;
+    s32 handle;
+    gcut_debris_item* item = (gcut_debris_item*)item_;
+    gcut_locator_event* events = system->events;
+    s32 index = events[record->event].index;
+    s32 spawned = 0;
+    s32 visible;
+
+    if (index == 0xffff)
+        return;
+    if (lbl_804083FC[index] == 0)
+        fn_80009948(lbl_8019308C, 0xe31)(str_instNuGCutDebrisLocatorUpdate_CannotSeeDebris,
+                                         *(char**)&events[record->event]);
+    if (*(gcut_anim**)((u8*)record + 0x50))
+        ((void (*)(gcut_anim*, f32, void*))NuAnimData2CalcTime)(*(gcut_anim**)((u8*)record + 0x50), frame, time);
+
+    visible = gcut_debris_clip(record, time, &scale, frame);
+    if (visible) {
+        if (scale < -0.5f)
+            scale = (f32)lbl_804083FC[index]->rate / 60.0f;
+        if (scale > 0.0f) {
+            s32 count;
+            spawned = 1;
+            if ((*((u8*)record + 0x58) & 0x10) && item->active)
+                return;
+            item->accum += scale;
+            count = 0;
+            while (item->accum > 0.0f) {
+                item->accum -= 1.0f;
+                count++;
+            }
+            if (count) {
+                s16 yaw, pitch;
+                fn_8003CEE0((gcut_rigid_view*)record, &matrix, time, frame);
+                if (*((u8*)record + 0x58) & 4)
+                    NuMtxPreTranslate(&matrix, (f32*)((u8*)record + 0x40));
+                if (arg)
+                    fn_8000D134(&matrix, &matrix, (gcut_matrix*)arg);
+                instNuGCutLocatorUpdate(*(u32*)((u8*)record + 0x54), &matrix, dir);
+                yaw = NuAngSub((s32)(NuAtan2(dir[0], dir[2]) * 10430.378f), 0x4000);
+                pitch = (s32)(NuAtan2(NuFsqrt(dir[0] * dir[0] + dir[2] * dir[2]), -dir[1]) * 10430.378f);
+                if (*((u8*)record + 0x58) & 0x10) {
+                    handle = -1;
+                    fn_80063E14(&handle, index, &matrix.m[12], count);
+                    fn_80064730(handle, pitch, yaw, 0);
+                    item->active = 1;
+                } else {
+                    fn_80064088(index, &matrix.m[12], count, pitch, yaw, lbl_804083C8);
+                }
+            }
+        }
+    }
+    if (!spawned) {
+        item->active = spawned;
+        item->accum = 0.0f;
+    }
+}
+
+#define GCUT_SAMPLE(dst, n) ((dst) = types[n] == 0 ? curves[n] : NuAnimCurve2CalcVal(&curves[n], time, types[n]))
+void fn_8003E9B8(u8* object, gcut_matrix* matrix, s32* visible, s32* id, f32* x, f32* y, f32* z, s32* extra, f32 frame)
+{
+    gcut_anim* anim = *(gcut_anim**)(object + 0x44);
+    if (anim) {
+        if (anim->magic == 0x414e4934) {
+            fn_8003E6EC(object, matrix, visible, id, x, y, z, extra);
+        } else {
+            u8 time[24];
+            f32 translate[3];
+            f32 angles[3];
+            f32 scale[3];
+            s32 rotation[3];
+            f32* curves;
+            s8* types;
+            s8 flags;
+            gcut_anim* a;
+            NuAnimData2CalcTime(anim, time, frame);
+            a = *(gcut_anim**)(object + 0x44);
+            flags = **(s8**)((u8*)a + 0x14);
+            curves = a->curves;
+            types = a->types;
+            if (*(s16*)((u8*)a + 6) > 6)
+                *visible = (s32)(types[6] == 0 ? curves[6] : NuAnimCurve2CalcVal(&curves[6], time, types[6]));
+            else
+                *visible = object[0x5c] & 1;
+            if (id) {
+                if (*(s16*)((u8*)*(gcut_anim**)(object + 0x44) + 6) > 7) {
+                    f32 value = types[7] == 0 ? curves[7] : NuAnimCurve2CalcVal(&curves[7], time, types[7]);
+                    if (value < 0.0f)
+                        *id = 0xff;
+                    else
+                        *id = (s32)value;
+                } else {
+                    *id = object[0x5d];
+                }
+                if (z && *id && *id != 0xff) {
+                    if (*(s16*)((u8*)*(gcut_anim**)(object + 0x44) + 6) > 10)
+                        GCUT_SAMPLE(*z, 10);
+                    else
+                        *z = (s8)object[0x63];
+                }
+            }
+            if (*visible) {
+                if (extra) {
+                    if (*(s16*)((u8*)*(gcut_anim**)(object + 0x44) + 6) > 11)
+                        *extra = (s32)(types[11] == 0 ? curves[11] : NuAnimCurve2CalcVal(&curves[11], time, types[11]));
+                    else
+                        *extra = -1;
+                }
+                if (flags & 1) {
+                    GCUT_SAMPLE(angles[0], 3);
+                    GCUT_SAMPLE(angles[1], 4);
+                    GCUT_SAMPLE(angles[2], 5);
+                    rotation[0] = (s32)(angles[0] * 10430.3779296875f);
+                    rotation[1] = (s32)(angles[1] * 10430.3779296875f);
+                    rotation[2] = (s32)(angles[2] * 10430.3779296875f);
+                    fn_8000D010(matrix, rotation);
+                } else {
+                    NuMtxSetIdentity(matrix);
+                }
+                GCUT_SAMPLE(translate[0], 0);
+                GCUT_SAMPLE(translate[1], 1);
+                GCUT_SAMPLE(translate[2], 2);
+                NuMtxTranslate(matrix, translate);
+                matrix->m[2] = -matrix->m[2];
+                matrix->m[6] = -matrix->m[6];
+                matrix->m[8] = -matrix->m[8];
+                matrix->m[9] = -matrix->m[9];
+                matrix->m[11] = -matrix->m[11];
+                matrix->m[14] = -matrix->m[14];
+                NuMtxGetScale(scale, (gcut_matrix*)object);
+                NuMtxPreScale(matrix, scale);
+                if (x) {
+                    if (*(s16*)((u8*)*(gcut_anim**)(object + 0x44) + 6) > 9)
+                        GCUT_SAMPLE(*x, 9);
+                    else
+                        *x = *(f32*)(object + 0x58);
+                }
+                if (y) {
+                    if (*(s16*)((u8*)*(gcut_anim**)(object + 0x44) + 6) > 8)
+                        GCUT_SAMPLE(*y, 8);
+                    else
+                        *y = object[0x61];
+                }
+            }
+        }
+    } else {
+        *visible = object[0x5c] & 1;
+        if (id)
+            *id = object[0x5d];
+        if (visible) {
+            *matrix = *(gcut_matrix*)object;
+            if (x)
+                *x = *(f32*)(object + 0x58);
+            if (y)
+                *y = object[0x61];
+        }
+    }
+}
+#undef GCUT_SAMPLE
+
+extern gcut_matrix lbl_8034701C;
+extern s32 lbl_80408198;
+extern char str_instNuGCutCamSysUpdate_InternalError[];
+extern s32 NuAnimData2GetEnd(gcut_anim*);
+extern void fn_8001BE94(gcut_anim*, s32, gcut_matrix*, f32);
+extern void NuAnimCurve2SetApplyToMatrix(f32*, s8*, s32, void*, gcut_matrix*);
+extern f32 fn_8000ED40(f32);
+extern f32 fn_8000B234(f32);
+extern void NuMtxLookAtZ(gcut_matrix*, f32*);
+extern void NuMtxMulR(gcut_matrix*, f32*);
+extern void fn_8000BAFC(f32*, f32*, f32*, f32);
+extern void fn_8000B518(f32*, gcut_matrix*);
+typedef struct gcut_vec3 { f32 x, y, z; } gcut_vec3;
+void instNuGCutCamSysUpdate(gcut_instance_view* instance, f32 frame)
+{
+    u8 time[24];
+    gcut_matrix matrix;
+    f32 from[4];
+    f32 to[4];
+    f32 result[4];
+    gcut_vec3 saved;
+    u8 value;
+    s32* words = (s32*)instance;
+    gcut_cam_runtime* runtime = (gcut_cam_runtime*)words[0x9c/4];
+    gcut_cam_data* system = (gcut_cam_data*)((s32*)instance->scene)[4];
+    gcut_events* events;
+    gcut_cam_cut* cut;
+    gcut_cam_state* state;
+
+    if (system->events) {
+        if (fn_800407F4(system->events, (gcut_trigger_byte*)&runtime->a, &value, frame)) {
+            runtime->b = value;
+            words[0x8c/4] |= 0x80000;
+            lbl_8040819C = 1;
+        }
+        events = system->events;
+        if (runtime->a < events->count) {
+            f32 t = events->times[runtime->a];
+            if (t - frame < 1.0f && events->values[runtime->a] != runtime->b) {
+                *(f32*)((u8*)instance + 0x94) = t - 1.0f;
+                if (words[0x88/4] & 0x2000)
+                    *(f32*)((u8*)instance + 0x94) = *(f32*)((u8*)instance->scene + 8) - (t - 1.0f);
+                if (*(f32*)((u8*)instance + 0x94) < 1.0f)
+                    *(f32*)((u8*)instance + 0x94) = 1.0f;
+            }
+        }
+    }
+    while (runtime->c < runtime->count && frame >= runtime->cuts[runtime->c].start) {
+        cut = &runtime->cuts[runtime->c];
+        state = &runtime->states[system->map[cut->camera]];
+        state->flags |= 2;
+        state->value = runtime->c;
+        runtime->c++;
+    }
+    while (runtime->c != 0 && frame < runtime->cuts[runtime->c - 1].start) {
+        runtime->c--;
+        cut = &runtime->cuts[runtime->c];
+        state = &runtime->states[system->map[cut->camera]];
+        state->flags |= 2;
+        state->value = runtime->c;
+    }
+    if (runtime->b >= 0) {
+        gcut_cam_view* camera;
+        if ((u32)runtime->b >= system->count)
+            fn_80009948(lbl_8019308C, 0xb7e)(str_instNuGCutCamSysUpdate_InternalError);
+        state = &runtime->states[runtime->b];
+        camera = &system->cameras[runtime->b];
+        if ((camera->flags & 1) && camera->index < NuAnimData2GetEnd(system->anim)) {
+            if (system->anim->magic == 0x414e4934) {
+                fn_8001BE94(system->anim, camera->index, &lbl_8034701C, *(f32*)((u8*)instance + 0x94));
+            } else {
+                gcut_anim* anim;
+                ((void (*)(gcut_anim*, f32, void*))NuAnimData2CalcTime)(system->anim, *(f32*)((u8*)instance + 0x94), time);
+                anim = system->anim;
+                NuAnimCurve2SetApplyToMatrix(&anim->curves[*(s16*)((u8*)anim + 6) * camera->index],
+                                             &anim->types[*(s16*)((u8*)anim + 6) * camera->index],
+                                             (*(s8**)((u8*)anim + 0x14))[camera->index], time, &lbl_8034701C);
+            }
+        } else {
+            lbl_8034701C = camera->matrix;
+        }
+        if (words[0x88/4] & 0x1000000)
+            fn_8000D134(&lbl_8034701C, &lbl_8034701C, &instance->matrix);
+        lbl_80408198 = 1;
+        if (state->flags & 2) {
+            s32 reverse = 0;
+            f32 blend;
+            f32 duration;
+            cut = &runtime->cuts[state->value];
+            duration = fn_8000ED40(cut->duration);
+            if (fn_8000B234(cut->duration) < 0.0f)
+                reverse = 1;
+            if (reverse && frame >= cut->start + duration) {
+                state->flags &= 0xfd;
+            } else {
+                saved = *(gcut_vec3*)&lbl_8034701C.m[12];
+                matrix = lbl_8034701C;
+                NuMtxLookAtZ(&matrix, cut->target);
+                if (duration > 0.01f) {
+                    blend = (frame - cut->start) / duration;
+                    if (blend > 1.0f)
+                        reverse = 1;
+                    else if (blend < 0.0f)
+                        reverse = 0;
+                } else {
+                    blend = 1.0f;
+                }
+                if (reverse)
+                    blend = 1.0f - blend;
+                NuMtxMulR(&matrix, to);
+                NuMtxMulR(&lbl_8034701C, from);
+                fn_8000BAFC(result, from, to, blend);
+                fn_8000B518(result, &lbl_8034701C);
+                *(gcut_vec3*)&lbl_8034701C.m[12] = saved;
+            }
+        }
+    }
+}
+
+extern s8 lbl_80407CC8;
+void NuAnimDataFixPtrs(gcut_instance_view* instance)
+{
+    s32* words = (s32*)instance;
+    s32* scene = (s32*)instance->scene;
+    u32 flags = words[0x88/4] & ~0x40000000;
+    *(f32*)((u8*)instance + 0x90) = *(f32*)((u8*)scene + 8);
+    flags |= 0x80000;
+    *(f32*)((u8*)instance + 0x94) = *(f32*)((u8*)scene + 8);
+    words[0x88/4] = flags;
+    words[0x8c/4] &= ~0x2000000;
+    *(f32*)((u8*)instance + 0x90) = *(f32*)((u8*)scene + 8);
+    words[0x88/4] = flags | 0x80000;
+    lbl_80407CC8 = 1;
+    if (instance->flags & 0x2000) {
+        if (scene[5])
+            instNuGCutRigidSysStart(instance, *(f32*)((u8*)instance->scene + 8) - *(f32*)((u8*)instance + 0x90));
+        if (words[0xa4/4])
+            NuGCutCharAnimProcess(instance, *(f32*)((u8*)instance->scene + 8) - *(f32*)((u8*)instance + 0x90));
+        if (words[0xa8/4])
+            ((void (*)(gcut_float_array*, gcut_count8*, f32))NuGCutLocatorCalcMtx)((gcut_float_array*)words[0xa8/4], (gcut_count8*)scene[7], *(f32*)((u8*)instance->scene + 8) - *(f32*)((u8*)instance + 0x90));
+    } else {
+        if (scene[5])
+            instNuGCutRigidSysStart(instance, *(f32*)((u8*)instance + 0x90));
+        if (words[0xa4/4])
+            NuGCutCharAnimProcess(instance, *(f32*)((u8*)instance + 0x90));
+        if (words[0xa8/4])
+            ((void (*)(gcut_float_array*, gcut_count8*, f32))NuGCutLocatorCalcMtx)((gcut_float_array*)words[0xa8/4], (gcut_count8*)scene[7], *(f32*)((u8*)instance + 0x90));
+    }
+    lbl_80407CC8 = 0;
+    if (*(s16*)((u8*)instance + 0xd8)) {
+        if (lbl_80346FFC[*(s8*)((u8*)instance + 0xde)] == *(s16*)((u8*)instance + 0xd8) && fn_80044AE8(*(s8*)((u8*)instance + 0xde)) == *(s16*)((u8*)instance + 0xd8))
+            fn_80044AF0(*(s8*)((u8*)instance + 0xde));
+        if (*(s16*)((u8*)instance + 0xda) && lbl_80346FFC[*(s8*)((u8*)instance + 0xde) + 1] == *(s16*)((u8*)instance + 0xda) && fn_80044AE8(*(s8*)((u8*)instance + 0xde) + 1) == *(s16*)((u8*)instance + 0xda))
+            fn_80044AF0(*(s8*)((u8*)instance + 0xde) + 1);
+        if (!*(u8*)((u8*)instance + 0xde) && (*(s32*)((u8*)instance + 0x8c) & 0x100000)) {
+            fn_80044D0C();
+            *(s32*)((u8*)instance + 0x8c) &= ~0x100000;
+        }
+    }
+}
+
+extern s32 NuFileLoadBuffer(char* name, s32 buf, s32 size);
+extern s32 NuStrLen(char*);
+extern char lbl_801930BC[];
+extern char lbl_801930E4[];
+extern s32 lbl_80408178;
+s32 fn_8003A244(char* name, s32* bufp, s32* endp, s32 noAlloc)
+{
+    s32 buf;
+    s32 size;
+    s32* scene;
+    s32 animDelta;
+    s32 base;
+    s32 str;
+    s32 end;
+
+    buf = *bufp;
+    end = *endp;
+    *bufp = (buf + 15) & ~15;
+    size = NuFileLoadBuffer(name, *bufp, end - buf);
+    if (size == 0) {
+        return 0;
+    }
+    scene = (s32*)*bufp;
+    if (scene[0] == 10) {
+        scene[1] = (s32)scene - scene[1];
+        animDelta = scene[10] = (s32)scene - scene[10];
+        if (!(scene[14] & 0x10000000)) {
+            scene[3] = scene[3] ? scene[3] + scene[1] : 0;
+            if (scene[4]) NuGCutCamsSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[7]) NuGCutLocatorSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[5]) NuGCutRigidSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[6]) NuGCutCharSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[9]) NuGCutTriggerSysFixPtrs(scene, scene[1]);
+            scene[8] = scene[8] ? scene[8] + scene[1] : 0;
+            if (scene[14] < 0 && noAlloc == 0) {
+                base = *bufp + scene[19];
+                scene[12] = (base + 15) & ~15;
+                { s32 t = scene[12] + 0x400; base = t + scene[15]; }
+                if (lbl_80408178 == 0) {
+                    scene[13] = (base + 15) & ~15;
+                    { s32 t = scene[13] + 0x400; base = t + scene[15]; }
+                }
+                *bufp = base;
+                size = NuStrLen(name);
+                str = *bufp;
+                {
+                    s32 t = str + 4;
+                    *bufp = t + size;
+                }
+                NuStrCpy((char*)str, name);
+                scene[11] = str;
+            } else {
+                *bufp += size;
+            }
+        } else {
+            scene[3] = scene[3] ? scene[3] + scene[1] : 0;
+            if (scene[4]) NuGCutCamsSysFixPtrs(scene, scene[1], 0);
+            if (scene[7]) NuGCutLocatorSysFixPtrs(scene, scene[1], 0);
+            if (scene[5]) NuGCutRigidSysFixPtrs(scene, scene[1], 0);
+            if (scene[6]) NuGCutCharSysFixPtrs(scene, scene[1], 0);
+            if (scene[9]) NuGCutTriggerSysFixPtrs(scene, scene[1]);
+            scene[8] = scene[8] ? scene[8] + scene[1] : 0;
+            *bufp += size;
+        }
+        if ((u32)*bufp > (u32)*endp) {
+            fn_80009948(lbl_8019308C, 0x41c)(lbl_801930BC, name, *bufp - *endp);
+            return (s32)scene;
+        }
+    } else {
+        if (scene[0] > 2) {
+            fn_80009948(lbl_8019308C, 0x428)(lbl_801930E4, name, scene[0]);
+        }
+        scene[1] = (s32)scene - scene[1];
+        if (scene[0] > 1) {
+            animDelta = scene[10] = (s32)scene - scene[10];
+        } else {
+            animDelta = scene[1];
+        }
+        if (scene[0] <= 1 || !(scene[14] & 0x10000000)) {
+            scene[3] = scene[3] ? scene[3] + scene[1] : 0;
+            if (scene[4]) NuGCutCamsSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[7]) NuGCutLocatorSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[5]) NuGCutRigidSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[6]) NuGCutCharSysFixPtrs(scene, scene[1], animDelta);
+            if (scene[9]) NuGCutTriggerSysFixPtrs(scene, scene[1]);
+            scene[8] = scene[8] ? scene[8] + scene[1] : 0;
+            if (scene[0] > 1 && scene[14] < 0 && noAlloc == 0) {
+                base = 0;
+                if (scene[4] && ((s32*)scene[4])[2]) {
+                    base = ((s32*)scene[4])[2];
+                } else if (scene[5] && (*(s32**)scene[5])[19]) {
+                    base = (*(s32**)scene[5])[19];
+                } else if (scene[6]) {
+                    s32* chr = *(s32**)scene[6];
+                    if (chr[17]) {
+                        base = chr[17];
+                    } else if (chr[18]) {
+                        base = chr[18];
+                    }
+                }
+                if (scene[19]) {
+                    base = *bufp + scene[19];
+                }
+                scene[12] = (base + 15) & ~15;
+                { s32 t = scene[12] + 0x400; base = t + scene[15]; }
+                if (lbl_80408178 == 0) {
+                    scene[13] = (base + 15) & ~15;
+                    { s32 t = scene[13] + 0x400; base = t + scene[15]; }
+                }
+                *bufp = base;
+                size = NuStrLen(name);
+                str = *bufp;
+                {
+                    s32 t = str + 4;
+                    *bufp = t + size;
+                }
+                NuStrCpy((char*)str, name);
+                scene[11] = str;
+            } else {
+                *bufp += size;
+            }
+        } else {
+            scene[3] = scene[3] ? scene[3] + scene[1] : 0;
+            if (scene[4]) NuGCutCamsSysFixPtrs(scene, scene[1], 0);
+            if (scene[7]) NuGCutLocatorSysFixPtrs(scene, scene[1], 0);
+            if (scene[5]) NuGCutRigidSysFixPtrs(scene, scene[1], 0);
+            if (scene[6]) NuGCutCharSysFixPtrs(scene, scene[1], 0);
+            if (scene[9]) NuGCutTriggerSysFixPtrs(scene, scene[1]);
+            scene[8] = scene[8] ? scene[8] + scene[1] : 0;
+            *bufp += size;
+        }
+        if ((u32)*bufp > (u32)*endp) {
+            fn_80009948(lbl_8019308C, 0x47f)(lbl_801930BC, name, *bufp - *endp);
+            return (s32)scene;
+        }
+    }
+    return (s32)scene;
+}

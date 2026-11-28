@@ -11,9 +11,11 @@ struct NUPICKUP_s {
     s32 link1C;
     f32 baseY;
     f32 previousY;
-    char unk28[4];
+    f32 value28;
     f32 value2C;
-    char unk30[6];
+    u16 angle30;
+    u16 word32;
+    u16 word34;
     s16 kind36;
     u8 flags38;
     u8 active39;
