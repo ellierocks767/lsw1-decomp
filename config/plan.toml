@@ -2880,3 +2880,7 @@ reason = "best 119/157: the slot scan uses an object pointer where retail carrie
 [[parked]]
 function = "fn_80145BCC"
 reason = "best 133/211: group loops and matrix setup keep an extra nonvolatile register live; next: isolate the group cursor and use the retail dual handle cursor for the final matrix loop"
+
+[[parked]]
+function = "fn_80143828"
+reason = "best 111/139: frame and length match with the spline type and signed model ID; next: stage the initial point copy around the paired-single subtraction"
