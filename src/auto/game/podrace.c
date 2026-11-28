@@ -51,7 +51,7 @@ void fn_8014BE90(void) {
 s32 PodraceUpdateStartLights();
 s32 fn_8014D7C8();
 s32 fn_8014DA40();
-s32 fn_8014EBBC();
+void fn_8014EBBC(void);
 
 void fn_8014FD9C(void) {
     fn_8014EBBC();
@@ -150,7 +150,7 @@ void fn_8014D01C(u32 arg0) {
 
 s32 PodraceUpdateStartLights();
 s32 fn_8014D1F8();
-s32 fn_8014EBBC();
+void fn_8014EBBC(void);
 extern PodSnd12 lbl_803EAD24[];
 
 void fn_8014FFE8(void) {
@@ -361,7 +361,7 @@ s32 PodraceUpdateStartLights();
 s32 fn_800133FC(void *);
 s32 fn_800137D0(void *, s32);
 void fn_8011E9C4(s32);
-s32 fn_8014EBBC();
+void fn_8014EBBC(void);
 extern f32 NuRndrHackWaterLevel[];
 extern f32 lbl_801AFEA4[];
 extern f32 lbl_801AFEA8[];
@@ -1544,5 +1544,44 @@ void PodraceCreateMine(void) {
         }
         MINE->debris = FindGameDebris(*(s32 *)((s8 *)lbl_80409410 + 0x1B8), str_Podrace_MinePop);
         MINE->part = PARTLookupType(str_Podrace_MinePart);
+    }
+}
+
+void *fn_800D5680(s32, s32, s32, s32, s32, s32, s32, f32, f32, f32);
+f32 NuSinApprox(s32);
+extern f32 lbl_801AFDF8[];
+extern f32 lbl_801AFDFC[];
+extern f32 lbl_801AFE00[];
+extern f32 lbl_801AFE04[];
+extern f32 lbl_801AFE08[];
+extern f32 lbl_801AFE0C[];
+extern f32 lbl_801AFE10[];
+extern f32 lbl_803E04B0[];
+extern s32 lbl_80408F20;
+extern s32 lbl_8040948C;
+extern f32 lbl_80409CF4;
+extern f32 lbl_8040AFA4;
+
+void fn_8014EBBC(void) {
+    u8 *obj;
+    f32 var;
+
+    if (lbl_80409C90 != 0) {
+        if (lbl_80408F00 == lbl_801AFDF8[0] && lbl_80408F20 == 0) {
+            lbl_8040AFA4 = lbl_8040AFA4 + 2.0f * lbl_80408E9C;
+            if (lbl_8040AFA4 > lbl_801AFDFC[0]) {
+                lbl_8040AFA4 = lbl_801AFDFC[0];
+            }
+            if (NuFmod(lbl_803E04B0[0], lbl_801AFE00[0]) < lbl_801AFE04[0]) {
+                var = lbl_80409CF4;
+                lbl_8040948C = 0xD1;
+                obj = fn_800D5680(0, lbl_80409C90 + 0x1A0, 0, 0xFF, 0x3F, 0x3F, 0x8083, var, lbl_801AFE08[0], lbl_801AFE08[0]);
+                if (obj != NULL) {
+                    obj[0x90] = (s32)(NuSinApprox((s32)(lbl_8040AFA4 * lbl_801AFE0C[0])) * lbl_801AFE10[0]);
+                }
+            }
+        } else {
+            lbl_8040AFA4 = lbl_801AFE08[0];
+        }
     }
 }
