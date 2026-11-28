@@ -8216,3 +8216,90 @@ void fn_800C5640(void *arg0)
         fn_8006DCD4(lbl_801A2C6C, (s32)&p->mtx._30);
     }
 }
+
+/* Emitter request handed to fn_80120AEC. lbl_803EAD9C is lbl_803EAD24[10]: retail loads
+ * the scene word through lbl_803EAD24 + 0x78 and the other two through lbl_803EAD9C. */
+struct partemit_entry_s {
+    struct nuhspecial_s sp;
+    u8 flag;
+};
+
+struct partemit_s {
+    s32 unk0;
+    s16 unk4;
+    s16 unk6;
+    s16 unk8;
+    u8 count;
+    u8 unkB;
+    s16 sfx;
+    f32 unk10;
+    f32 unk14;
+    f32 unk18;
+    f32 unk1C;
+    f32 unk20;
+    struct partemit_entry_s e[61];
+    u8 pad3F4[0xC];               /* frame is 0x420: 0x400 bytes of locals */
+};
+
+s32 fn_80120AEC(struct partemit_s *, struct nuvec_s *, s32 *);
+extern s32 lbl_801A2C80[];
+extern f32 lbl_801A2C94[];
+extern f32 lbl_801A2C98[];
+extern f32 lbl_801A2C9C[];
+extern f32 lbl_801A2CA0[];
+
+void fn_800C582C(void *arg0)
+{
+    struct partemit_s s;
+    struct partemit_s *ps = &s;
+    struct partemit_entry_s *e;
+    s32 idx;
+    s32 i;
+    s32 p;
+    s32 c;
+
+    if (arg0 == (void *)lbl_803ED320[0]) {
+        idx = 0;
+    } else if (arg0 == (void *)lbl_803ED320[1]) {
+        idx = 1;
+    } else if (arg0 == (void *)lbl_803ED320[2]) {
+        idx = 2;
+    } else {
+        idx = -1;
+    }
+    if (idx != -1 && arg0 != NULL) {
+        if (fn_800130F4(lbl_803EAD9C) != 0) {
+            ps->unk0 = 0;
+            ps->unk4 = 0x38;
+            ps->unk6 = -1;
+            ps->unk8 = 0;
+            ps->count = 0xF;
+            ps->unkB = 0;
+            ps->sfx = PauseMenu_HandleEntry1(lbl_801A2C80);
+            ps->unk10 = lbl_801A2C94[0];
+            ps->unk14 = lbl_801A2C98[0];
+            ps->unk18 = lbl_801A2C9C[0];
+            ps->unk1C = lbl_801A2CA0[0];
+            ps->unk20 = lbl_801A2C98[0];
+            for (i = 0; i < ps->count; i++) {
+                e = &ps->e[i];
+                *(s32 *)&e->sp.scene = lbl_803EAD24[30];
+                *(s32 *)&e->sp.special = lbl_803EAD9C[1];
+                *(s32 *)&e->sp.display = lbl_803EAD9C[2];
+                e->flag = 0;
+            }
+            fn_80120AEC(ps, (struct nuvec_s *)((s8 *)arg0 + 0x30), &lbl_803EAD24[idx * 3]);
+        }
+        fn_800BA244(&lbl_803EAD24[idx * 3]);
+        for (i = 0; i < 8; i++) {
+            p = gPlayer1Pointer[i];
+            if (p != 0) {
+                c = *(s32 *)(p + 0xEEC);
+                if (*(s32 *)(c + 0x64C) == lbl_803ED320[idx]) {
+                    *(s32 *)(c + 0x64C) = 0;
+                }
+            }
+        }
+        lbl_803ED320[idx] = 0;
+    }
+}
