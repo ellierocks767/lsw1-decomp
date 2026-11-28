@@ -7654,3 +7654,87 @@ s32 JediBInitLocator(struct nuvec_s *pos, s32 id, struct jedib_locator_s *loc, f
     }
     return 0;
 }
+
+s32 fn_800C04C4();
+extern f32 lbl_801A25B0[];
+extern f32 lbl_801A25B4[];
+extern u8 lbl_803EACF1[];
+
+typedef struct {
+    s8 *p0;
+    char pad[0x24];
+    s8 *a[4];
+    s8 *c;
+    s8 *b[4];
+} C0EC0Tbl;
+
+void fn_800C0EC0(void) {
+#define tb ((C0EC0Tbl *)lbl_802DA6D8)
+    f32 t;
+    s8 *p;
+    s32 ok;
+    s32 i;
+    s8 *a;
+    s8 *b;
+
+    if (lbl_804091F8 != 0) {
+        fn_800BB3FC(7, 0, lbl_801A25B0[0]);
+    } else {
+        t = lbl_801A25B0[0];
+        switch (lbl_8040B060[0]) {
+        case 0:
+            p = (s8 *)fn_800D515C(7, 1, 1);
+            if (p == NULL || !(*(s32 *)(p + 0xF24) & 2) || (*(u8 *)(p + 0x28F) == 0 && *(u8 *)(p + 0x1085) != 0)) {
+                p = NULL;
+            }
+            if (p == NULL) {
+                goto none;
+            }
+            if (t <= lbl_801A25B0[0]) {
+                goto two;
+            }
+            lbl_8040B060[0] = 1;
+            goto none;
+        case 1:
+            lbl_8040B0C8 += lbl_80408E9C;
+            if (lbl_8040B0C8 >= t) {
+                goto two;
+            }
+            goto none;
+        two:
+            lbl_8040B060[0] = 2;
+            ok = 1;
+            break;
+        default:
+        none:
+            ok = 0;
+            break;
+        }
+        if (ok) {
+            lbl_80408F2C = 1;
+            lbl_804093B0 = 0x3B;
+            if (lbl_8040AF64 != -1) {
+                lbl_8040AF94 = 1;
+            }
+        }
+    }
+    if (*(f32 *)(tb->p0 + 0x28) == lbl_801A25B0[0] && lbl_804091F8 == 0 && lbl_803EACF1[0] != 0) {
+        *(f32 *)(tb->p0 + 0x28) = lbl_801A25B4[0];
+    }
+    fn_800C04C4();
+    if (tb->c != NULL && (*(u16 *)(tb->c + 0x6E) & 0xC0) != 0) {
+        tb->c = NULL;
+    }
+    for (i = 0; i < 4; i++) {
+        a = tb->a[i];
+        if (a != NULL) {
+            b = tb->b[i];
+            if (b != NULL) {
+                if (!(*(u16 *)(a + 0x6E) & 0xC0) && (*(u16 *)(a + 0x6E) & 1) && (*(s32 *)(b + 0x18) & 0x1000)) {
+                    *(u16 *)(a + 0x6E) &= ~1;
+                }
+            }
+        }
+    }
+#undef tb
+}
