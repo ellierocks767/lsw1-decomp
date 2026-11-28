@@ -3073,7 +3073,7 @@ void fn_800BB6D8(void) {
 
 s32 fn_8006D1BC(s16, s32);
 s32 fn_8006DCD4(s32 *, s32);
-s32 fn_800B9928(f32 *, f32);
+void fn_800B9928(f32 *, f32);
 s32 fn_8010CA18(s32, s32 *, s32 *);
 extern f32 NuRndrHackWaterLevel[];
 extern const f32 lbl_801A0414[];
@@ -7016,4 +7016,104 @@ void fn_800B9974(void *arg0) {
         (*(f32 *)((s8 *)(arg0) + (8))) = var_f13;
     }
     (*(s32 *)((s8 *)(arg0) + (0xC))) = (s32) ((*(s32 *)((s8 *)(arg0) + (0xC))) + 1);
+}
+
+void fn_80029050(s32, f32);
+extern f32 lbl_801A1A04[];
+
+void fn_800BA1AC(f32 farg0)
+{
+    if (lbl_80408F64 != 0) {
+        fn_80029050(lbl_80408F64, farg0 * lbl_801A1A04[0]);
+    }
+}
+
+f32 NuFmod(f32, f32);
+extern f32 lbl_801A19B4[];
+
+void fn_800B9928(f32 *arg0, f32 farg0)
+{
+    arg0[1] = farg0;
+    arg0[0] = farg0;
+    arg0[2] = NuFmod(farg0, 1.0f);
+    ((s32 *)arg0)[3] = 0;
+}
+
+void fn_800B57DC(void);
+extern f32 lbl_801A19CC[];
+extern f32 lbl_801A19D0[];
+extern f32 lbl_80409178;
+extern f32 lbl_8040917C;
+extern f32 lbl_80409180;
+extern f32 lbl_80409184;
+extern f32 lbl_80409188;
+extern f32 lbl_8040918C;
+extern f32 lbl_80409190;
+
+void fn_800B9B6C(void)
+{
+    lbl_80409178 = lbl_801A19CC[0];
+    lbl_80409190 = lbl_801A19D0[0];
+    lbl_8040917C = lbl_801A19CC[0];
+    lbl_80409180 = lbl_801A19CC[0];
+    lbl_80409184 = lbl_801A19CC[0];
+    lbl_80409188 = lbl_801A19CC[0];
+    lbl_8040918C = lbl_801A19CC[0];
+    fn_800B57DC();
+}
+
+void fn_80074840(void);
+void fn_8010BB08(void);
+void fn_8011FCCC(void *);
+void fn_8013DB18(void *);
+extern f32 lbl_801A19FC[];
+extern s32 lbl_80409158;
+extern s32 lbl_8040B128;
+extern f32 lbl_8040B12C;
+extern s32 lbl_8040B130;
+extern f32 lbl_8040B134;
+extern s32 lbl_8040B138;
+extern s32 lbl_8040B13C;
+extern s32 lbl_8040B140;
+
+void fn_800B9E4C(s32 arg0)
+{
+    if (lbl_80409158 != 0 || arg0 == 1) {
+        lbl_8040B128 = 1;
+        lbl_8040B0C8 = lbl_801A19FC[0];
+        lbl_8040B12C = lbl_801A19FC[0];
+        fn_8013DB18(lbl_80409410);
+        fn_8011FCCC(lbl_80409410);
+    }
+    lbl_8040B138 = 0;
+    lbl_8040B134 = lbl_801A19FC[0];
+    lbl_8040B13C = 0;
+    lbl_8040B140 = 0;
+    lbl_8040B130 = 0;
+    fn_8010BB08();
+    fn_800BA444();
+    fn_80074840();
+    fn_800BA2AC();
+}
+
+void fn_800135B0(void *);
+s32 fn_8005A5F8(void);
+
+typedef struct LevelSpecialSlot {
+    s32 unk0[3];
+    s32 unkC;
+} LevelSpecialSlot;
+
+void fn_800BA6AC(void *arg0)
+{
+    s32 i;
+    LevelSpecialSlot *slots = (LevelSpecialSlot *)((s8 *)arg0 + 0x76C);
+
+    for (i = 0; i < 287; i++) {
+        slots[i].unkC = -1;
+        if (*(s32 *)((s8 *)arg0 + 0x1C4) != 0 && fn_800130F4((s32 *)&slots[i]) != 0 && ((s32 *)lbl_801D5AA0)[i * 2] == 0) {
+            fn_800135B0(&slots[i]);
+            slots[i].unkC = fn_8005A5F8();
+        }
+    }
 }
