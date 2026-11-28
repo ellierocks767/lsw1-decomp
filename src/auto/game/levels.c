@@ -4861,7 +4861,22 @@ s32 fn_800CFE9C(void *arg0, void *arg1, f32 farg0, f32 farg1) {
     return temp_f0 <= temp_f2;
 }
 
-typedef struct { u8 pad[0x14]; s16 id; u8 rest[0xE0 - 0x16]; } MenuFrame;
+typedef struct {
+    u8 pad0[0xA];
+    s16 selA;
+    u8 padC[2];
+    s16 minE;
+    u8 pad10[2];
+    s16 max12;
+    s16 id;
+    u8 pad16[0x94 - 0x16];
+    f32 unk94;
+    u8 pad98[4];
+    f32 unk9C;
+    u8 padA0[8];
+    f32 unkA8;
+    u8 padAC[0xE0 - 0xAC];
+} MenuFrame;
 extern s32 gRegisteredMenuDefinitions[];
 s32 fn_800B2ED4(void) {
     s16 id = ((MenuFrame *)gMenuStack)[gMenuDepth].id;
@@ -6412,5 +6427,37 @@ void Menu_Main_BuildOptions(void) {
             fn_8007BE20(lbl_803DF930[0], lbl_801A0428[0], lbl_80409120, scale,
                          0.5f, 0.5f, 0.5f, 0, 0xFF, 0xFF, 0xFF);
         }
+    }
+}
+
+extern f32 lbl_801A0448[];
+extern f32 lbl_80408A98;
+extern f32 lbl_804090E4;
+
+void Menu_Unknown10_BuildOptions(MenuFrame *menu) {
+    f32 height = (f32)(menu->max12 - menu->minE);
+    f32 selected = (f32)-menu->selA;
+    f32 step = lbl_80408A84;
+    f32 scale = lbl_804090E4;
+    f32 factor = lbl_801A0448[0];
+    s32 i = 0;
+    s32 offset;
+    struct lbl_80409410_s *level;
+
+    menu->unk94 = scale;
+    menu->unkA8 = height * step * scale * factor;
+    menu->unk9C = selected * step * scale;
+    level = lbl_80409410;
+    if (i < level->unk244) {
+        offset = 0;
+        do {
+            s32 text = (s32)((u8 *)level->unk240 + offset);
+
+            lbl_80408A98 = menu->unk94;
+            i++;
+            offset += sizeof(*level->unk240);
+            fn_800769B4(menu, text, lbl_80408A57);
+            level = lbl_80409410;
+        } while (i < level->unk244);
     }
 }
