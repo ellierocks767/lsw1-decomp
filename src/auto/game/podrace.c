@@ -1164,3 +1164,74 @@ void fn_80146B8C(SplineKnots *s, f32 t) {
     }
     CalcSplinePoint(s, t);
 }
+
+s32 fn_800E6484();
+extern f32 NuRndrHackWaterLevel[];
+extern f32 lbl_80408E9C;
+extern f32 lbl_80408F00;
+extern s32 lbl_8040912C;
+extern void *lbl_80409410;
+extern s32 lbl_8040A810;
+extern f32 lbl_8040A814;
+extern f32 lbl_8040A818;
+extern f32 lbl_8040A81C;
+extern s32 lbl_8040AFA8;
+extern s32 lbl_8040AFAC;
+
+void fn_8014E9B8(void) {
+    f32 temp_f0;
+    f32 temp_f0_2;
+    f32 temp_f0_3;
+    f32 temp_f0_4;
+    f32 temp_f13;
+    f32 var_f12;
+    s32 prev;
+
+    if ((lbl_80408F00 != -0.1f) || ((s32) lbl_8040AFA8 != 0) || ((s32) lbl_8040AFAC != 0)) {
+        lbl_8040A814 = 0.0f;
+        lbl_8040A818 = 0.0f;
+        lbl_8040A81C = 0.0f;
+    } else {
+        if (((s32) lbl_8040912C != 0) || (((s32) (*(s32 *)((s8 *)(lbl_80409410) + (0x198))) == 0x1B) && ((NuRndrHackWaterLevel[0] >= 1.0f)) && (NuRndrHackWaterLevel[0] < 6.0f))) {
+            var_f12 = 1.0f;
+        } else {
+            var_f12 = 0.0f;
+        }
+        if (lbl_8040A814 > var_f12) {
+            temp_f0 = lbl_8040A814 - (2.0f * lbl_80408E9C);
+            lbl_8040A814 = temp_f0;
+            if (temp_f0 < var_f12) {
+                lbl_8040A814 = var_f12;
+            }
+        } else if (lbl_8040A814 < var_f12) {
+            temp_f0_2 = lbl_8040A814 + (2.0f * lbl_80408E9C);
+            lbl_8040A814 = temp_f0_2;
+            if (temp_f0_2 > var_f12) {
+                lbl_8040A814 = var_f12;
+            }
+        }
+    }
+    prev = lbl_8040A810;
+    if (((s32) lbl_8040912C == 0) && ((void *) lbl_80409C94 != NULL) && (temp_f13 = (*(f32 *)((s8 *)(lbl_80409C94) + (0xB008))), ((temp_f13 < 1e+01f) != 0))) {
+        lbl_8040A810 = (s32) temp_f13;
+        if (lbl_8040A818 < 1.0f) {
+            temp_f0_3 = lbl_8040A818 + (2.0f * lbl_80408E9C);
+            lbl_8040A818 = temp_f0_3;
+            if (temp_f0_3 > 1.0f) {
+                lbl_8040A818 = 1.0f;
+            }
+        }
+    } else {
+        lbl_8040A818 = 0.0f;
+    }
+    if (((s32) lbl_8040A810 > 0) && ((s32) lbl_8040A810 != prev)) {
+        fn_800E6484();
+    }
+    if (((s32) lbl_8040912C == 0) && ((void *) lbl_80409C94 != NULL) && ((*(f32 *)((s8 *)(lbl_80409C94) + (0xB000))) > 0.0f) && (lbl_8040A81C < 1.0f)) {
+        temp_f0_4 = lbl_8040A81C + (2.0f * lbl_80408E9C);
+        lbl_8040A81C = temp_f0_4;
+        if (temp_f0_4 > 1.0f) {
+            lbl_8040A81C = 1.0f;
+        }
+    }
+}
