@@ -6332,3 +6332,19 @@ void fn_800B4A88(f32 intensity) {
         }
     }
 }
+
+s32 fn_800B2F10(void) {
+    s32 depth = gMenuDepth;
+    s16 id;
+
+    if (depth <= 1) {
+        return -1;
+    }
+
+    depth--;
+    id = ((MenuFrame *)gMenuStack)[depth].id;
+    if (id == -1) {
+        return -1;
+    }
+    return *(s32 *)((s8 *)gRegisteredMenuDefinitions + id * 0x1C);
+}
