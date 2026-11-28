@@ -8630,3 +8630,129 @@ void VaderAStartCollapseStage(void)
         fn_80013200((s32 *)&specials[i], 0);
     }
 }
+
+/* Vader A collapse state at lbl_802E0BBC (VaderAStartCollapseStage, fn_800C6430). */
+struct vadera_s {
+    s32 msg;
+    f32 timer;
+    s16 stage;
+    s16 hit;
+    u8 padC[0x10 - 0xC];
+    s32 force[4];
+    u8 pad20[0x24 - 0x20];
+    s32 surface;
+};
+
+#define VA ((struct vadera_s *)lbl_802E0BBC)
+
+s32 SetPlayerOnSurface(void *, s32);
+void *NuCameraGetViewMtx(void);
+s32 fn_800E6484();
+void fn_800B01C4(void *, void *, f32, f32, f32, f32, s32, s32);
+extern void *lbl_802E0BDC[];
+extern f32 lbl_80409364;
+extern char lbl_801A2DBC[];
+extern char lbl_801A2DCC[];
+extern const f32 lbl_801A2DDC[];
+extern const f32 lbl_801A2DE0[];
+extern const f32 lbl_801A2DE4[];
+extern s32 lbl_801D6888[];
+extern s32 lbl_801D6894[];
+
+static inline s32 levels_alldone(s32 *list, s32 n)
+{
+    s32 o;
+
+    do {
+        o = *list++;
+        if (o == 0 || (*(u16 *)(o + 0x20) & 0x101) == 0) {
+            return 0;
+        }
+    } while (--n > 0);
+    return 1;
+}
+
+void fn_800C6430(void)
+{
+    s32 i;
+    s32 o;
+    f32 old;
+    f32 wait;
+
+    if (VA->surface != 0) {
+        VA->surface = 0;
+        for (i = 0; i < 8; i++) {
+            if (gPlayer1Pointer[i] != 0 && *(s32 *)(gPlayer1Pointer[i] + 0x20C) < 0) {
+                SetPlayerOnSurface((void *)gPlayer1Pointer[i], 1);
+            }
+        }
+    }
+    if (lbl_802E0BDC[0] != NULL && lbl_80409004 != NULL && *(s16 *)((s8 *)lbl_80409004 + 0x282) != -1) {
+        *(struct nuvec_s *)((s8 *)lbl_802E0BDC[0] + 0x10) = *(struct nuvec_s *)((s8 *)lbl_80409004 + 0x1AC);
+    }
+    if (VA->stage != 0) {
+        old = VA->timer;
+        VA->timer = old - lbl_80408E9C;
+        if (VA->stage <= 2) {
+            for (i = 0; i < 4; i++) {
+                if (VA->force[i] != 0 && (*(u16 *)(VA->force[i] + 0x20) & 1)) {
+                    VA->hit = 1;
+                    VA->timer += lbl_80409364;
+                    VA->force[i] = 0;
+                }
+            }
+            if (VA->timer < lbl_801D687C[VA->stage]) {
+                o = 0;
+                switch (VA->stage) {
+                case 1:
+                    o = FindObstacle((s32)lbl_80409410, (s32 *)lbl_801A2DBC);
+                    break;
+                do {
+                case 2:
+                    o = FindObstacle((s32)lbl_80409410, (s32 *)lbl_801A2DCC);
+                    VA->timer = lbl_801A2DDC[0];
+                    NuCameraGetViewMtx();
+                    fn_800B01C4(lbl_801D6888, lbl_801D6894, lbl_801A2DE0[0], lbl_801A2DDC[0], lbl_801A2DE0[0], lbl_801A2DE4[0], 0, 1);
+                    break;
+                } while (0);
+                }
+                if (o != 0) {
+                    fn_80105500(lbl_80409410, *(s8 *)(o + 0x71), *(s8 *)(o + 0x72), 0);
+                    fn_80107A6C(o, 0);
+                }
+                VA->stage++;
+            }
+            if (VA->hit != 0 || (VA->timer > lbl_801A2DE0[0] && (s32)old != (s32)VA->timer)) {
+                fn_800E6484();
+            }
+        } else if (VA->timer <= lbl_801A2DE0[0]) {
+            fn_800D3054((s32)lbl_80409004, 2);
+        }
+    }
+    wait = lbl_801A2DE0[0];
+    switch (lbl_8040B060[0]) {
+    case 0:
+        if (levels_alldone(lbl_803EAEC4, 2)) {
+            {
+                s32 *pp = lbl_803EAEC4;
+
+                do {
+                    fn_801268CC(*pp);
+                    pp++;
+                } while ((s32)pp < (s32)&lbl_803EAEC4[2]);
+            }
+            if (wait <= lbl_801A2DE0[0]) {
+                goto set2;
+            }
+            lbl_8040B060[0] = 1;
+        }
+        break;
+    case 1:
+        lbl_8040B0C8 += lbl_80408E9C;
+        if (lbl_8040B0C8 >= wait) {
+        set2:
+            lbl_8040B060[0] = 2;
+        }
+        break;
+    }
+}
