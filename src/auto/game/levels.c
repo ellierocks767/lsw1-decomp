@@ -6284,3 +6284,51 @@ void DaveSetSoundFadeDist(void) {
         fn_8006DF68(((f32)(f64)volume[3] / divisor) * ((f32)(f64)volume[4] / divisor));
     }
 }
+
+s32 fn_800272A0(s32 *, s32, f32);
+extern f32 lbl_801A1650[];
+extern f32 lbl_801A1654[];
+extern f32 lbl_801A1658[];
+
+void fn_800B4A88(f32 intensity) {
+    struct numtx_s matrix;
+    u8 *state;
+    u8 *modes;
+    u32 index;
+    f32 elapsed;
+    s32 level;
+    s32 i;
+    u8 *base;
+    s32 *special;
+
+    if (lbl_80408F64 != 0) {
+        level = lbl_80409410->unk198;
+        if (level == 0x7C) {
+            intensity *= lbl_8040B0BC;
+        } else if (level == 0x7D && lbl_8040B060[0] == 3) {
+            intensity *= lbl_8040B0E4;
+        } else if (fn_800B2ED4() == 0x1B) {
+            state = (u8 *)lbl_801DCF5C;
+            index = state[0x4E];
+            modes = state + 0x30;
+            if (modes[index] == 0xD) {
+                elapsed = *(f32 *)(state + 0x44);
+                if (elapsed < lbl_801A1650[0]) {
+                    intensity = lbl_801A1654[0] - 2.0f * elapsed;
+                } else {
+                    intensity = lbl_801A1658[0];
+                }
+            }
+        }
+        if (intensity > lbl_801A1658[0]) {
+            base = (u8 *)lbl_803E8660;
+            for (i = 0; i < 4; i++) {
+                special = (s32 *)(i * 0xC + (u32)base);
+                if (fn_800130F4(special) != 0) {
+                    matrix = *(struct numtx_s *)fn_800133FC(special);
+                    fn_800272A0((s32 *)(i * 0xC + (u32)base), (s32)&matrix, intensity);
+                }
+            }
+        }
+    }
+}
