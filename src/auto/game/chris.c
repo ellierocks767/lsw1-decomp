@@ -954,8 +954,26 @@ s32 QuickBolt_Add(struct ChrisBoltPool *pool, struct numtx_s *transform, struct 
     return 0;
 }
 
+struct ChrisStripMaterial {
+    u8 pad0[0xCC];
+    s32 fieldCC;
+};
+
 struct ChrisPoolNode {
-    u8 payload[0x78];
+    struct numtx_s transform;
+    struct nuvec_s velocity;
+    struct ChrisStripMaterial *material;
+    f32 radius;
+    f32 firstRadius;
+    f32 lastRadius;
+    u32 colour;
+    u32 firstColour;
+    u32 lastColour;
+    f32 age;
+    f32 duration;
+    f32 delay;
+    u16 flags;
+    u8 pad76[2];
     struct ChrisPoolNode *next;
     struct ChrisPoolNode *previous;
 };
@@ -1260,4 +1278,100 @@ void CalcSplinePoint(struct ChrisFlightSpline *spline, struct ChrisSplinePoint *
     NuVecAddPS(result, result, &cubic);
     NuVecScale(&result->position, &result->position, lbl_801AF3C8[0]);
     result->value = fraction * (next->value - current->value) + current->value;
+}
+
+extern struct nuvec_s lbl_801D5964;
+extern const f32 lbl_801AF080[];
+extern s32 lbl_80409A68;
+
+void fn_80141158(struct ChrisPool *pool, const struct numtx_s *transform,
+                 const u32 *firstColour, const u32 *lastColour, u16 inputFlags,
+                 struct ChrisStripMaterial *material, const struct nuvec_s *inputVelocity,
+                 f32 firstRadius, f32 lastRadius, f32 duration, f32 delay)
+{
+    struct ChrisPoolNode *node;
+    u32 first;
+    u32 last;
+    struct ChrisPoolNode *head;
+    struct ChrisPoolNode *free;
+    struct ChrisPoolNode *next;
+    register u16 flags asm("r6");
+    register const struct nuvec_s *velocity asm("r7");
+    last = *lastColour;
+    node = NULL;
+    flags = inputFlags;
+    first = *firstColour;
+    velocity = inputVelocity;
+
+    if (material != NULL && pool != NULL) {
+        u16 capacity;
+        register u16 count asm("r9");
+        register struct ChrisPoolNode *slot asm("r0");
+        head = pool->head;
+        capacity = pool->capacity;
+        asm("" : "=r"(capacity) : "0"(capacity));
+        count = pool->count;
+        slot = pool->free;
+        if (count < capacity) {
+            free = slot;
+            {
+                struct ChrisPoolNode *first = free->next;
+                if (first == free) {
+                    next = NULL;
+                } else {
+                    first->previous = free->previous;
+                    free->previous->next = free->next;
+                    next = free->next;
+                }
+            }
+            if (head != NULL) {
+                free->next = head->next;
+                free->next->previous = free;
+                free->previous = head;
+                head->next = free;
+            } else {
+                free->next = free;
+                free->previous = free;
+            }
+            ++pool->count;
+            pool->free = next;
+            pool->head = free;
+            if (pool->count == pool->capacity)
+                pool->free = NULL;
+            node = free;
+        }
+        if (node == NULL) {
+            node = pool->tail;
+            pool->head = node;
+            pool->tail = node->next;
+        } else if (pool->tail == NULL) {
+            pool->tail = node;
+        }
+
+        if (node != NULL) {
+            node->transform = *transform;
+            node->material = material;
+            if (material->fieldCC == 0)
+                ++lbl_80409A68;
+            {
+                f32 age;
+                node->lastRadius = lastRadius;
+                age = lbl_801AF080[0];
+                asm volatile("" : : : "memory");
+                *(volatile f32 *)&node->radius = firstRadius;
+                *(volatile u16 *)&node->flags = flags;
+                *(volatile u32 *)&node->lastColour = last;
+                *(volatile u32 *)&node->colour = first;
+                *(volatile f32 *)&node->age = age;
+            }
+            node->duration = duration;
+            node->delay = delay;
+            node->firstRadius = firstRadius;
+            node->firstColour = first;
+            if (velocity != NULL)
+                node->velocity = *velocity;
+            else
+                node->velocity = lbl_801D5964;
+        }
+    }
 }
