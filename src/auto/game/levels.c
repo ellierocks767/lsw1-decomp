@@ -4172,7 +4172,7 @@ void fn_800D4E70(void *arg0) {
     fn_800AC020(**(s32 **)(*(s8 **)((s8 *)arg0 + 0xEEC) + 0x61C), lbl_801A5244[0]);
 }
 
-s32 VaderAStartCollapseStage();
+void VaderAStartCollapseStage(void);
 s32 fn_800D7ED8(s32, s32, s32);
 extern s32 lbl_802E0BBC[];
 void fn_800CEEF0(void) {
@@ -8574,5 +8574,59 @@ void fn_800C6900(void)
                 }
             }
         }
+    }
+}
+
+s32 NuSpecialFindMulti(s32, struct nuhspecial_s *, char *, s32, s32);
+struct levelflags_s {
+    s32 count;
+    u32 flags[1];
+};
+
+struct levelflags_s *fn_8008A6D4(void *, s32, char *, char *, s32 *);
+extern char lbl_801A2D48[];
+extern char lbl_801A2D68[];
+extern char lbl_801A2D74[];
+extern char lbl_801A2D80[];
+extern char lbl_801A2D90[];
+extern char lbl_801A2D98[];
+extern char lbl_801A2DA0[];
+extern char lbl_801A2DA8[];
+extern char lbl_801A2DB0[];
+extern const f32 lbl_801A2DB8[];
+extern f32 lbl_801D687C[];
+
+void VaderAStartCollapseStage(void)
+{
+    struct nuhspecial_s specials[100];
+    s32 idx;
+    void *loc;
+    struct levelflags_s *p;
+    s32 o;
+    s32 n;
+    s32 i;
+
+    loc = (void *)lbl_80409410->unk2E8;
+    p = fn_8008A6D4(loc, *(s32 *)(*(s8 **)((s8 *)loc + 0xC) + 8), lbl_801A2D68, lbl_801A2D74, &idx);
+    if (p != NULL) {
+        u32 *f = p->flags;
+
+        f[idx] |= 0x80000000;
+    }
+    o = FindObstacle((s32)lbl_80409410, (s32 *)lbl_801A2D80);
+    if (o != 0) {
+        fn_80105500(lbl_80409410, *(s8 *)(o + 0x71), *(s8 *)(o + 0x72), 0);
+        fn_80107A6C(o, 0);
+    }
+    lbl_802E0BBC[4] = FindForceObject(lbl_80409410, (s32 *)lbl_801A2D90, 0);
+    lbl_802E0BBC[5] = FindForceObject(lbl_80409410, (s32 *)lbl_801A2D98, 0);
+    lbl_802E0BBC[6] = FindForceObject(lbl_80409410, (s32 *)lbl_801A2DA0, 0);
+    lbl_802E0BBC[7] = FindForceObject(lbl_80409410, (s32 *)lbl_801A2DA8, 0);
+    *(s16 *)((s8 *)lbl_802E0BBC + 8) = 1;
+    *(f32 *)((s8 *)lbl_802E0BBC + 4) = lbl_801D687C[0];
+    SetAIMessage(lbl_80408F58, (s32 *)lbl_801A2D48, lbl_802E0BBC[0], lbl_801A2DB8[0]);
+    n = NuSpecialFindMulti(lbl_80409410->unk1C0, specials, lbl_801A2DB0, 100, 0);
+    for (i = 0; i < n; i++) {
+        fn_80013200((s32 *)&specials[i], 0);
     }
 }
