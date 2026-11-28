@@ -7478,3 +7478,53 @@ void fn_800C2F20(void) {
     t->b = 0;
 }
 #undef t
+
+extern s32 lbl_801A2318[];
+extern s32 lbl_801A2328[];
+extern s32 lbl_801A2338[];
+extern s32 lbl_801A2344[];
+extern f32 lbl_801A2350[];
+s32 SetAIMessage(s32, s32 *, s32, f32);
+s32 fn_80107A6C(s32, s32);
+
+struct kaminoc_s {
+    s32 unk0;
+    s32 specialA[16][3];
+    s32 specialB[32][3];
+    s32 specialC[16][3];
+    s32 obstacle304;
+    s32 obstacle308;
+    u8 unk30C[0x10];
+    s8 count;
+    u8 unk31D;
+    s8 unk31E;
+    s8 unk31F;
+    f32 unk320;
+    s32 msg324;
+    s32 msg328;
+};
+extern struct kaminoc_s lbl_802DA3A0;
+
+void KaminoCReset(void) {
+    s32 i;
+    u8 *p;
+
+    p = lbl_802DA3A0.unk30C;
+    memset(p, 0, 0x10);
+    lbl_802DA3A0.unk31D = 0;
+    lbl_802DA3A0.unk320 = lbl_801A2350[0];
+    lbl_802DA3A0.unk31F = lbl_802DA3A0.unk31E = -1;
+    for (i = 0; i < lbl_802DA3A0.count; i++) {
+        fn_80013200(lbl_802DA3A0.specialA[i], 1);
+        fn_80013200(lbl_802DA3A0.specialB[i], 0);
+        fn_80013200(lbl_802DA3A0.specialC[i], 0);
+    }
+    lbl_802DA3A0.msg324 = SetAIMessage(lbl_80408F58, lbl_801A2318, 0, lbl_801A2350[0]);
+    lbl_802DA3A0.msg328 = SetAIMessage(lbl_80408F58, lbl_801A2328, 0, lbl_801A2350[0]);
+    lbl_802DA3A0.obstacle304 = FindObstacle((s32)lbl_80409410, lbl_801A2338);
+    lbl_802DA3A0.obstacle308 = FindObstacle((s32)lbl_80409410, lbl_801A2344);
+    if (lbl_802DA3A0.obstacle304 != 0) {
+        fn_80105500(lbl_80409410, *(s8 *)(lbl_802DA3A0.obstacle304 + 0x71), *(s8 *)(lbl_802DA3A0.obstacle304 + 0x72), 0);
+        fn_80107A6C(lbl_802DA3A0.obstacle304, 0);
+    }
+}
