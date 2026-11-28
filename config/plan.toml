@@ -2844,3 +2844,7 @@ reason = "best 43/61: frame/stack right via 12-byte struct assign for sp8 and me
 [[parked]]
 function = "fn_800BEC64"
 reason = "best 115/116: only fmr f2,f30 (1.0f arg) scheduled after li r9 instead of between li r7/li r8; work/fn_800BEC64/try.c; 183 variant_search + 180s permuter no gain; next: arg-type/prototype shapes for fn_8013CBAC, permuter run"
+
+[[parked]]
+function = "KaminoEReset"
+reason = "best 145/150: stwx base/index operand order in turret/door loop, 3rd SetAIMessage arg scheduling, final-loop add operand order; next: permuter burst on work/KaminoEReset/best5.c"
