@@ -915,3 +915,186 @@ void fn_80042730(void)
     lbl_8040A430 = 0;
     fn_800424F4();
 }
+
+/* Salvaged from hillclimb run hc-20261127-023020 (PR #222), adapted to the
+ * declarations above. */
+void CARDInit(void);
+extern s32 lbl_80408244;
+
+/* 32-byte card comment/title text; word aligned so the copies use lwz/stw. */
+struct sl_card_text {
+    char text[32];
+} __attribute__((aligned(4)));
+
+void fn_800411EC(s32 unused, const char *asset, const struct sl_card_text *text)
+{
+    if (lbl_80408244 == 0) {
+        CARDInit();
+        lbl_80408244 = 1;
+    }
+    memset(lbl_802935A0, 0, 0x6000);
+    lbl_8040A434 = 1;
+    lbl_8040A450 = 0;
+    lbl_8040A454 = 0;
+    lbl_8040A430 = 1;
+    lbl_8040A458 = 0;
+    lbl_8040A45C = 0;
+    lbl_8040A460 = 0;
+    lbl_8040A480 = 0;
+    lbl_8040A474 = 0;
+    lbl_8040A490 = 0;
+    lbl_80408248 = (s32)asset;
+    memset(&lbl_80293560, 0, sizeof(lbl_80293560));
+    memset(&lbl_80293580, 0, sizeof(lbl_80293580));
+    if (text != NULL) {
+        *(struct sl_card_text *)&lbl_80293560 = text[0];
+        *(struct sl_card_text *)&lbl_80293580 = text[1];
+    } else {
+        lbl_80293560.b[0] = 'X';
+        lbl_80293580.b[1] = 'X';
+    }
+}
+
+s32 fn_800414F8(void)
+{
+    s32 result;
+    s32 state;
+
+    if (lbl_8040A444 == 0) {
+        return -1;
+    }
+    result = lbl_8040A440 = lbl_8040A448;
+    if (lbl_80408240 != 0) {
+        result = -2;
+    }
+    lbl_8040A440 = result;
+    if (result == -6 || result == -13 || result == 0) {
+        lbl_8040A450 = 1;
+        if (lbl_8040A440 == 0) {
+            lbl_8040A454 = 1;
+        }
+    }
+    if (lbl_8040A440 == -6) {
+        lbl_8040A44C = 1;
+    }
+    if (lbl_8040A440 != -3) {
+        lbl_8040A490 = 1;
+        if (lbl_8040A480 != 0) {
+            /* lbl_8040A478/lbl_8040A488 hold 64-bit card serial numbers (low words at +4). */
+            lbl_8040A474 = lbl_8040A480;
+            *(u64 *)&lbl_8040A478 = *(u64 *)&lbl_8040A488;
+        }
+        if (CARDGetSerialNo(0, &lbl_8040A488) == 0) {
+            lbl_8040A480 = 1;
+            if ((lbl_8040A488 | lbl_8040A48C) == 0) {
+                lbl_8040A480 = 0;
+            }
+        }
+    }
+    if (lbl_8040A440 == 0) {
+        goto ready;
+    }
+    switch (lbl_8040A440) {
+    case -128:
+        state = 0x15;
+        break;
+    case -3:
+        state = 0x16;
+        break;
+    case -5:
+        state = 0x18;
+        break;
+    case -2:
+        state = 0x19;
+        break;
+    case -13:
+        state = 0x1A;
+        break;
+    default:
+        return 0;
+    case -6:
+        goto ready;
+    }
+    lbl_8040A434 = state;
+    return 0;
+ready:
+    return 1;
+}
+
+s32 fn_80041E30(void)
+{
+    s32 result;
+    s32 *slotPresent;
+    u8 *cursor;
+    u8 *buffer;
+    s32 i;
+    u32 size;
+    u32 checksum;
+    u32 offset;
+    u32 storedChecksum;
+
+    if (lbl_8040A444 == 0) {
+        return -1;
+    }
+    result = lbl_8040A440 = lbl_8040A448;
+    if (result == 0) {
+        goto read_data;
+    }
+    switch (result) {
+    case -128:
+        lbl_8040A434 = 0x15;
+        break;
+    case -3:
+        lbl_8040A434 = 0x16;
+        break;
+    case -6:
+        lbl_8040A434 = 0x17;
+        break;
+    case -5:
+        lbl_8040A434 = 0x18;
+        break;
+    case -2:
+        lbl_8040A434 = 0x19;
+        break;
+    case -13:
+        lbl_8040A434 = 0x1A;
+        break;
+    default:
+        break;
+    }
+    return 0;
+
+read_data:
+    cursor = (u8 *)lbl_802935A0;
+    slotPresent = lbl_8034705C;
+    cursor += 0x640;
+    for (i = 0; i < 3; i++) {
+        *slotPresent++ = *(s32 *)cursor;
+        cursor += sizeof(s32);
+    }
+    for (i = 0; i < 3; i++) {
+        if (lbl_8034705C[i] != 0) {
+            lbl_80347068[i] = *(s32 *)cursor;
+        }
+        cursor += 0x1C04;
+    }
+    checksum = 0xDEADBEEF;
+    buffer = (u8 *)lbl_802935A0;
+    offset = 0;
+    size = cursor - buffer;
+    storedChecksum = *(u32 *)cursor;
+    if (offset < size) {
+        do {
+            u8 byte = buffer[offset];
+            offset++;
+            checksum += byte;
+        } while (offset < size);
+    }
+    if (storedChecksum != checksum) {
+        lbl_8040A460 = 1;
+    } else {
+        lbl_8040A460 = 0;
+    }
+    lbl_8040A45C = 1;
+    return 1;
+}

@@ -2534,18 +2534,6 @@ function = "fn_8009DCE8"
 reason = "best 232/291: exact -0x38 frame and subfic r5, r3, 0x2800 matched; 0.1f vs 43300000 lis order and f9/f11 regalloc shift (same quirk as fn_8009E310); next: check how sw/sh float cast and 0.1f are written"
 
 [[parked]]
-function = "fn_80041E30"
-reason = "best 84/90: lbl_802935A0+0x640 folded into reloc; next: advance pointer sequentially from lbl_802935A0"
-
-[[parked]]
-function = "fn_800411EC"
-reason = "best 91/103: exact 103 insns, global zeroing store order around memset; next: reorder global stores"
-
-[[parked]]
-function = "fn_800414F8"
-reason = "best 75/95: switch matched 100%, serial copy struct and res regalloc left; next: use 12-byte struct copy for lbl_8040A474/80"
-
-[[parked]]
 function = "fn_80059C44"
 reason = "best 101/152: matched frame, grouped switch and three-word copies, but allocation setup and copied-vector scheduling diverge; next: compare direct scratch-global lvalues with scoped local aliases before retuning field stores"
 
@@ -2695,7 +2683,7 @@ reason = "best 97/144 (work/hc/a/h7.c): clamp frac>1.0 folds 9C reuse (target re
 
 [[parked]]
 function = "fn_80040B4C"
-reason = "best 15/54: mismatch, target computes -align twice (no CSE) with size copied to r8; next: source form that blocks CSE of the two negs (separate block/helper with own params), permuter burst"
+reason = "best 23/54 (hc-20261127-023020, PR #222): narrow stride changes allocation width; full-width 21/54 merges the two masks and shifts the node loop registers; in-tree source scores 15/54: target computes -align twice (no CSE) with size copied to r8; next: separate inline alignment helpers (blocks CSE of the two negs), inspect ProDG RTL before tuning the node loop, permuter burst"
 
 [[parked]]
 function = "fn_800A45BC"
